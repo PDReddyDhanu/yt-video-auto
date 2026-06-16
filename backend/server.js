@@ -454,7 +454,7 @@ app.post('/api/generate', upload.fields([
   let progressState = 'Uploading';
   
   try {
-    const { bgId, showMovable, movableX, movableY, movableScale, cropTop, cropBottom, cropLeft, cropRight, imageScale, folderId, captions } = req.body;
+    const { bgId, showMovable, movableX, movableY, movableScale, cropTop, cropBottom, cropLeft, cropRight, showMovable2, movable2X, movable2Y, movable2Scale, crop2Top, crop2Bottom, crop2Left, crop2Right, imageScale, folderId, captions } = req.body;
     const files = req.files;
 
     // Parse captions and generate ASS subtitles if present
@@ -526,6 +526,11 @@ app.post('/api/generate', upload.fields([
       }
     }
 
+    let movable2Path = path.join(UPLOADS_DIR, 'watermark2p.png');
+    if (!fs.existsSync(movable2Path)) {
+      movable2Path = path.join(UPLOADS_DIR, 'default_watermark.png');
+    }
+
     const imgScalePct = parseFloat(imageScale) || 90;
     const targetWidth = Math.round((imgScalePct / 100) * 1080);
     const targetHeight = Math.round((imgScalePct / 100) * 1760);
@@ -546,11 +551,11 @@ app.post('/api/generate', upload.fields([
     const mwmX = Math.round((mwmXPct / 100) * 1080);
     const mwmY = Math.round((mwmYPct / 100) * 1920);
     
-    // Parse crop percentages (defaulting to 0)
-    const cropL = parseFloat(cropLeft) || 0;
-    const cropR = parseFloat(cropRight) || 0;
-    const cropT = parseFloat(cropTop) || 0;
-    const cropB = parseFloat(cropBottom) || 0;
+    // Parse crop percentages (defaulting to 35% for banner top/bottom, 0 for left/right)
+    const cropL = (cropLeft !== undefined && cropLeft !== null && cropLeft !== '') ? parseFloat(cropLeft) : 0;
+    const cropR = (cropRight !== undefined && cropRight !== null && cropRight !== '') ? parseFloat(cropRight) : 0;
+    const cropT = (cropTop !== undefined && cropTop !== null && cropTop !== '') ? parseFloat(cropTop) : 35;
+    const cropB = (cropBottom !== undefined && cropBottom !== null && cropBottom !== '') ? parseFloat(cropBottom) : 35;
     
     // 2:v is the movable watermark bottom banner
     let mwmFilter = `[2:v]format=rgba`;
@@ -561,6 +566,31 @@ app.post('/api/generate', upload.fields([
     filterComplexParts.push(mwmFilter);
     filterComplexParts.push(`[bg_img][mwm]overlay=${mwmX}:${mwmY}[bg_mwm]`);
     let lastLabel = '[bg_mwm]';
+
+    // 3:v is the optional second movable watermark
+    if (showMovable2 === 'true') {
+      const mwm2ScalePct = parseFloat(movable2Scale) || 20;
+      const mwm2XPct = parseFloat(movable2X) || 75;
+      const mwm2YPct = parseFloat(movable2Y) || 5;
+
+      const mwm2Width = Math.round((mwm2ScalePct / 100) * 1080);
+      const mwm2X = Math.round((mwm2XPct / 100) * 1080);
+      const mwm2Y = Math.round((mwm2YPct / 100) * 1920);
+
+      const crop2L = parseFloat(crop2Left) || 0;
+      const crop2R = parseFloat(crop2Right) || 0;
+      const crop2T = parseFloat(crop2Top) || 0;
+      const crop2B = parseFloat(crop2Bottom) || 0;
+
+      let mwm2Filter = `[3:v]format=rgba`;
+      if (crop2L > 0 || crop2R > 0 || crop2T > 0 || crop2B > 0) {
+        mwm2Filter += `,crop=iw*(1-(${crop2L}+${crop2R})/100):ih*(1-(${crop2T}+${crop2B})/100):iw*${crop2L}/100:ih*${crop2T}/100`;
+      }
+      mwm2Filter += `,scale=${mwm2Width}:-1[mwm2];`;
+      filterComplexParts.push(mwm2Filter);
+      filterComplexParts.push(`[bg_mwm][mwm2]overlay=${mwm2X}:${mwm2Y}[bg_mwm2]`);
+      lastLabel = '[bg_mwm2]';
+    }
 
     // Burn subtitles into video if present, otherwise just pipe the stream
     if (assFilename) {
@@ -578,10 +608,11 @@ app.post('/api/generate', upload.fields([
       '-i', bgPath,
       '-i', imgPath,
       '-i', movablePath,
+      '-i', movable2Path,
       '-i', audioPath
     ];
 
-    const audioInputIndex = 3;
+    const audioInputIndex = 4;
 
     ffmpegArgs.push(
       '-t', audioDuration.toString(),

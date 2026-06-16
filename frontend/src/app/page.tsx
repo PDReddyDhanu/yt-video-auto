@@ -50,16 +50,30 @@ export default function StudioPage() {
   const [movableX, setMovableX] = useState<number>(0); // initial X percentage (0% for full width center)
   const [movableY, setMovableY] = useState<number>(92); // initial Y percentage (92% bottom covering watermark)
   const [movableScale, setMovableScale] = useState<number>(100); // initial width scale (100% full-width banner)
-  const [cropTop, setCropTop] = useState<number>(0);
-  const [cropBottom, setCropBottom] = useState<number>(0);
+  const [cropTop, setCropTop] = useState<number>(35); // fixed crop values
+  const [cropBottom, setCropBottom] = useState<number>(35); // fixed crop values
   const [cropLeft, setCropLeft] = useState<number>(0);
   const [cropRight, setCropRight] = useState<number>(0);
   const [movableAspectRatio, setMovableAspectRatio] = useState<number>(5.3); // default banner is ~5.32 aspect ratio
+  
+  // Movable Watermark 2 State (Optional / Toggleable)
+  const [showMovable2, setShowMovable2] = useState<boolean>(false);
+  const [movable2Url, setMovable2Url] = useState<string>('http://localhost:3001/uploads/watermark2p.png');
+  const [movable2X, setMovable2X] = useState<number>(75); // initial X percentage (top right corner)
+  const [movable2Y, setMovable2Y] = useState<number>(5); // initial Y percentage
+  const [movable2Scale, setMovable2Scale] = useState<number>(20); // initial width scale (20%)
+  const [crop2Top, setCrop2Top] = useState<number>(0);
+  const [crop2Bottom, setCrop2Bottom] = useState<number>(0);
+  const [crop2Left, setCrop2Left] = useState<number>(0);
+  const [crop2Right, setCrop2Right] = useState<number>(0);
+  const [movable2AspectRatio, setMovable2AspectRatio] = useState<number>(1.0); // loaded dynamically
+
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isResizing, setIsResizing] = useState<string | null>(null); // 'tl' | 'tr' | 'bl' | 'br' | null
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dragStart = useRef({ x: 0, y: 0, left: 0, top: 0 });
+  const dragTarget = useRef<'wm1' | 'wm2'>('wm1');
 
   // Preview Synced Player State
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -160,6 +174,18 @@ export default function StudioPage() {
     };
     img.src = movableUrl;
   }, [movableUrl]);
+
+  // Update second movable watermark aspect ratio when image URL changes
+  useEffect(() => {
+    if (!movable2Url) return;
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        setMovable2AspectRatio(img.naturalWidth / img.naturalHeight);
+      }
+    };
+    img.src = movable2Url;
+  }, [movable2Url]);
 
   const fetchBackgrounds = async () => {
     try {
@@ -396,73 +422,91 @@ export default function StudioPage() {
     }
   };
 
-  // Movable Watermark Dragging Logic
-  const handleMovableMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Movable Watermark Dragging Logic (Supports wm1 and wm2)
+  const handleMovableMouseDown = (e: React.MouseEvent<HTMLDivElement>, target: 'wm1' | 'wm2') => {
     e.preventDefault();
+    dragTarget.current = target;
     setIsDragging(true);
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const currentX = target === 'wm1' ? movableX : movable2X;
+      const currentY = target === 'wm1' ? movableY : movable2Y;
       dragStart.current = {
         x: e.clientX,
         y: e.clientY,
-        left: (movableX / 100) * rect.width,
-        top: (movableY / 100) * rect.height
+        left: (currentX / 100) * rect.width,
+        top: (currentY / 100) * rect.height
       };
     }
   };
 
-  const handleMovableTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+  const handleMovableTouchStart = (e: React.TouchEvent<HTMLDivElement>, target: 'wm1' | 'wm2') => {
     if (e.touches.length !== 1) return;
     const touch = e.touches[0];
+    dragTarget.current = target;
     setIsDragging(true);
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const currentX = target === 'wm1' ? movableX : movable2X;
+      const currentY = target === 'wm1' ? movableY : movable2Y;
       dragStart.current = {
         x: touch.clientX,
         y: touch.clientY,
-        left: (movableX / 100) * rect.width,
-        top: (movableY / 100) * rect.height
+        left: (currentX / 100) * rect.width,
+        top: (currentY / 100) * rect.height
       };
     }
   };
 
-  // Movable Watermark Resizing Logic
-  const handleResizeStart = (e: React.MouseEvent, corner: string) => {
+  // Movable Watermark Resizing Logic (Supports wm1 and wm2)
+  const handleResizeStart = (e: React.MouseEvent, corner: string, target: 'wm1' | 'wm2') => {
     e.stopPropagation();
     e.preventDefault();
+    dragTarget.current = target;
     setIsResizing(corner);
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const currentScale = target === 'wm1' ? movableScale : movable2Scale;
+      const currentX = target === 'wm1' ? movableX : movable2X;
       dragStart.current = {
         x: e.clientX,
         y: e.clientY,
-        left: (movableScale / 100) * rect.width, // start width
-        top: (movableX / 100) * rect.width // start position X
+        left: (currentScale / 100) * rect.width, // start width
+        top: (currentX / 100) * rect.width // start position X
       };
     }
   };
 
-  const handleResizeTouchStart = (e: React.TouchEvent, corner: string) => {
+  const handleResizeTouchStart = (e: React.TouchEvent, corner: string, target: 'wm1' | 'wm2') => {
     if (e.touches.length !== 1) return;
     const touch = e.touches[0];
     e.stopPropagation();
+    dragTarget.current = target;
     setIsResizing(corner);
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
+      const currentScale = target === 'wm1' ? movableScale : movable2Scale;
+      const currentX = target === 'wm1' ? movableX : movable2X;
       dragStart.current = {
         x: touch.clientX,
         y: touch.clientY,
-        left: (movableScale / 100) * rect.width, // start width
-        top: (movableX / 100) * rect.width // start position X
+        left: (currentScale / 100) * rect.width, // start width
+        top: (currentX / 100) * rect.width // start position X
       };
     }
   };
 
-  // Dynamic layout calculations for movable watermark cropping
+  // Dynamic layout calculations for movable watermark 1 cropping
   const scaleX = 1 - (cropLeft + cropRight) / 100;
   const scaleY = 1 - (cropTop + cropBottom) / 100;
   const croppedAspectRatio = movableAspectRatio * (scaleX / Math.max(0.01, scaleY));
   const movableHeightPct = (1080 / 1920) * movableScale / croppedAspectRatio;
+
+  // Dynamic layout calculations for movable watermark 2 cropping
+  const scale2X = 1 - (crop2Left + crop2Right) / 100;
+  const scale2Y = 1 - (crop2Top + crop2Bottom) / 100;
+  const croppedAspectRatio2 = movable2AspectRatio * (scale2X / Math.max(0.01, scale2Y));
+  const movable2HeightPct = (1080 / 1920) * movable2Scale / croppedAspectRatio2;
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -479,11 +523,17 @@ export default function StudioPage() {
         let newX = (newLeft / rect.width) * 100;
         let newY = (newTop / rect.height) * 100;
 
-        newX = Math.max(0, Math.min(100 - movableScale, newX));
-        newY = Math.max(0, Math.min(100 - movableHeightPct, newY));
-
-        setMovableX(newX);
-        setMovableY(newY);
+        if (dragTarget.current === 'wm1') {
+          newX = Math.max(0, Math.min(100 - movableScale, newX));
+          newY = Math.max(0, Math.min(100 - movableHeightPct, newY));
+          setMovableX(newX);
+          setMovableY(newY);
+        } else {
+          newX = Math.max(0, Math.min(100 - movable2Scale, newX));
+          newY = Math.max(0, Math.min(100 - movable2HeightPct, newY));
+          setMovable2X(newX);
+          setMovable2Y(newY);
+        }
       } else if (isResizing) {
         const deltaX = e.clientX - dragStart.current.x;
         let newWidth = dragStart.current.left;
@@ -493,12 +543,20 @@ export default function StudioPage() {
         } else if (isResizing === 'bl' || isResizing === 'tl') {
           newWidth = dragStart.current.left - deltaX;
           let newX = ((dragStart.current.top + deltaX) / rect.width) * 100;
-          setMovableX(Math.max(0, Math.min(100 - movableScale, newX)));
+          if (dragTarget.current === 'wm1') {
+            setMovableX(Math.max(0, Math.min(100 - movableScale, newX)));
+          } else {
+            setMovable2X(Math.max(0, Math.min(100 - movable2Scale, newX)));
+          }
         }
 
         let newScale = (newWidth / rect.width) * 100;
-        newScale = Math.max(10, Math.min(80, newScale));
-        setMovableScale(newScale);
+        newScale = Math.max(5, Math.min(100, newScale));
+        if (dragTarget.current === 'wm1') {
+          setMovableScale(newScale);
+        } else {
+          setMovable2Scale(newScale);
+        }
       }
     };
 
@@ -517,11 +575,17 @@ export default function StudioPage() {
         let newX = (newLeft / rect.width) * 100;
         let newY = (newTop / rect.height) * 100;
 
-        newX = Math.max(0, Math.min(100 - movableScale, newX));
-        newY = Math.max(0, Math.min(100 - movableHeightPct, newY));
-
-        setMovableX(newX);
-        setMovableY(newY);
+        if (dragTarget.current === 'wm1') {
+          newX = Math.max(0, Math.min(100 - movableScale, newX));
+          newY = Math.max(0, Math.min(100 - movableHeightPct, newY));
+          setMovableX(newX);
+          setMovableY(newY);
+        } else {
+          newX = Math.max(0, Math.min(100 - movable2Scale, newX));
+          newY = Math.max(0, Math.min(100 - movable2HeightPct, newY));
+          setMovable2X(newX);
+          setMovable2Y(newY);
+        }
       } else if (isResizing) {
         const deltaX = touch.clientX - dragStart.current.x;
         let newWidth = dragStart.current.left;
@@ -531,12 +595,20 @@ export default function StudioPage() {
         } else if (isResizing === 'bl' || isResizing === 'tl') {
           newWidth = dragStart.current.left - deltaX;
           let newX = ((dragStart.current.top + deltaX) / rect.width) * 100;
-          setMovableX(Math.max(0, Math.min(100 - movableScale, newX)));
+          if (dragTarget.current === 'wm1') {
+            setMovableX(Math.max(0, Math.min(100 - movableScale, newX)));
+          } else {
+            setMovable2X(Math.max(0, Math.min(100 - movable2Scale, newX)));
+          }
         }
 
         let newScale = (newWidth / rect.width) * 100;
-        newScale = Math.max(10, Math.min(80, newScale));
-        setMovableScale(newScale);
+        newScale = Math.max(5, Math.min(100, newScale));
+        if (dragTarget.current === 'wm1') {
+          setMovableScale(newScale);
+        } else {
+          setMovable2Scale(newScale);
+        }
       }
     };
 
@@ -558,7 +630,7 @@ export default function StudioPage() {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleMouseUp);
     };
-  }, [isDragging, isResizing, movableScale, movableX, movableY, movableHeightPct]);
+  }, [isDragging, isResizing, movableScale, movableX, movableY, movableHeightPct, movable2Scale, movable2X, movable2Y, movable2HeightPct]);
 
   // Synchronized Preview Controls
   const togglePlay = () => {
@@ -761,6 +833,16 @@ export default function StudioPage() {
     if (movableFile) {
       formData.append('movableWatermark', movableFile);
     }
+
+    // Movable watermark 2 (Optional)
+    formData.append('showMovable2', showMovable2.toString());
+    formData.append('movable2X', movable2X.toString());
+    formData.append('movable2Y', movable2Y.toString());
+    formData.append('movable2Scale', movable2Scale.toString());
+    formData.append('crop2Top', crop2Top.toString());
+    formData.append('crop2Bottom', crop2Bottom.toString());
+    formData.append('crop2Left', crop2Left.toString());
+    formData.append('crop2Right', crop2Right.toString());
 
     formData.append('imageScale', imageScale.toString());
     formData.append('captions', JSON.stringify(captions));
@@ -1440,6 +1522,158 @@ export default function StudioPage() {
                   💡 <strong>Tip:</strong> Drag the banner layer directly on the Live Output Simulation player to place it anywhere (e.g. center at the bottom).
                 </p>
               </div>
+
+              {/* Watermark 2 settings card */}
+              <div className="mt-4 pt-4 border-t border-slate-800 space-y-4">
+                <div className="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="enableMovable2"
+                      checked={showMovable2}
+                      onChange={(e) => setShowMovable2(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-800 bg-slate-950 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                    />
+                    <label htmlFor="enableMovable2" className="text-xs font-bold text-slate-200 cursor-pointer select-none">
+                      Enable Watermark Layer 2 (watermark2p.png)
+                    </label>
+                  </div>
+                  <span className={`text-[9px] px-2 py-0.5 rounded-full font-semibold ${showMovable2 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-800 text-slate-500 border border-transparent'}`}>
+                    {showMovable2 ? 'Visible' : 'Hidden'}
+                  </span>
+                </div>
+
+                {showMovable2 && (
+                  <div className="space-y-4 p-4 rounded-xl border border-slate-800 bg-slate-950/40 animate-[fadeIn_0.2s_ease-out]">
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-slate-800 bg-slate-950 p-4 relative">
+                      <img
+                        src={movable2Url}
+                        alt="Watermark 2 Preview"
+                        className="max-h-[120px] object-contain rounded"
+                      />
+                      <span className="text-[10px] text-slate-500 mt-2 font-mono">
+                        watermark2p.png (Default Watermark 2)
+                      </span>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[11px] font-semibold text-slate-400">
+                          <span>Watermark 2 Size (Width)</span>
+                          <span>{movable2Scale}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="5"
+                          max="100"
+                          step="1"
+                          value={movable2Scale}
+                          onChange={(e) => setMovable2Scale(parseInt(e.target.value))}
+                          className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                        />
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-[10px] text-slate-500">
+                        <span>Coordinates: X: {movable2X.toFixed(0)}% • Y: {movable2Y.toFixed(0)}%</span>
+                        <button
+                          onClick={() => {
+                            setMovable2X(75);
+                            setMovable2Y(5);
+                          }}
+                          className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+                        >
+                          Reset Position
+                        </button>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800/60 space-y-2.5">
+                        <span className="text-[11px] font-bold text-slate-300 block">Crop Watermark 2 Margins</span>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-slate-400">
+                              <span>Crop Top</span>
+                              <span>{crop2Top}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="80"
+                              step="1"
+                              value={crop2Top}
+                              onChange={(e) => setCrop2Top(parseInt(e.target.value))}
+                              className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                            />
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-slate-400">
+                              <span>Crop Bottom</span>
+                              <span>{crop2Bottom}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="80"
+                              step="1"
+                              value={crop2Bottom}
+                              onChange={(e) => setCrop2Bottom(parseInt(e.target.value))}
+                              className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-slate-400">
+                              <span>Crop Left</span>
+                              <span>{crop2Left}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="80"
+                              step="1"
+                              value={crop2Left}
+                              onChange={(e) => setCrop2Left(parseInt(e.target.value))}
+                              className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-slate-400">
+                              <span>Crop Right</span>
+                              <span>{crop2Right}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="80"
+                              step="1"
+                              value={crop2Right}
+                              onChange={(e) => setCrop2Right(parseInt(e.target.value))}
+                              className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span className="text-[9px] text-slate-500 font-medium">Position Watermark 2 freely anywhere</span>
+                          <button
+                            onClick={() => {
+                              setCrop2Top(0);
+                              setCrop2Bottom(0);
+                              setCrop2Left(0);
+                              setCrop2Right(0);
+                            }}
+                            className="text-[10px] text-slate-400 hover:text-emerald-400 underline font-medium transition-colors"
+                          >
+                            Reset Crop
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1618,8 +1852,8 @@ export default function StudioPage() {
               {/* Movable Watermark overlay */}
               {enableMovable && movableUrl && (
                 <div
-                  onMouseDown={handleMovableMouseDown}
-                  onTouchStart={handleMovableTouchStart}
+                  onMouseDown={(e) => handleMovableMouseDown(e, 'wm1')}
+                  onTouchStart={(e) => handleMovableTouchStart(e, 'wm1')}
                   style={{
                     position: 'absolute',
                     left: `${movableX}%`,
@@ -1657,24 +1891,90 @@ export default function StudioPage() {
                   
                   {/* Corner Resize Handles */}
                   <div
-                    onMouseDown={(e) => handleResizeStart(e, 'tl')}
-                    onTouchStart={(e) => handleResizeTouchStart(e, 'tl')}
+                    onMouseDown={(e) => handleResizeStart(e, 'tl', 'wm1')}
+                    onTouchStart={(e) => handleResizeTouchStart(e, 'tl', 'wm1')}
                     className="w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full absolute -top-1.75 -left-1.75 cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
                   />
                   <div
-                    onMouseDown={(e) => handleResizeStart(e, 'tr')}
-                    onTouchStart={(e) => handleResizeTouchStart(e, 'tr')}
+                    onMouseDown={(e) => handleResizeStart(e, 'tr', 'wm1')}
+                    onTouchStart={(e) => handleResizeTouchStart(e, 'tr', 'wm1')}
                     className="w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full absolute -top-1.75 -right-1.75 cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
                   />
                   <div
-                    onMouseDown={(e) => handleResizeStart(e, 'bl')}
-                    onTouchStart={(e) => handleResizeTouchStart(e, 'bl')}
+                    onMouseDown={(e) => handleResizeStart(e, 'bl', 'wm1')}
+                    onTouchStart={(e) => handleResizeTouchStart(e, 'bl', 'wm1')}
                     className="w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full absolute -bottom-1.75 -left-1.75 cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
                   />
                   <div
-                    onMouseDown={(e) => handleResizeStart(e, 'br')}
-                    onTouchStart={(e) => handleResizeTouchStart(e, 'br')}
+                    onMouseDown={(e) => handleResizeStart(e, 'br', 'wm1')}
+                    onTouchStart={(e) => handleResizeTouchStart(e, 'br', 'wm1')}
                     className="w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full absolute -bottom-1.75 -right-1.75 cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
+                  />
+                </div>
+              )}
+
+              {/* Movable Watermark 2 overlay */}
+              {showMovable2 && movable2Url && (
+                <div
+                  onMouseDown={(e) => handleMovableMouseDown(e, 'wm2')}
+                  onTouchStart={(e) => handleMovableTouchStart(e, 'wm2')}
+                  style={{
+                    position: 'absolute',
+                    left: `${movable2X}%`,
+                    top: `${movable2Y}%`,
+                    width: `${movable2Scale}%`,
+                    aspectRatio: movable2AspectRatio ? `${movable2AspectRatio * (1 - (crop2Left + crop2Right) / 100) / Math.max(0.01, 1 - (crop2Top + crop2Bottom) / 100)}` : 'auto',
+                    overflow: 'hidden',
+                    opacity: 0.9,
+                    cursor: isDragging ? 'grabbing' : 'grab',
+                    userSelect: 'none',
+                    touchAction: 'none',
+                    zIndex: 40,
+                    border: '1.5px dashed #10b981',
+                    padding: '2px',
+                    boxShadow: '0 0 10px rgba(0,0,0,0.5)',
+                    transition: (isDragging || isResizing) ? 'none' : 'left 0.1s ease, top 0.1s ease, width 0.1s ease, aspect-ratio 0.1s ease'
+                  }}
+                  className="group/watermark2"
+                >
+                  <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', aspectRatio: croppedAspectRatio2 }}>
+                    <img
+                      src={movable2Url}
+                      alt="Watermark 2"
+                      style={{
+                        position: 'absolute',
+                        width: `${100 / Math.max(0.01, scale2X)}%`,
+                        height: `${100 / Math.max(0.01, scale2Y)}%`,
+                        left: `-${crop2Left / Math.max(0.01, scale2X)}%`,
+                        top: `-${crop2Top / Math.max(0.01, scale2Y)}%`,
+                        maxWidth: 'none',
+                        maxHeight: 'none',
+                        objectFit: 'fill',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Corner Resize Handles */}
+                  <div
+                    onMouseDown={(e) => handleResizeStart(e, 'tl', 'wm2')}
+                    onTouchStart={(e) => handleResizeTouchStart(e, 'tl', 'wm2')}
+                    className="w-3.5 h-3.5 bg-white border-2 border-emerald-600 rounded-full absolute -top-1.75 -left-1.75 cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
+                  />
+                  <div
+                    onMouseDown={(e) => handleResizeStart(e, 'tr', 'wm2')}
+                    onTouchStart={(e) => handleResizeTouchStart(e, 'tr', 'wm2')}
+                    className="w-3.5 h-3.5 bg-white border-2 border-emerald-600 rounded-full absolute -top-1.75 -right-1.75 cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
+                  />
+                  <div
+                    onMouseDown={(e) => handleResizeStart(e, 'bl', 'wm2')}
+                    onTouchStart={(e) => handleResizeTouchStart(e, 'bl', 'wm2')}
+                    className="w-3.5 h-3.5 bg-white border-2 border-emerald-600 rounded-full absolute -bottom-1.75 -left-1.75 cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
+                  />
+                  <div
+                    onMouseDown={(e) => handleResizeStart(e, 'br', 'wm2')}
+                    onTouchStart={(e) => handleResizeTouchStart(e, 'br', 'wm2')}
+                    className="w-3.5 h-3.5 bg-white border-2 border-emerald-600 rounded-full absolute -bottom-1.75 -right-1.75 cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
                   />
                 </div>
               )}
