@@ -47,11 +47,11 @@ export default function StudioPage() {
   const [enableMovable, setEnableMovable] = useState<boolean>(true); // always true/compulsory
   const [movableFile, setMovableFile] = useState<File | null>(null);
   const [movableUrl, setMovableUrl] = useState<string>('http://localhost:3001/uploads/ChatGPT%20Image%20Jun%2017,%202026,%2003_36_57%20AM.png');
-  const [movableX, setMovableX] = useState<number>(0); // initial X percentage (0% for full width center)
-  const [movableY, setMovableY] = useState<number>(92); // initial Y percentage (92% bottom covering watermark)
-  const [movableScale, setMovableScale] = useState<number>(100); // initial width scale (100% full-width banner)
-  const [cropTop, setCropTop] = useState<number>(35); // fixed crop values
-  const [cropBottom, setCropBottom] = useState<number>(35); // fixed crop values
+  const [movableX, setMovableX] = useState<number>(4); // initial X percentage
+  const [movableY, setMovableY] = useState<number>(83); // initial Y percentage
+  const [movableScale, setMovableScale] = useState<number>(91.78571428571428); // initial width scale
+  const [cropTop, setCropTop] = useState<number>(32); // default crop values
+  const [cropBottom, setCropBottom] = useState<number>(30); // default crop values
   const [cropLeft, setCropLeft] = useState<number>(0);
   const [cropRight, setCropRight] = useState<number>(0);
   const [movableAspectRatio, setMovableAspectRatio] = useState<number>(5.3); // default banner is ~5.32 aspect ratio
@@ -1424,8 +1424,8 @@ export default function StudioPage() {
                   <span>Coordinates: X: {movableX.toFixed(0)}% • Y: {movableY.toFixed(0)}%</span>
                   <button
                     onClick={() => {
-                      setMovableX(0);
-                      setMovableY(92);
+                      setMovableX(4);
+                      setMovableY(83);
                     }}
                     className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
                   >

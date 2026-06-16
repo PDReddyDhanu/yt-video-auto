@@ -543,19 +543,19 @@ app.post('/api/generate', upload.fields([
       `[bg][img]overlay=(W-w)/2:(H-h)/2[bg_img];`
     ];
 
-    const mwmScalePct = parseFloat(movableScale) || 100;
-    const mwmXPct = parseFloat(movableX) || 0;
-    const mwmYPct = parseFloat(movableY) || 92;
+    const mwmScalePct = parseFloat(movableScale) || 91.78571428571428;
+    const mwmXPct = parseFloat(movableX) || 4;
+    const mwmYPct = parseFloat(movableY) || 83;
     
     const mwmWidth = Math.round((mwmScalePct / 100) * 1080);
     const mwmX = Math.round((mwmXPct / 100) * 1080);
     const mwmY = Math.round((mwmYPct / 100) * 1920);
     
-    // Parse crop percentages (defaulting to 35% for banner top/bottom, 0 for left/right)
+    // Parse crop percentages (defaulting to 32% top, 30% bottom, 0 for left/right)
     const cropL = (cropLeft !== undefined && cropLeft !== null && cropLeft !== '') ? parseFloat(cropLeft) : 0;
     const cropR = (cropRight !== undefined && cropRight !== null && cropRight !== '') ? parseFloat(cropRight) : 0;
-    const cropT = (cropTop !== undefined && cropTop !== null && cropTop !== '') ? parseFloat(cropTop) : 35;
-    const cropB = (cropBottom !== undefined && cropBottom !== null && cropBottom !== '') ? parseFloat(cropBottom) : 35;
+    const cropT = (cropTop !== undefined && cropTop !== null && cropTop !== '') ? parseFloat(cropTop) : 32;
+    const cropB = (cropBottom !== undefined && cropBottom !== null && cropBottom !== '') ? parseFloat(cropBottom) : 30;
     
     // 2:v is the movable watermark bottom banner
     let mwmFilter = `[2:v]format=rgba`;
