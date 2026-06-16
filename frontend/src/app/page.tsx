@@ -50,6 +50,11 @@ export default function StudioPage() {
   const [movableX, setMovableX] = useState<number>(0); // initial X percentage (0% for full width center)
   const [movableY, setMovableY] = useState<number>(92); // initial Y percentage (92% bottom covering watermark)
   const [movableScale, setMovableScale] = useState<number>(100); // initial width scale (100% full-width banner)
+  const [cropTop, setCropTop] = useState<number>(0);
+  const [cropBottom, setCropBottom] = useState<number>(0);
+  const [cropLeft, setCropLeft] = useState<number>(0);
+  const [cropRight, setCropRight] = useState<number>(0);
+  const [movableAspectRatio, setMovableAspectRatio] = useState<number>(5.3); // default banner is ~5.32 aspect ratio
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isResizing, setIsResizing] = useState<string | null>(null); // 'tl' | 'tr' | 'bl' | 'br' | null
 
@@ -143,6 +148,18 @@ export default function StudioPage() {
     checkGoogleAuth();
     fetchTTSVoices();
   }, []);
+
+  // Update movable watermark aspect ratio when image URL changes
+  useEffect(() => {
+    if (!movableUrl) return;
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        setMovableAspectRatio(img.naturalWidth / img.naturalHeight);
+      }
+    };
+    img.src = movableUrl;
+  }, [movableUrl]);
 
   const fetchBackgrounds = async () => {
     try {
@@ -441,6 +458,12 @@ export default function StudioPage() {
     }
   };
 
+  // Dynamic layout calculations for movable watermark cropping
+  const scaleX = 1 - (cropLeft + cropRight) / 100;
+  const scaleY = 1 - (cropTop + cropBottom) / 100;
+  const croppedAspectRatio = movableAspectRatio * (scaleX / Math.max(0.01, scaleY));
+  const movableHeightPct = (1080 / 1920) * movableScale / croppedAspectRatio;
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
@@ -457,7 +480,7 @@ export default function StudioPage() {
         let newY = (newTop / rect.height) * 100;
 
         newX = Math.max(0, Math.min(100 - movableScale, newX));
-        newY = Math.max(0, Math.min(100 - (movableScale * (1920/1080) * 0.5), newY));
+        newY = Math.max(0, Math.min(100 - movableHeightPct, newY));
 
         setMovableX(newX);
         setMovableY(newY);
@@ -495,7 +518,7 @@ export default function StudioPage() {
         let newY = (newTop / rect.height) * 100;
 
         newX = Math.max(0, Math.min(100 - movableScale, newX));
-        newY = Math.max(0, Math.min(100 - (movableScale * (1920/1080) * 0.5), newY));
+        newY = Math.max(0, Math.min(100 - movableHeightPct, newY));
 
         setMovableX(newX);
         setMovableY(newY);
@@ -535,7 +558,7 @@ export default function StudioPage() {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleMouseUp);
     };
-  }, [isDragging, isResizing, movableScale, movableX, movableY]);
+  }, [isDragging, isResizing, movableScale, movableX, movableY, movableHeightPct]);
 
   // Synchronized Preview Controls
   const togglePlay = () => {
@@ -731,6 +754,10 @@ export default function StudioPage() {
     formData.append('movableX', movableX.toString());
     formData.append('movableY', movableY.toString());
     formData.append('movableScale', movableScale.toString());
+    formData.append('cropTop', cropTop.toString());
+    formData.append('cropBottom', cropBottom.toString());
+    formData.append('cropLeft', cropLeft.toString());
+    formData.append('cropRight', cropRight.toString());
     if (movableFile) {
       formData.append('movableWatermark', movableFile);
     }
@@ -1323,6 +1350,92 @@ export default function StudioPage() {
                     Reset Position
                   </button>
                 </div>
+
+                <div className="pt-2 border-t border-slate-800/60 space-y-2.5">
+                  <span className="text-[11px] font-bold text-slate-300 block">Crop Watermark Margins</span>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-slate-400">
+                        <span>Crop Top</span>
+                        <span>{cropTop}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="80"
+                        step="1"
+                        value={cropTop}
+                        onChange={(e) => setCropTop(parseInt(e.target.value))}
+                        className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-slate-400">
+                        <span>Crop Bottom</span>
+                        <span>{cropBottom}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="80"
+                        step="1"
+                        value={cropBottom}
+                        onChange={(e) => setCropBottom(parseInt(e.target.value))}
+                        className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-slate-400">
+                        <span>Crop Left</span>
+                        <span>{cropLeft}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="80"
+                        step="1"
+                        value={cropLeft}
+                        onChange={(e) => setCropLeft(parseInt(e.target.value))}
+                        className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-[10px] text-slate-400">
+                        <span>Crop Right</span>
+                        <span>{cropRight}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="80"
+                        step="1"
+                        value={cropRight}
+                        onChange={(e) => setCropRight(parseInt(e.target.value))}
+                        className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] text-slate-500">Crop out white space to make positioning easier</span>
+                    <button
+                      onClick={() => {
+                        setCropTop(0);
+                        setCropBottom(0);
+                        setCropLeft(0);
+                        setCropRight(0);
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-indigo-400 underline font-medium transition-colors"
+                    >
+                      Reset Crop
+                    </button>
+                  </div>
+                </div>
+
                 <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40">
                   💡 <strong>Tip:</strong> Drag the banner layer directly on the Live Output Simulation player to place it anywhere (e.g. center at the bottom).
                 </p>
@@ -1524,11 +1637,23 @@ export default function StudioPage() {
                   }}
                   className="group/watermark"
                 >
-                  <img
-                    src={movableUrl}
-                    alt="Movable Watermark"
-                    className="w-full h-auto pointer-events-none"
-                  />
+                  <div style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative', aspectRatio: croppedAspectRatio }}>
+                    <img
+                      src={movableUrl}
+                      alt="Movable Watermark"
+                      style={{
+                        position: 'absolute',
+                        width: `${100 / Math.max(0.01, scaleX)}%`,
+                        height: `${100 / Math.max(0.01, scaleY)}%`,
+                        left: `-${cropLeft / Math.max(0.01, scaleX)}%`,
+                        top: `-${cropTop / Math.max(0.01, scaleY)}%`,
+                        maxWidth: 'none',
+                        maxHeight: 'none',
+                        objectFit: 'fill',
+                        pointerEvents: 'none'
+                      }}
+                    />
+                  </div>
                   
                   {/* Corner Resize Handles */}
                   <div

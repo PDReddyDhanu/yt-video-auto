@@ -454,7 +454,7 @@ app.post('/api/generate', upload.fields([
   let progressState = 'Uploading';
   
   try {
-    const { bgId, showMovable, movableX, movableY, movableScale, imageScale, folderId, captions } = req.body;
+    const { bgId, showMovable, movableX, movableY, movableScale, cropTop, cropBottom, cropLeft, cropRight, imageScale, folderId, captions } = req.body;
     const files = req.files;
 
     // Parse captions and generate ASS subtitles if present
@@ -546,8 +546,19 @@ app.post('/api/generate', upload.fields([
     const mwmX = Math.round((mwmXPct / 100) * 1080);
     const mwmY = Math.round((mwmYPct / 100) * 1920);
     
+    // Parse crop percentages (defaulting to 0)
+    const cropL = parseFloat(cropLeft) || 0;
+    const cropR = parseFloat(cropRight) || 0;
+    const cropT = parseFloat(cropTop) || 0;
+    const cropB = parseFloat(cropBottom) || 0;
+    
     // 2:v is the movable watermark bottom banner
-    filterComplexParts.push(`[2:v]format=rgba,scale=${mwmWidth}:-1[mwm];`);
+    let mwmFilter = `[2:v]format=rgba`;
+    if (cropL > 0 || cropR > 0 || cropT > 0 || cropB > 0) {
+      mwmFilter += `,crop=iw*(1-(${cropL}+${cropR})/100):ih*(1-(${cropT}+${cropB})/100):iw*${cropL}/100:ih*${cropT}/100`;
+    }
+    mwmFilter += `,scale=${mwmWidth}:-1[mwm];`;
+    filterComplexParts.push(mwmFilter);
     filterComplexParts.push(`[bg_img][mwm]overlay=${mwmX}:${mwmY}[bg_mwm]`);
     let lastLabel = '[bg_mwm]';
 
