@@ -48,7 +48,7 @@ export default function StudioPage() {
   const [movableFile, setMovableFile] = useState<File | null>(null);
   const [movableUrl, setMovableUrl] = useState<string>('http://localhost:3001/uploads/ChatGPT%20Image%20Jun%2017,%202026,%2003_36_57%20AM.png');
   const [movableX, setMovableX] = useState<number>(0); // initial X percentage (0% for full width center)
-  const [movableY, setMovableY] = useState<number>(85); // initial Y percentage (85% bottom)
+  const [movableY, setMovableY] = useState<number>(92); // initial Y percentage (92% bottom covering watermark)
   const [movableScale, setMovableScale] = useState<number>(100); // initial width scale (100% full-width banner)
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isResizing, setIsResizing] = useState<string | null>(null); // 'tl' | 'tr' | 'bl' | 'br' | null
@@ -1316,7 +1316,7 @@ export default function StudioPage() {
                   <button
                     onClick={() => {
                       setMovableX(0);
-                      setMovableY(85);
+                      setMovableY(92);
                     }}
                     className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
                   >

@@ -540,7 +540,7 @@ app.post('/api/generate', upload.fields([
 
     const mwmScalePct = parseFloat(movableScale) || 100;
     const mwmXPct = parseFloat(movableX) || 0;
-    const mwmYPct = parseFloat(movableY) || 85;
+    const mwmYPct = parseFloat(movableY) || 92;
     
     const mwmWidth = Math.round((mwmScalePct / 100) * 1080);
     const mwmX = Math.round((mwmXPct / 100) * 1080);
