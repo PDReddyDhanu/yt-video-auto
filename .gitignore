@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Local database and configuration (CRITICAL: Contains tokens and credentials)
+backend/db.json
+backend/.env
+frontend/.env
+frontend/.env.local
+.env
+.env.local
+
+# Temp media output and user uploads (CRITICAL: Contains rendered files and uploads)
+backend/output/*
+!backend/output/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/uploads/default_watermark.png
+backend/uploads/Watermark-movable.png
+
+# Build outputs
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
