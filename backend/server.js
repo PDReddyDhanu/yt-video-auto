@@ -10,10 +10,73 @@ import { google } from 'googleapis';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
 
 const execPromise = promisify(exec);
+
+// Helper to format ASS subtitle timestamps (H:MM:SS.CS)
+function formatAssTime(seconds) {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  const cs = Math.floor((seconds % 1) * 100);
+  
+  const hrsStr = hrs.toString();
+  const minsStr = mins.toString().padStart(2, '0');
+  const secsStr = secs.toString().padStart(2, '0');
+  const csStr = cs.toString().padStart(2, '0');
+  
+  return `${hrsStr}:${minsStr}:${secsStr}.${csStr}`;
+}
+
+// Helper to construct ASS subtitle file content
+function generateAssContent(captions) {
+  const header = `[Script Info]
+Title: AutoVideo Subtitles
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 1080
+PlayResY: 1920
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,65,&H0047E0FD,&H000000FF,&H00000000,&H8C000000,-1,0,0,0,100,100,0,0,3,10,0,8,10,10,110,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+
+  let events = '';
+  for (const caption of captions) {
+    const startStr = formatAssTime(caption.start || 0);
+    const endStr = formatAssTime(caption.end || 0);
+    const text = (caption.text || '').replace(/\r?\n/g, ' ');
+    events += `Dialogue: 0,${startStr},${endStr},Default,,0,0,0,,${text}\n`;
+  }
+
+  return header + events;
+}
+
+function cleanOldTtsFiles() {
+  try {
+    const files = fs.readdirSync(UPLOADS_DIR);
+    for (const file of files) {
+      if (file.startsWith('tts-') && file.endsWith('.mp3')) {
+        const filePath = path.join(UPLOADS_DIR, file);
+        try {
+          fs.unlinkSync(filePath);
+          console.log(`Cleaned up old TTS file: ${file}`);
+        } catch (err) {
+          // ignore if locked
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Could not clean old TTS files:", e);
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -245,6 +308,142 @@ app.post('/api/watermark', upload.single('watermarkImage'), (req, res) => {
   }
 });
 
+// ---------------- TEXT-TO-SPEECH PROXY API ----------------
+
+const TTS_API = 'http://127.0.0.1:8001';
+
+// Proxy: Get available voices from TTS server
+app.get('/api/tts/voices', async (req, res) => {
+  try {
+    const response = await fetch(`${TTS_API}/api/voices`);
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(503).json({ error: 'TTS service unavailable. Please ensure the TTS server is running.' });
+  }
+});
+
+// Proxy: Generate audio from text, save to uploads, return URL and filename
+app.post('/api/tts/generate', async (req, res) => {
+  try {
+    const { text, voice_id, language_code, gender, speed, pitch } = req.body;
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ error: 'Text is required.' });
+    }
+
+    const ttsPayload = {
+      text: text.trim(),
+      voice_id: voice_id || null,
+      language_code: language_code || 'te-IN',
+      gender: gender || 'FEMALE',
+      speed: parseFloat(speed) || 1.65,
+      pitch: parseInt(pitch) || 0
+    };
+
+    // Use the word-boundary endpoint for precise per-word timestamps
+    const ttsRes = await fetch(`${TTS_API}/api/generate-with-words`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ttsPayload)
+    });
+
+    if (!ttsRes.ok) {
+      const errData = await ttsRes.json().catch(() => ({ detail: 'Unknown TTS error' }));
+      return res.status(500).json({ error: errData.detail || 'TTS generation failed.' });
+    }
+
+    const ttsData = await ttsRes.json();
+    const { audio_b64, word_timestamps } = ttsData;
+
+    // Decode base64 audio and save to uploads/
+    const audioFilename = `tts-${Date.now()}.mp3`;
+    const audioSavePath = path.join(UPLOADS_DIR, audioFilename);
+    fs.writeFileSync(audioSavePath, Buffer.from(audio_b64, 'base64'));
+
+    console.log(`[TTS] Saved ${audioFilename} with ${word_timestamps?.length || 0} word timestamps`);
+
+    res.json({
+      url: `/uploads/${audioFilename}`,
+      filename: audioFilename,
+      word_timestamps: word_timestamps || []
+    });
+  } catch (err) {
+    console.error('TTS proxy error:', err);
+    res.status(503).json({ error: 'TTS service unavailable. Make sure the TTS server is running on port 8001.' });
+  }
+});
+
+// ---------------- AUDIO TRANSCRIPTION API ----------------
+
+app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file uploaded' });
+    }
+
+    const audioPath = req.file.path;
+    const pythonScript = path.join(__dirname, 'transcribe.py');
+    const lang = req.body.language || 'te-IN'; // defaults to Telugu
+
+    const ffmpegDir = path.dirname(ffmpegPath);
+    const ffprobeDir = path.dirname(ffprobePath);
+    const env = { ...process.env };
+    const pathKey = Object.keys(env).find(k => k.toLowerCase() === 'path') || 'PATH';
+    env[pathKey] = `${ffmpegDir}${path.delimiter}${ffprobeDir}${path.delimiter}${env[pathKey] || ''}`;
+
+    console.log(`Running transcription script on ${audioPath} for language ${lang}...`);
+    const child = spawn('python', ['-W', 'ignore', pythonScript, audioPath, lang], { env });
+
+    let stdoutData = '';
+    let stderrData = '';
+
+    child.stdout.on('data', (data) => {
+      stdoutData += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      stderrData += data.toString();
+    });
+
+    child.on('close', (code) => {
+      // Cleanup temporary uploaded audio file
+      try {
+        if (fs.existsSync(audioPath)) {
+          fs.unlinkSync(audioPath);
+        }
+      } catch (e) {
+        console.warn("Could not delete temp transcription file:", e);
+      }
+
+      if (code === 0) {
+        try {
+          const parsed = JSON.parse(stdoutData.trim());
+          if (parsed.error) {
+            return res.status(500).json({ error: parsed.error });
+          }
+          res.json(parsed);
+        } catch (err) {
+          console.error("Failed to parse transcription script JSON output:", stdoutData);
+          res.status(500).json({ error: 'Failed to parse transcription output.', details: stdoutData, raw: stdoutData });
+        }
+      } else {
+        console.error("Transcription script exited with code:", code);
+        console.error("Stderr logs:", stderrData);
+        res.status(500).json({ error: 'Transcription failed.', details: stderrData });
+      }
+    });
+
+  } catch (error) {
+    console.error("Transcription route crash:", error);
+    if (req.file && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (e) {}
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ---------------- VIDEO GENERATION API ----------------
 
 app.post('/api/generate', upload.fields([
@@ -255,8 +454,27 @@ app.post('/api/generate', upload.fields([
   let progressState = 'Uploading';
   
   try {
-    const { bgId, showMovable, movableX, movableY, movableScale, imageScale, folderId } = req.body;
+    const { bgId, showMovable, movableX, movableY, movableScale, imageScale, folderId, captions } = req.body;
     const files = req.files;
+
+    // Parse captions and generate ASS subtitles if present
+    const hasSubtitles = captions && captions !== '[]';
+    let assFilename = null;
+    let assPath = null;
+    if (hasSubtitles) {
+      try {
+        const parsedCaptions = JSON.parse(captions);
+        if (Array.isArray(parsedCaptions) && parsedCaptions.length > 0) {
+          const assContent = generateAssContent(parsedCaptions);
+          assFilename = `subtitles-${Date.now()}.ass`;
+          assPath = path.join(__dirname, assFilename);
+          fs.writeFileSync(assPath, assContent, 'utf8');
+          console.log("Written subtitles to:", assPath);
+        }
+      } catch (err) {
+        console.error("Failed to parse or write subtitles:", err);
+      }
+    }
 
     if (!bgId) return res.status(400).json({ error: 'Missing background video ID (bgId)' });
     if (!files.image || !files.image[0]) return res.status(400).json({ error: 'Missing image file' });
@@ -297,16 +515,14 @@ app.post('/api/generate', upload.fields([
       overlayCoords = `${wm.margin}:H-h-${wm.margin}`;
     }
 
-    const isMovableEnabled = showMovable === 'true';
-    let movablePath = null;
-    if (isMovableEnabled) {
-      if (files.movableWatermark && files.movableWatermark[0]) {
-        movablePath = files.movableWatermark[0].path;
-      } else {
-        movablePath = path.join(UPLOADS_DIR, 'Watermark-movable.png');
-        if (!fs.existsSync(movablePath)) {
-          movablePath = path.join(UPLOADS_DIR, db.watermark.filename || 'default_watermark.png');
-        }
+    const isMovableEnabled = true; // compulsory mandatory bottom banner
+    let movablePath = path.join(UPLOADS_DIR, 'ChatGPT Image Jun 17, 2026, 03_36_57 AM.png');
+    if (files.movableWatermark && files.movableWatermark[0]) {
+      movablePath = files.movableWatermark[0].path;
+    } else if (!fs.existsSync(movablePath)) {
+      movablePath = path.join(UPLOADS_DIR, 'Watermark-movable.png');
+      if (!fs.existsSync(movablePath)) {
+        movablePath = path.join(UPLOADS_DIR, 'default_watermark.png');
       }
     }
 
@@ -315,48 +531,46 @@ app.post('/api/generate', upload.fields([
     const targetHeight = Math.round((imgScalePct / 100) * 1760);
 
     // Construct filter complex parts dynamically
+    // Overlay 0:v (background) with 1:v (center image)
     const filterComplexParts = [
       `[0:v]scale=w='iw*max(1080/iw,1920/ih)':h='ih*max(1080/iw,1920/ih)',crop=1080:1920[bg];`,
       `[1:v]scale='if(gt(ih/iw,${targetHeight}/${targetWidth}),-1,${targetWidth})':'if(gt(ih/iw,${targetHeight}/${targetWidth}),${targetHeight},-1)'[img];`,
-      `[2:v]format=rgba,colorchannelmixer=aa=${wm.opacity},scale=${wm.size}:-1[wm];`,
       `[bg][img]overlay=(W-w)/2:(H-h)/2[bg_img];`
     ];
 
-    if (isMovableEnabled) {
-      filterComplexParts.push(`[bg_img][wm]overlay=${overlayCoords}[bg_wm];`);
-      
-      const mwmScalePct = parseFloat(movableScale) || 20;
-      const mwmXPct = parseFloat(movableX) || 0;
-      const mwmYPct = parseFloat(movableY) || 0;
-      
-      const mwmWidth = Math.round((mwmScalePct / 100) * 1080);
-      const mwmX = Math.round((mwmXPct / 100) * 1080);
-      const mwmY = Math.round((mwmYPct / 100) * 1920);
-      
-      filterComplexParts.push(`[3:v]format=rgba,scale=${mwmWidth}:-1[mwm];`);
-      filterComplexParts.push(`[bg_wm][mwm]overlay=${mwmX}:${mwmY}[outv]`);
+    const mwmScalePct = parseFloat(movableScale) || 100;
+    const mwmXPct = parseFloat(movableX) || 0;
+    const mwmYPct = parseFloat(movableY) || 85;
+    
+    const mwmWidth = Math.round((mwmScalePct / 100) * 1080);
+    const mwmX = Math.round((mwmXPct / 100) * 1080);
+    const mwmY = Math.round((mwmYPct / 100) * 1920);
+    
+    // 2:v is the movable watermark bottom banner
+    filterComplexParts.push(`[2:v]format=rgba,scale=${mwmWidth}:-1[mwm];`);
+    filterComplexParts.push(`[bg_img][mwm]overlay=${mwmX}:${mwmY}[bg_mwm]`);
+    let lastLabel = '[bg_mwm]';
+
+    // Burn subtitles into video if present, otherwise just pipe the stream
+    if (assFilename) {
+      filterComplexParts.push(`;${lastLabel}subtitles='${assFilename}'[outv]`);
     } else {
-      filterComplexParts.push(`[bg_img][wm]overlay=${overlayCoords}[outv]`);
+      filterComplexParts.push(`;${lastLabel}null[outv]`);
     }
 
     const filterComplex = filterComplexParts.join('');
 
-    // Setup input lists and index tracking
+    // Setup input lists and index tracking (no corner watermark logo)
     const ffmpegArgs = [
       '-y',
       '-stream_loop', '-1',
       '-i', bgPath,
       '-i', imgPath,
-      '-i', watermarkPath
+      '-i', movablePath,
+      '-i', audioPath
     ];
 
-    if (isMovableEnabled) {
-      ffmpegArgs.push('-i', movablePath);
-    }
-
-    ffmpegArgs.push('-i', audioPath);
-
-    const audioInputIndex = isMovableEnabled ? 4 : 3;
+    const audioInputIndex = 3;
 
     ffmpegArgs.push(
       '-t', audioDuration.toString(),
@@ -384,9 +598,14 @@ app.post('/api/generate', upload.fields([
       try {
         fs.unlinkSync(imgPath);
         fs.unlinkSync(audioPath);
-        if (isMovableEnabled && files.movableWatermark && files.movableWatermark[0]) {
+        if (files.movableWatermark && files.movableWatermark[0]) {
           fs.unlinkSync(files.movableWatermark[0].path);
         }
+        if (assPath && fs.existsSync(assPath)) {
+          fs.unlinkSync(assPath);
+        }
+        // Also delete any generated tts-*.mp3 files from uploads directory
+        cleanOldTtsFiles();
       } catch (e) {
         console.warn("Could not clean up temporary upload files:", e);
       }

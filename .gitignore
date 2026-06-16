@@ -16,8 +16,19 @@ backend/output/*
 !backend/output/.gitkeep
 backend/uploads/*
 !backend/uploads/.gitkeep
+!backend/uploads/gemini_generated_video_080dd2fa.mp4
+!backend/uploads/gemini_generated_video_3f9409a8.mp4
+!backend/uploads/gemini_generated_video_9373c8e4.mp4
+!backend/uploads/gemini_generated_video_c6c8622d.mp4
+!backend/uploads/gemini_generated_video_ec2851d1.mp4
+!backend/uploads/ChatGPT Image Jun 17, 2026, 03_36_57 AM.png
 backend/uploads/default_watermark.png
 backend/uploads/Watermark-movable.png
+backend/mock_audio_long.mp3
+backend/mock_audio_short.mp3
+backend/mock_image.png
+backend/test_subtitles.ass
+backend/bin/
 
 # Build outputs
 frontend/.next/

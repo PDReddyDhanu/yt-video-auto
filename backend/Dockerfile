@@ -17,8 +17,8 @@ RUN npm ci --only=production
 # Copy remaining server code
 COPY . .
 
-# Expose backend port
-EXPOSE 3001
+# Expose backend ports
+EXPOSE 3001 8080 7860
 
 # Start server
 CMD ["node", "server.js"]

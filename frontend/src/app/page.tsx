@@ -17,7 +17,10 @@ import {
   Video as VideoIcon,
   Download,
   ExternalLink,
-  LogOut
+  LogOut,
+  Plus,
+  Mic,
+  Type
 } from 'lucide-react';
 
 export default function StudioPage() {
@@ -41,12 +44,12 @@ export default function StudioPage() {
   const [audioDuration, setAudioDuration] = useState<number>(0);
 
   // Movable Watermark State
-  const [enableMovable, setEnableMovable] = useState<boolean>(true);
+  const [enableMovable, setEnableMovable] = useState<boolean>(true); // always true/compulsory
   const [movableFile, setMovableFile] = useState<File | null>(null);
-  const [movableUrl, setMovableUrl] = useState<string>('http://localhost:3001/uploads/Watermark-movable.png');
-  const [movableX, setMovableX] = useState<number>(15); // initial X percentage (15%)
-  const [movableY, setMovableY] = useState<number>(15); // initial Y percentage (15%)
-  const [movableScale, setMovableScale] = useState<number>(20); // initial width scale (20%)
+  const [movableUrl, setMovableUrl] = useState<string>('http://localhost:3001/uploads/ChatGPT%20Image%20Jun%2017,%202026,%2003_36_57%20AM.png');
+  const [movableX, setMovableX] = useState<number>(0); // initial X percentage (0% for full width center)
+  const [movableY, setMovableY] = useState<number>(85); // initial Y percentage (85% bottom)
+  const [movableScale, setMovableScale] = useState<number>(100); // initial width scale (100% full-width banner)
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isResizing, setIsResizing] = useState<string | null>(null); // 'tl' | 'tr' | 'bl' | 'br' | null
 
@@ -75,6 +78,58 @@ export default function StudioPage() {
   const [driveLink, setDriveLink] = useState<string>('');
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
 
+  // Caption/Subtitle State
+  interface CaptionSegment {
+    id: string;
+    start: number;
+    end: number;
+    text: string;
+  }
+  const [captions, setCaptions] = useState<CaptionSegment[]>([]);
+  const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
+  const [transcriptionError, setTranscriptionError] = useState<string>('');
+
+  // TTS Pro Voice Presets (Microsoft Edge Neural — te-IN context)
+  const TTS_PRESETS = [
+    { id: 'FM1', label: 'Emma', tag: 'Super', gender: 'F', voiceId: 'en-US-EmmaMultilingualNeural',   pitchCycles: [-4, -8, -15] },
+    { id: 'FM2', label: 'Vivienne', tag: '',  gender: 'F', voiceId: 'fr-FR-VivienneMultilingualNeural', pitchCycles: [-4, -8] },
+    { id: 'FM3', label: 'Seraphina', tag: '', gender: 'F', voiceId: 'de-DE-SeraphinaMultilingualNeural', pitchCycles: [-4, -8] },
+    { id: 'MV1', label: 'Brian',     tag: '',          gender: 'M', voiceId: 'en-US-BrianMultilingualNeural',   pitchCycles: [4, 8] },
+    { id: 'MV2', label: 'Remy',      tag: 'Super Good', gender: 'M', voiceId: 'fr-FR-RemyMultilingualNeural',   pitchCycles: [4, 8] },
+    { id: 'MV3', label: 'Giuseppe',  tag: '',          gender: 'M', voiceId: 'it-IT-GiuseppeMultilingualNeural', pitchCycles: [4, 8] },
+  ] as const;
+  const TTS_FIXED_SPEED = 1.65;
+
+  // TTS (Text-to-Speech) State
+  const [ttsScript, setTtsScript] = useState<string>('');
+  const [tenglishScript, setTenglishScript] = useState<string>('');
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('FM1');
+  const [pitchCycleIndex, setPitchCycleIndex] = useState<Record<string, number>>({});
+  const [isGeneratingTTS, setIsGeneratingTTS] = useState<boolean>(false);
+  const [ttsError, setTtsError] = useState<string>('');
+
+  // Word-level sync captions
+  interface WordTimestamp { word: string; start: number; end: number; }
+  const [wordTimestamps, setWordTimestamps] = useState<WordTimestamp[]>([]);
+  const [currentWordIdx, setCurrentWordIdx] = useState<number>(-1);
+
+  // Helpers
+  const [, setTtsVoices] = useState<any[]>([]); // fetchTTSVoices compat (voices embedded as presets above)
+  const selectedVoiceId = TTS_PRESETS.find(p => p.id === selectedPresetId)?.voiceId ?? 'en-US-EmmaMultilingualNeural';
+  const ttsSpeed = TTS_FIXED_SPEED;
+  const getCurrentPitch = (presetId: string) => {
+    const preset = TTS_PRESETS.find(p => p.id === presetId);
+    if (!preset) return 0;
+    const idx = pitchCycleIndex[presetId] ?? 0;
+    return preset.pitchCycles[idx % preset.pitchCycles.length];
+  };
+  const cyclePresetPitch = (presetId: string) => {
+    const preset = TTS_PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+    const idx = (pitchCycleIndex[presetId] ?? 0);
+    setPitchCycleIndex(prev => ({ ...prev, [presetId]: (idx + 1) % preset.pitchCycles.length }));
+  };
+
   // Refs for Synced Playback
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -86,6 +141,7 @@ export default function StudioPage() {
     fetchBackgrounds();
     fetchWatermark();
     checkGoogleAuth();
+    fetchTTSVoices();
   }, []);
 
   const fetchBackgrounds = async () => {
@@ -112,6 +168,129 @@ export default function StudioPage() {
       }
     } catch (e) {
       console.error('Failed to fetch watermark config:', e);
+    }
+  };
+
+  const fetchTTSVoices = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/tts/voices`);
+      if (res.ok) {
+        const data = await res.json();
+        // Merge all voice lists (te-IN + en-US)
+        const allVoices: any[] = [...(data['te-IN'] || []), ...(data['en-US'] || [])];
+        setTtsVoices(allVoices);
+      }
+    } catch (e) {
+      console.error('Failed to fetch TTS voices:', e);
+    }
+  };
+
+  const handleGenerateTTS = async () => {
+    if (!ttsScript.trim()) {
+      setTtsError('Please type a script to generate audio.');
+      return;
+    }
+    setIsGeneratingTTS(true);
+    setTtsError('');
+    const currentPitch = getCurrentPitch(selectedPresetId);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/tts/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: ttsScript.trim(),
+          voice_id: selectedVoiceId,
+          speed: ttsSpeed,
+          pitch: currentPitch
+        })
+      });
+      // Advance pitch cycle for next click
+      cyclePresetPitch(selectedPresetId);
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'TTS generation failed.');
+      }
+      const data = await res.json();
+
+      // Fetch the generated audio and create an object URL
+      const audioRes = await fetch(`${BACKEND_URL}${data.url}`);
+      const blob = await audioRes.blob();
+      const generatedFile = new File([blob], data.filename, { type: 'audio/mpeg' });
+      const objectUrl = URL.createObjectURL(blob);
+
+      // Auto-load into audio state
+      setAudioFile(generatedFile);
+      setAudioUrl(objectUrl);
+
+      // Get real audio duration
+      const audioDurationValue: number = await new Promise(resolve => {
+        const tmp = new Audio(objectUrl);
+        tmp.onloadedmetadata = () => resolve(tmp.duration);
+        tmp.onerror = () => resolve(30); // fallback 30s
+      });
+      setAudioDuration(audioDurationValue);
+
+      // ── Word-level timestamps from TTS engine ──────────────────────────
+      const words: WordTimestamp[] = data.word_timestamps || [];
+      console.log(`[TTS Caption] word_timestamps received: ${words.length} words`, words.slice(0, 5));
+
+      const captionText = tenglishScript.trim() || ttsScript.trim();
+      const captionWords = captionText
+        .split(/\s+/)
+        .map(w => w.trim())
+        .filter(w => w.length > 0);
+
+      let alignedWords: WordTimestamp[] = [];
+      if (words.length > 0 && captionWords.length > 0) {
+        const numSource = words.length;
+        const numDest = captionWords.length;
+        if (numSource === numDest) {
+          alignedWords = captionWords.map((word, idx) => ({
+            word,
+            start: words[idx].start,
+            end: words[idx].end
+          }));
+        } else {
+          alignedWords = captionWords.map((word, idx) => {
+            const srcIdx = numDest > 1 ? Math.min(numSource - 1, Math.round(idx * (numSource - 1) / (numDest - 1))) : 0;
+            return {
+              word,
+              start: words[srcIdx].start,
+              end: words[srcIdx].end
+            };
+          });
+        }
+      } else if (captionWords.length > 0) {
+        console.warn('[TTS Caption] No word timestamps — using proportional fallback captions (word by word)');
+        const totalChars = captionWords.reduce((acc, w) => acc + w.length, 0) || 1;
+        let elapsed = 0;
+        alignedWords = captionWords.map((word) => {
+          const ratio = word.length / totalChars;
+          const dur = ratio * audioDurationValue;
+          const start = parseFloat(elapsed.toFixed(3));
+          elapsed += dur;
+          const end = parseFloat(elapsed.toFixed(3));
+          return { word, start, end };
+        });
+      }
+
+      setWordTimestamps(alignedWords);
+      setCurrentWordIdx(-1);
+
+      // Build caption segments from alignedWords
+      const newCaptions = alignedWords.map((w, idx) => ({
+        id: `cap-tts-${Date.now()}-${idx}`,
+        start: w.start,
+        end: w.end,
+        text: w.word
+      }));
+      setCaptions(newCaptions);
+      console.log(`[TTS Caption] Built ${newCaptions.length} word-by-word captions`);
+    } catch (err: any) {
+      console.error('[TTS]', err);
+      setTtsError(err.message || 'TTS generation failed.');
+    } finally {
+      setIsGeneratingTTS(false);
     }
   };
 
@@ -405,6 +584,11 @@ export default function StudioPage() {
       const current = audioRef.current.currentTime;
       setPreviewCurrentTime(current);
       setPreviewProgress((current / audioDuration) * 100);
+      // Word-level sync: find which word is currently being spoken
+      if (wordTimestamps.length > 0) {
+        const idx = wordTimestamps.findIndex(w => current >= w.start && current < w.end);
+        setCurrentWordIdx(idx);
+      }
     }
   };
 
@@ -414,6 +598,117 @@ export default function StudioPage() {
     if (audioRef.current) audioRef.current.currentTime = 0;
     setPreviewCurrentTime(0);
     setPreviewProgress(0);
+  };
+
+  // Audio Transcription and Caption Editing Methods
+  const handleAutoTranscribe = async () => {
+    if (!audioFile) {
+      setTranscriptionError('Please upload an audio file in Step 3 first.');
+      return;
+    }
+
+    setIsTranscribing(true);
+    setTranscriptionError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioFile);
+
+      const res = await fetch(`${BACKEND_URL}/api/transcribe`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to transcribe audio.');
+      }
+
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        const wordLevelSegments: any[] = [];
+        data.forEach((seg: any, sIdx: number) => {
+          const start = typeof seg.start === 'number' ? seg.start : parseFloat(seg.start) || 0;
+          const end = typeof seg.end === 'number' ? seg.end : parseFloat(seg.end) || 0;
+          const text = (seg.text || '').trim();
+          const words = text.split(/\s+/).map((w: string) => w.trim()).filter((w: string) => w.length > 0);
+          
+          if (words.length === 0) return;
+          
+          const segmentDuration = end - start;
+          const totalChars = words.reduce((acc: number, w: string) => acc + w.length, 0) || 1;
+          
+          let elapsed = start;
+          words.forEach((word: string, wIdx: number) => {
+            const ratio = word.length / totalChars;
+            const dur = ratio * segmentDuration;
+            const wStart = parseFloat(elapsed.toFixed(3));
+            elapsed += dur;
+            const wEnd = parseFloat(elapsed.toFixed(3));
+            wordLevelSegments.push({
+              id: `cap-${Date.now()}-${sIdx}-${wIdx}-${Math.round(Math.random() * 1000)}`,
+              start: wStart,
+              end: wEnd,
+              text: word
+            });
+          });
+        });
+        setCaptions(wordLevelSegments);
+        
+        // Also populate wordTimestamps so timing works consistently for single word preview
+        const transWordTimestamps = wordLevelSegments.map(c => ({
+          word: c.text,
+          start: c.start,
+          end: c.end
+        }));
+        setWordTimestamps(transWordTimestamps);
+      } else {
+        throw new Error('Invalid transcription response format.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setTranscriptionError(err.message || 'An error occurred during transcription.');
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const handleAddCaptionSegment = () => {
+    let start = 0;
+    if (captions.length > 0) {
+      start = captions[captions.length - 1].end;
+    } else {
+      start = previewCurrentTime;
+    }
+    const newSeg = {
+      id: `cap-${Date.now()}-${Math.round(Math.random() * 1000)}`,
+      start: parseFloat(start.toFixed(2)),
+      end: parseFloat((start + 2.5).toFixed(2)),
+      text: 'New Caption'
+    };
+    setCaptions([...captions, newSeg].sort((a, b) => a.start - b.start));
+  };
+
+  const handleUpdateCaptionSegment = (id: string, field: string, value: any) => {
+    setCaptions(prev => prev.map(c => {
+      if (c.id === id) {
+        let parsedVal = value;
+        if (field === 'start' || field === 'end') {
+          parsedVal = parseFloat(value);
+          if (isNaN(parsedVal)) parsedVal = 0;
+        }
+        return { ...c, [field]: parsedVal };
+      }
+      return c;
+    }).sort((a, b) => a.start - b.start));
+  };
+
+  const handleDeleteCaptionSegment = (id: string) => {
+    setCaptions(prev => prev.filter(c => c.id !== id));
+  };
+
+  const handleClearAllCaptions = () => {
+    setCaptions([]);
   };
 
   // Video Generation Form Submission
@@ -431,17 +726,17 @@ export default function StudioPage() {
     formData.append('audio', audioFile);
     formData.append('folderId', selectedFolderId);
 
-    if (enableMovable && movableFile) {
+    // Movable watermark is compulsory mandatory and uses the permanent default image
+    formData.append('showMovable', 'true');
+    formData.append('movableX', movableX.toString());
+    formData.append('movableY', movableY.toString());
+    formData.append('movableScale', movableScale.toString());
+    if (movableFile) {
       formData.append('movableWatermark', movableFile);
-      formData.append('showMovable', 'true');
-      formData.append('movableX', movableX.toString());
-      formData.append('movableY', movableY.toString());
-      formData.append('movableScale', movableScale.toString());
-    } else {
-      formData.append('showMovable', 'false');
     }
 
     formData.append('imageScale', imageScale.toString());
+    formData.append('captions', JSON.stringify(captions));
 
     try {
       // Simulate transition to processing because large uploads are quick, then render takes time
@@ -613,6 +908,8 @@ export default function StudioPage() {
     );
   }
 
+  const activeCaption = captions.find(c => previewCurrentTime >= c.start && previewCurrentTime <= c.end);
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Title Header */}
@@ -775,18 +1072,165 @@ export default function StudioPage() {
             )}
           </div>
 
-          {/* Step 3: Sound Track */}
+          {/* Step 3: Soundtrack — TTS Studio or Manual Upload */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-sm border border-indigo-500/20">
                 3
               </div>
-              <h2 className="text-lg font-semibold text-slate-200">Upload Soundtrack</h2>
+              <h2 className="text-lg font-semibold text-slate-200">Soundtrack</h2>
             </div>
 
-            <div className="space-y-4">
-              <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all p-6 text-center group">
-                <AudioIcon className="h-8 w-8 text-slate-500 group-hover:text-indigo-400 transition-colors mb-2" />
+            <div className="space-y-5">
+              {/* === TTS Script Studio === */}
+              <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/10 p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Mic className="h-4 w-4 text-indigo-400" />
+                  <span className="text-sm font-semibold text-indigo-300">AI Voice Studio (Microsoft Edge TTS)</span>
+                  <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free · Unlimited</span>
+                </div>
+
+                {/* Script textarea */}
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-indigo-400">Telugu Script (for generating voice)</span>
+                  <textarea
+                    rows={4}
+                    placeholder="Type your Telugu script here... (e.g.: నమస్కారం! శుభోదయం. ఈ వీడియో మీకు నచ్చుతుందని ఆశిస్తున్నాను.)"
+                    value={ttsScript}
+                    onChange={(e) => setTtsScript(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Tenglish Script textarea */}
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-indigo-400">Tenglish Text box (for generating captions)</span>
+                  <textarea
+                    rows={4}
+                    placeholder="Type your Tenglish captions script here... (e.g.: Namaskaram! Shubhodhayam. Ee video meeku nachutundhani aashistunnanu.)"
+                    value={tenglishScript}
+                    onChange={(e) => setTenglishScript(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Pro Voice Preset Cards */}
+                <div className="space-y-2">
+                  {/* Female Presets */}
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">♀ Female Pro Voices</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {TTS_PRESETS.filter(p => p.gender === 'F').map(preset => {
+                      const isActive = selectedPresetId === preset.id;
+                      const pitch = getCurrentPitch(preset.id);
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            if (isActive) cyclePresetPitch(preset.id);
+                            else setSelectedPresetId(preset.id);
+                          }}
+                          className={`relative rounded-lg border p-2.5 text-left transition-all group ${
+                            isActive
+                              ? 'border-pink-500/60 bg-pink-950/20 shadow-[0_0_12px_rgba(236,72,153,0.15)]'
+                              : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                          }`}
+                        >
+                          <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-pink-300' : 'text-slate-500'}`}>{preset.id}</span>
+                          <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
+                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
+                          <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-pink-400' : 'text-slate-600'}`}>
+                            Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
+                          </span>
+                          {isActive && (
+                            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-pink-400 animate-pulse" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Male Presets */}
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">♂ Male Pro Voices</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {TTS_PRESETS.filter(p => p.gender === 'M').map(preset => {
+                      const isActive = selectedPresetId === preset.id;
+                      const pitch = getCurrentPitch(preset.id);
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            if (isActive) cyclePresetPitch(preset.id);
+                            else setSelectedPresetId(preset.id);
+                          }}
+                          className={`relative rounded-lg border p-2.5 text-left transition-all group ${
+                            isActive
+                              ? 'border-sky-500/60 bg-sky-950/20 shadow-[0_0_12px_rgba(14,165,233,0.15)]'
+                              : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                          }`}
+                        >
+                          <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-sky-300' : 'text-slate-500'}`}>{preset.id}</span>
+                          <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
+                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
+                          <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-sky-400' : 'text-slate-600'}`}>
+                            Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
+                          </span>
+                          {isActive && (
+                            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* DSP Badge + Speed info */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-800/60">
+                  <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-[10px] text-emerald-400 font-semibold">Studio Clarity Boost</span>
+                  <span className="text-[9px] text-slate-500 ml-auto">DSP: 7-band EQ · HP 80Hz · Locked</span>
+                  <span className="text-[10px] font-mono text-indigo-300 ml-2">1.65×</span>
+                </div>
+
+                <p className="text-[9px] text-slate-600 text-center">
+                  Tap a preset to select · Tap again to cycle pitch variant
+                </p>
+
+                {ttsError && (
+                  <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 p-2 rounded-lg flex items-start gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>{ttsError}</span>
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleGenerateTTS}
+                  disabled={isGeneratingTTS || !ttsScript.trim()}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 transition-colors"
+                >
+                  {isGeneratingTTS ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" />Generating Audio + Captions...</>
+                  ) : (
+                    <><Mic className="h-4 w-4" />Generate Audio & Auto-Fill Captions</>
+                  )}
+                </button>
+
+                <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+                  💡 The script is automatically split into caption segments and synced with the generated audio.
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-slate-800" />
+                <span className="text-[10px] font-semibold text-slate-500">OR UPLOAD MANUALLY</span>
+                <div className="flex-1 h-px bg-slate-800" />
+              </div>
+
+              {/* Manual Upload */}
+              <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all p-5 text-center group">
+                <AudioIcon className="h-7 w-7 text-slate-500 group-hover:text-indigo-400 transition-colors mb-2" />
                 <span className="text-xs font-semibold text-slate-300">Choose Audio File</span>
                 <span className="text-[10px] text-slate-500 mt-1">MP3, WAV, AAC (Determines final video duration)</span>
                 <input
@@ -825,114 +1269,193 @@ export default function StudioPage() {
             </div>
           </div>
 
-          {/* Step 4: Movable Watermark (Optional) */}
+
+          {/* Step 4: Bottom Banner / Watermark */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-sm border border-indigo-500/20">
                   4
                 </div>
-                <h2 className="text-lg font-semibold text-slate-200">Movable Watermark (Optional)</h2>
+                <h2 className="text-lg font-semibold text-slate-200">Bottom Banner / Watermark</h2>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={enableMovable}
-                  onChange={(e) => setEnableMovable(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
-                <span className="ml-2 text-xs font-medium text-slate-400">Enable</span>
-              </label>
+              <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-semibold">Active</span>
             </div>
 
-            {enableMovable && (
-              <div className="space-y-4 pt-2 border-t border-slate-850 animate-[fadeIn_0.2s_ease-out]">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                  <div>
-                    <label className="flex flex-col items-center justify-center aspect-[2/1] sm:aspect-square rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all group">
-                      <div className="flex flex-col items-center justify-center p-3 text-center">
-                        <Upload className="h-6 w-6 text-slate-500 group-hover:text-indigo-400 transition-colors mb-1.5" />
-                        <span className="text-xs font-semibold text-slate-300">Choose Watermark</span>
-                        <span className="text-[10px] text-slate-500 mt-0.5">PNG, JPG</span>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleMovableChange}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
+            <div className="space-y-4 pt-2 border-t border-slate-850 animate-[fadeIn_0.2s_ease-out]">
+              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-800 bg-slate-950 p-4 relative">
+                <img
+                  src={movableUrl}
+                  alt="Movable preview"
+                  className="max-h-[120px] object-contain rounded"
+                />
+                <span className="text-[10px] text-slate-500 mt-2 font-mono">
+                  ChatGPT Image Jun 17, 2026, 03_36_57 AM.png (Default Banner)
+                </span>
+              </div>
 
-                  {movableFile ? (
-                    <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 flex flex-col items-center justify-center aspect-square relative group">
-                      <img
-                        src={movableUrl}
-                        alt="Movable preview"
-                        className="max-h-[85%] max-w-[85%] object-contain rounded"
-                      />
-                      <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button
-                          onClick={() => {
-                            setMovableFile(null);
-                            setMovableUrl('');
-                            setEnableMovable(false);
-                          }}
-                          className="rounded-lg bg-red-500/20 p-2 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <span className="absolute bottom-2 left-2 right-2 text-[10px] text-slate-500 truncate text-center font-mono">
-                        {movableFile.name}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center border border-dashed border-slate-800 rounded-xl aspect-square bg-slate-950/10 text-slate-500 text-xs text-center p-4">
-                      Upload an image to place it on the screen. Drag it to reposition.
-                    </div>
-                  )}
+              <div className="space-y-3 pt-2">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-[11px] font-semibold text-slate-400">
+                    <span>Banner Size (Width)</span>
+                    <span>{movableScale}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    step="1"
+                    value={movableScale}
+                    onChange={(e) => setMovableScale(parseInt(e.target.value))}
+                    className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  />
                 </div>
+                
+                <div className="flex justify-between items-center text-[10px] text-slate-500">
+                  <span>Coordinates: X: {movableX.toFixed(0)}% • Y: {movableY.toFixed(0)}%</span>
+                  <button
+                    onClick={() => {
+                      setMovableX(0);
+                      setMovableY(85);
+                    }}
+                    className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
+                  >
+                    Reset Position
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40">
+                  💡 <strong>Tip:</strong> Drag the banner layer directly on the Live Output Simulation player to place it anywhere (e.g. center at the bottom).
+                </p>
+              </div>
+            </div>
+          </div>
 
-                {movableFile && (
-                  <div className="space-y-3 pt-2">
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[11px] font-semibold text-slate-400">
-                        <span>Watermark Size (Width)</span>
-                        <span>{movableScale}%</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="10"
-                        max="60"
-                        step="1"
-                        value={movableScale}
-                        onChange={(e) => setMovableScale(parseInt(e.target.value))}
-                        className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                      />
-                    </div>
-                    
-                    <div className="flex justify-between items-center text-[10px] text-slate-500">
-                      <span>Coordinates: X: {movableX.toFixed(0)}% • Y: {movableY.toFixed(0)}%</span>
-                      <button
-                        onClick={() => {
-                          setMovableX(15);
-                          setMovableY(15);
-                        }}
-                        className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
-                      >
-                        Reset Position
-                      </button>
-                    </div>
-                    
-                    <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40">
-                      💡 <strong>Tip:</strong> Drag the logo layer directly on the Live Output Simulation player to place it anywhere (e.g., top-left, top-right, or on top of the center image).
-                    </p>
-                  </div>
+          {/* Step 5: Dynamic Captions (Optional) */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-sm border border-indigo-500/20">
+                  5
+                </div>
+                <h2 className="text-lg font-semibold text-slate-200">Dynamic Captions (Optional)</h2>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleAutoTranscribe}
+                  disabled={isTranscribing || !audioFile}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isTranscribing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Transcribing Audio...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Auto-Transcribe with Gemini
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleAddCaptionSegment}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-200 font-semibold text-xs transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Caption
+                </button>
+
+                {captions.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAllCaptions}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-red-500/20 bg-red-950/10 hover:bg-red-950/20 text-red-400 font-semibold text-xs transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear
+                  </button>
                 )}
               </div>
-            )}
+
+              {!audioFile && (
+                <p className="text-[11px] text-amber-400/90 bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-lg">
+                  ⚠️ <strong>Note:</strong> You must upload a soundtrack in Step 3 before using auto-transcription.
+                </p>
+              )}
+
+              {transcriptionError && (
+                <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 p-2.5 rounded-lg flex items-start gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>{transcriptionError}</span>
+                </p>
+              )}
+
+              {captions.length > 0 && (
+                <div className="space-y-2.5">
+                  <div className="max-h-[300px] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/50 p-2 space-y-2 custom-scrollbar">
+                    {captions.map((caption, idx) => (
+                      <div
+                        key={caption.id}
+                        className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-900/40 p-3 hover:border-slate-700 transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono text-slate-500">
+                            #{idx + 1}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[9px] text-slate-500">Start:</span>
+                              <input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                value={caption.start}
+                                onChange={(e) => handleUpdateCaptionSegment(caption.id, 'start', e.target.value)}
+                                className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-indigo-500 focus:outline-none"
+                              />
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[9px] text-slate-500">End:</span>
+                              <input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                value={caption.end}
+                                onChange={(e) => handleUpdateCaptionSegment(caption.id, 'end', e.target.value)}
+                                className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-indigo-500 focus:outline-none"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCaptionSegment(caption.id)}
+                              className="rounded p-1 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={caption.text}
+                          onChange={(e) => handleUpdateCaptionSegment(caption.id, 'text', e.target.value)}
+                          placeholder="Caption text..."
+                          className="w-full rounded border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40">
+                    💡 <strong>Tip:</strong> Timestamps are in seconds. The simulator dynamically highlights the active caption during playback and bounces it with a CSS animation.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -977,15 +1500,6 @@ export default function StudioPage() {
                     className="rounded shadow-lg"
                   />
                 </div>
-              )}
-
-              {/* Watermark Logo overlay */}
-              {watermark.filename && (
-                <img
-                  src={`${BACKEND_URL}/uploads/${watermark.filename}`}
-                  alt="Watermark"
-                  style={getWatermarkPositionStyle()}
-                />
               )}
 
               {/* Movable Watermark overlay */}
@@ -1039,6 +1553,41 @@ export default function StudioPage() {
                   />
                 </div>
               )}
+
+              {/* Synced Audio Captions overlay — Word-by-Word Single Word Display */}
+              {(() => {
+                // If we have word-level timestamps, show single word highlighted
+                if (wordTimestamps.length > 0 && currentWordIdx >= 0) {
+                  const currentWord = wordTimestamps[currentWordIdx];
+                  return (
+                    <div className="absolute top-[4.5%] left-0 right-0 px-4 text-center pointer-events-none z-30 select-none">
+                      <span
+                        style={{
+                          textShadow: '0px 2px 4px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
+                        }}
+                        className="inline-block bg-black/45 px-2.5 py-1 rounded-md text-yellow-300 font-bold text-xs leading-snug tracking-wide border border-white/10 backdrop-blur-[1px] animate-pop"
+                      >
+                        {currentWord.word}
+                      </span>
+                    </div>
+                  );
+                }
+                // Fallback: segment-level caption (manual upload / before TTS)
+                if (activeCaption) {
+                  return (
+                    <div
+                      key={activeCaption.id}
+                      className="absolute top-[4.5%] left-0 right-0 px-4 text-center pointer-events-none z-30 select-none animate-pop"
+                      style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}
+                    >
+                      <span className="inline-block bg-black/45 px-2.5 py-1 rounded-md text-white font-bold text-xs leading-snug tracking-wide border border-white/10 backdrop-blur-[1px]">
+                        {activeCaption.text}
+                      </span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               {/* Audio playback hidden element */}
               {audioUrl && (
