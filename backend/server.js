@@ -754,7 +754,12 @@ app.delete('/api/history', (req, res) => {
 function getOAuthClient(db) {
   const clientId = process.env.GOOGLE_CLIENT_ID || db.googleDrive.clientId;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || db.googleDrive.clientSecret;
-  const redirectUri = db.googleDrive.redirectUri;
+  
+  let redirectUri = process.env.GOOGLE_REDIRECT_URI || db.googleDrive.redirectUri;
+  if (process.env.SPACE_HOST) {
+    redirectUri = `https://${process.env.SPACE_HOST}/api/auth/google/callback`;
+  }
+  
   if (!clientId || !clientSecret) {
     return null;
   }
