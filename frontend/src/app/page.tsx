@@ -1448,7 +1448,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
             )}
           </div>
 
-          {/* Step 3: Soundtrack — TTS Studio or Manual Upload */}
+          {/* Step 3: Soundtrack — TTS Studio or Instagram Music Library */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
@@ -1457,192 +1457,323 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
               <h2 className="text-lg font-semibold text-slate-200">Soundtrack</h2>
             </div>
 
-            <div className="space-y-5">
-              {/* === TTS Script Studio === */}
-              <div className="rounded-xl border border-orange-500/20 bg-indigo-950/10 p-4 space-y-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <Mic className="h-4 w-4 text-orange-400" />
-                  <span className="text-sm font-semibold text-orange-300">AI Voice Studio (Microsoft Edge TTS)</span>
-                  <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free · Unlimited</span>
-                </div>
-
-                {/* Script textarea */}
+            {videoPlatform === 'instagram' ? (
+              /* ================= INSTAGRAM MUSIC LIBRARY & TRIMMER ================= */
+              <div className="space-y-4 animate-[fadeIn_0.2s_ease-out]">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-orange-400">Telugu Script (for generating voice)</span>
-                  <textarea
-                    rows={4}
-                    placeholder="Type your Telugu script here... (e.g.: నమస్కారం! శుభోదయం. ఈ వీడియో మీకు నచ్చుతుందని ఆశిస్తున్నాను.)"
-                    value={ttsScript}
-                    onChange={(e) => setTtsScript(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
+                  <span className="text-xs font-semibold text-orange-400">Search Background Music</span>
+                  <input
+                    type="text"
+                    placeholder="Search music files..."
+                    value={musicSearchQuery}
+                    onChange={(e) => setMusicSearchQuery(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none"
                   />
                 </div>
 
-                {/* Tenglish Script textarea */}
-                <div className="space-y-1">
-                  <span className="text-xs font-semibold text-orange-400">Tenglish Text box (for generating captions)</span>
-                  <textarea
-                    rows={4}
-                    placeholder="Type your Tenglish captions script here... (e.g.: Namaskaram! Shubhodhayam. Ee video meeku nachutundhani aashistunnanu.)"
-                    value={tenglishScript}
-                    onChange={(e) => setTenglishScript(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
-                  />
-                </div>
-
-                {/* Pro Voice Preset Cards */}
-                <div className="space-y-2">
-                  {/* Female Presets */}
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">♀ Female Pro Voices</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {TTS_PRESETS.filter(p => p.gender === 'F').map(preset => {
-                      const isActive = selectedPresetId === preset.id;
-                      const pitch = getCurrentPitch(preset.id);
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => {
-                            if (isActive) cyclePresetPitch(preset.id);
-                            else setSelectedPresetId(preset.id);
-                          }}
-                          className={`relative rounded-lg border p-2.5 text-left transition-all group ${
-                            isActive
-                              ? 'border-pink-500/60 bg-pink-950/20 shadow-[0_0_12px_rgba(236,72,153,0.15)]'
-                              : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
-                          }`}
-                        >
-                          <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-pink-300' : 'text-slate-500'}`}>{preset.id}</span>
-                          <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
-                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
-                          <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-blue-400' : 'text-slate-600'}`}>
-                            Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
-                          </span>
-                          {isActive && (
-                            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-pink-400 animate-pulse" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Male Presets */}
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">♂ Male Pro Voices</div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {TTS_PRESETS.filter(p => p.gender === 'M').map(preset => {
-                      const isActive = selectedPresetId === preset.id;
-                      const pitch = getCurrentPitch(preset.id);
-                      return (
-                        <button
-                          key={preset.id}
-                          type="button"
-                          onClick={() => {
-                            if (isActive) cyclePresetPitch(preset.id);
-                            else setSelectedPresetId(preset.id);
-                          }}
-                          className={`relative rounded-lg border p-2.5 text-left transition-all group ${
-                            isActive
-                              ? 'border-sky-500/60 bg-sky-950/20 shadow-[0_0_12px_rgba(14,165,233,0.15)]'
-                              : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
-                          }`}
-                        >
-                          <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-sky-300' : 'text-slate-500'}`}>{preset.id}</span>
-                          <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
-                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
-                          <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-sky-400' : 'text-slate-600'}`}>
-                            Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
-                          </span>
-                          {isActive && (
-                            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* DSP Badge + Speed info */}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-800/60">
-                  <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                  <span className="text-[10px] text-emerald-400 font-semibold">Studio Clarity Boost</span>
-                  <span className="text-[9px] text-slate-500 ml-auto">DSP: 7-band EQ · HP 80Hz · Locked</span>
-                  <span className="text-[10px] font-mono text-orange-300 ml-2">1.65×</span>
-                </div>
-
-                <p className="text-[9px] text-slate-600 text-center">
-                  Tap a preset to select · Tap again to cycle pitch variant
-                </p>
-
-                {ttsError && (
-                  <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 p-2 rounded-lg flex items-start gap-1.5">
-                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                    <span>{ttsError}</span>
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={handleGenerateTTS}
-                  disabled={isGeneratingTTS || !ttsScript.trim()}
-                  className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-orange-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 transition-colors"
-                >
-                  {isGeneratingTTS ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" />Generating Audio + Captions...</>
+                <div className="max-h-52 overflow-y-auto border border-slate-800 rounded-lg divide-y divide-slate-800 bg-slate-950/40">
+                  {musicFiles.filter(f => f.name.toLowerCase().includes(musicSearchQuery.toLowerCase())).length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-500">
+                      No music files found in backend/music folder.
+                    </div>
                   ) : (
-                    <><Mic className="h-4 w-4" />Generate Audio & Auto-Fill Captions</>
+                    musicFiles
+                      .filter(f => f.name.toLowerCase().includes(musicSearchQuery.toLowerCase()))
+                      .map(f => {
+                        const isSelected = selectedMusicFile === f.filename;
+                        return (
+                          <button
+                            key={f.filename}
+                            type="button"
+                            onClick={() => {
+                              setSelectedMusicFile(f.filename);
+                            }}
+                            className={`w-full flex items-center justify-between p-3 text-left transition-colors ${
+                              isSelected ? 'bg-orange-500/10 hover:bg-orange-500/15' : 'hover:bg-slate-900/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <AudioIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-orange-400 animate-pulse' : 'text-slate-500'}`} />
+                              <span className={`text-xs truncate ${isSelected ? 'text-orange-400 font-medium' : 'text-slate-300'}`}>
+                                {f.name}
+                              </span>
+                            </div>
+                            {isSelected && (
+                              <CheckCircle2 className="h-4 w-4 text-orange-400 shrink-0" />
+                            )}
+                          </button>
+                        );
+                      })
                   )}
-                </button>
+                </div>
 
-                <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-                  💡 The script is automatically split into caption segments and synced with the generated audio.
-                </p>
-              </div>
-
-              {/* Divider */}
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-slate-800" />
-                <span className="text-[10px] font-semibold text-slate-500">OR UPLOAD MANUALLY</span>
-                <div className="flex-1 h-px bg-slate-800" />
-              </div>
-
-              {/* Manual Upload */}
-              <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all p-5 text-center group">
-                <AudioIcon className="h-7 w-7 text-slate-500 group-hover:text-orange-400 transition-colors mb-2" />
-                <span className="text-xs font-semibold text-slate-300">Choose Audio File</span>
-                <span className="text-[10px] text-slate-500 mt-1">MP3, WAV, AAC (Determines final video duration)</span>
-                <input
-                  type="file"
-                  accept="audio/*"
-                  onChange={handleAudioChange}
-                  className="hidden"
-                />
-              </label>
-
-              {audioFile && (
-                <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950 p-4">
-                  <div className="flex items-center gap-3 truncate">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 border border-purple-500/20 text-orange-400">
-                      <AudioIcon className="h-5 w-5" />
+                {selectedMusicFile && (
+                  <div className="rounded-xl border border-orange-500/20 bg-indigo-950/10 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-orange-300">Select 6-Second Music Trim Segment</span>
+                      <span className="ml-auto text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full font-semibold">6s Fixed Trim</span>
                     </div>
-                    <div className="truncate">
-                      <p className="text-xs font-medium text-slate-200 truncate">{audioFile.name}</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        Duration: {audioDuration.toFixed(1)}s (timeline master)
-                      </p>
+
+                    {/* Custom Visual Timeline / Waveform Slider */}
+                    <div className="space-y-2">
+                      <div className="relative h-12 bg-slate-950 border border-slate-800 rounded-lg overflow-hidden flex items-end px-1 gap-[2px]">
+                        {/* Simulated waveform bars */}
+                        {Array.from({ length: 48 }).map((_, i) => {
+                          const duration = musicDuration || 30;
+                          const percentStart = musicTrimStart / duration;
+                          const percentEnd = (musicTrimStart + 6) / duration;
+                          const barPercent = i / 48;
+                          const isSelected = barPercent >= percentStart && barPercent <= percentEnd;
+
+                          // Generate static random height for waveform look
+                          const heights = [30, 60, 45, 80, 20, 50, 75, 40, 90, 35, 65, 55, 25, 70, 85, 40, 50, 30, 60, 45, 80, 20, 50, 75, 40, 90, 35, 65, 55, 25, 70, 85, 40, 50, 30, 60, 45, 80, 20, 50, 75, 40, 90, 35, 65, 55, 25, 70];
+                          const h = heights[i % heights.length];
+
+                          return (
+                            <div
+                              key={i}
+                              className="flex-1 transition-colors"
+                              style={{
+                                height: `${h}%`,
+                                backgroundColor: isSelected ? 'rgba(249, 115, 22, 0.7)' : 'rgba(71, 85, 105, 0.3)',
+                                borderRadius: '1px'
+                              }}
+                            />
+                          );
+                        })}
+
+                        {/* Slider track indicator */}
+                        <div 
+                          className="absolute top-0 bottom-0 border-l-2 border-r-2 border-orange-500 bg-orange-500/10 pointer-events-none transition-all duration-75"
+                          style={{
+                            left: `${musicDuration ? (musicTrimStart / musicDuration) * 100 : 0}%`,
+                            width: `${musicDuration ? (6 / musicDuration) * 100 : 20}%`
+                          }}
+                        />
+                      </div>
+
+                      {/* HTML5 Range Slider */}
+                      <input
+                        type="range"
+                        min={0}
+                        max={Math.max(0, (musicDuration || 6) - 6)}
+                        step={0.1}
+                        value={musicTrimStart}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          setMusicTrimStart(val);
+                          if (audioRef.current) {
+                            audioRef.current.currentTime = val;
+                            if (isPlaying) {
+                              audioRef.current.play().catch(err => console.warn(err));
+                            }
+                          }
+                        }}
+                        className="w-full accent-orange-500 cursor-pointer bg-slate-800 rounded-lg h-1.5 focus:outline-none"
+                      />
+
+                      <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                        <span>Trim Start: {musicTrimStart.toFixed(1)}s</span>
+                        <span>Duration: 6.0s Reel Audio</span>
+                        <span>Trim End: {(musicTrimStart + 6).toFixed(1)}s</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+                      Instagram Reels are limited to 6.0s. Drag the crop slider to choose your favorite section from <strong>{selectedMusicFile}</strong> (total song length: {(musicDuration || 0).toFixed(1)}s).
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ================= YOUTUBE SHORTS TTS STUDIO & MANUAL UPLOAD ================= */
+              <div className="space-y-5">
+                {/* === TTS Script Studio === */}
+                <div className="rounded-xl border border-orange-500/20 bg-indigo-950/10 p-4 space-y-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Mic className="h-4 w-4 text-orange-400" />
+                    <span className="text-sm font-semibold text-orange-300">AI Voice Studio (Microsoft Edge TTS)</span>
+                    <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free · Unlimited</span>
+                  </div>
+
+                  {/* Script textarea */}
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold text-orange-400">Telugu Script (for generating voice)</span>
+                    <textarea
+                      rows={4}
+                      placeholder="Type your Telugu script here... (e.g.: నమస్కారం! శుభోదయం. ఈ వీడియో మీకు నచ్చుతుందని ఆశిస్తున్నాను.)"
+                      value={ttsScript}
+                      onChange={(e) => setTtsScript(e.target.value)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Tenglish Script textarea */}
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold text-orange-400">Tenglish Text box (for generating captions)</span>
+                    <textarea
+                      rows={4}
+                      placeholder="Type your Tenglish captions script here... (e.g.: Namaskaram! Shubhodhayam. Ee video meeku nachutundhani aashistunnanu.)"
+                      value={tenglishScript}
+                      onChange={(e) => setTenglishScript(e.target.value)}
+                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Pro Voice Preset Cards */}
+                  <div className="space-y-2">
+                    {/* Female Presets */}
+                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">♀ Female Pro Voices</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {TTS_PRESETS.filter(p => p.gender === 'F').map(preset => {
+                        const isActive = selectedPresetId === preset.id;
+                        const pitch = getCurrentPitch(preset.id);
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => {
+                              if (isActive) cyclePresetPitch(preset.id);
+                              else setSelectedPresetId(preset.id);
+                            }}
+                            className={`relative rounded-lg border p-2.5 text-left transition-all group ${
+                              isActive
+                                ? 'border-pink-500/60 bg-pink-950/20 shadow-[0_0_12px_rgba(236,72,153,0.15)]'
+                                : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                            }`}
+                          >
+                            <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-pink-300' : 'text-slate-500'}`}>{preset.id}</span>
+                            <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
+                            {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
+                            <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-blue-400' : 'text-slate-600'}`}>
+                              Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
+                            </span>
+                            {isActive && (
+                              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-pink-400 animate-pulse" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {/* Male Presets */}
+                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">♂ Male Pro Voices</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {TTS_PRESETS.filter(p => p.gender === 'M').map(preset => {
+                        const isActive = selectedPresetId === preset.id;
+                        const pitch = getCurrentPitch(preset.id);
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => {
+                              if (isActive) cyclePresetPitch(preset.id);
+                              else setSelectedPresetId(preset.id);
+                            }}
+                            className={`relative rounded-lg border p-2.5 text-left transition-all group ${
+                              isActive
+                                ? 'border-sky-500/60 bg-sky-950/20 shadow-[0_0_12px_rgba(14,165,233,0.15)]'
+                                : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                            }`}
+                          >
+                            <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-sky-300' : 'text-slate-500'}`}>{preset.id}</span>
+                            <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
+                            {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
+                            <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-sky-300' : 'text-slate-600'}`}>
+                              Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
+                            </span>
+                            {isActive && (
+                              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
+
+                  {/* DSP Badge + Speed info */}
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-800/60">
+                    <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span className="text-[10px] text-emerald-400 font-semibold">Studio Clarity Boost</span>
+                    <span className="text-[9px] text-slate-500 ml-auto">DSP: 7-band EQ · HP 80Hz · Locked</span>
+                    <span className="text-[10px] font-mono text-orange-300 ml-2">1.65×</span>
+                  </div>
+
+                  <p className="text-[9px] text-slate-600 text-center">
+                    Tap a preset to select · Tap again to cycle pitch variant
+                  </p>
+
+                  {ttsError && (
+                    <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 p-2 rounded-lg flex items-start gap-1.5">
+                      <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <span>{ttsError}</span>
+                    </p>
+                  )}
+
                   <button
-                    onClick={() => {
-                      setAudioFile(null);
-                      setAudioUrl('');
-                      setAudioDuration(0);
-                    }}
-                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-900 hover:text-red-400 transition-colors border border-transparent hover:border-slate-800"
+                    type="button"
+                    onClick={handleGenerateTTS}
+                    disabled={isGeneratingTTS || !ttsScript.trim()}
+                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-orange-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 transition-colors"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {isGeneratingTTS ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" />Generating Audio + Captions...</>
+                    ) : (
+                      <><Mic className="h-4 w-4" />Generate Audio & Auto-Fill Captions</>
+                    )}
                   </button>
+
+                  <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+                    💡 The script is automatically split into caption segments and synced with the generated audio.
+                  </p>
                 </div>
-              )}
-            </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-slate-800" />
+                  <span className="text-[10px] font-semibold text-slate-500">OR UPLOAD MANUALLY</span>
+                  <div className="flex-1 h-px bg-slate-800" />
+                </div>
+
+                {/* Manual Upload */}
+                <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all p-5 text-center group">
+                  <AudioIcon className="h-7 w-7 text-slate-500 group-hover:text-orange-400 transition-colors mb-2" />
+                  <span className="text-xs font-semibold text-slate-300">Choose Audio File</span>
+                  <span className="text-[10px] text-slate-500 mt-1">MP3, WAV, AAC (Determines final video duration)</span>
+                  <input
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleAudioChange}
+                    className="hidden"
+                  />
+                </label>
+
+                {audioFile && (
+                  <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950 p-4">
+                    <div className="flex items-center gap-3 truncate">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 border border-purple-500/20 text-orange-400">
+                        <AudioIcon className="h-5 w-5" />
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs font-medium text-slate-200 truncate">{audioFile.name}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Duration: {audioDuration.toFixed(1)}s (timeline master)
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setAudioFile(null);
+                        setAudioUrl('');
+                        setAudioDuration(0);
+                      }}
+                      className="rounded-lg p-2 text-slate-500 hover:bg-slate-900 hover:text-red-400 transition-colors border border-transparent hover:border-slate-800"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
 
