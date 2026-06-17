@@ -12,7 +12,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link href={pathname.startsWith('/telugu') ? '/telugu' : '/'} className="flex items-center gap-2.5 group">
           <img 
             src={logoDataUri} 
             alt="PDR-Edits Logo" 
@@ -26,15 +26,15 @@ export default function Navbar() {
         {/* Navigation */}
         <nav className="flex items-center gap-1">
           <Link
-            href="/"
+            href={pathname.startsWith('/telugu') ? '/telugu' : '/'}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 ${
-              pathname === '/'
+              pathname === '/' || pathname === '/telugu'
                 ? 'bg-slate-900 text-orange-400'
                 : 'text-slate-400 hover:bg-slate-900/50 hover:text-slate-200'
             }`}
           >
             <Video className="h-4 w-4" />
-            <span>Studio</span>
+            <span>{pathname.startsWith('/telugu') ? 'స్టూడియో' : 'Studio'}</span>
           </Link>
           
           <Link
@@ -46,7 +46,7 @@ export default function Navbar() {
             }`}
           >
             <Settings className="h-4 w-4" />
-            <span>Settings</span>
+            <span>{pathname.startsWith('/telugu') ? 'సెట్టింగ్స్' : 'Settings'}</span>
           </Link>
         </nav>
       </div>

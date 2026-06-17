@@ -27,7 +27,169 @@ import { logoDataUri } from '@/components/LogoData';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
-export default function StudioPage() {
+const translations = {
+  en: {
+    title: "PDR's Automated Video Studio",
+    subtitle: "Generate high-quality short-form videos with custom watermarks, AI voice generation, and automated Google Drive uploads.",
+    step1: "Select Background Video",
+    step2: "Select Platform / Video Type",
+    step3: "Upload Center Image",
+    step4: "Soundtrack",
+    step5: "Bottom Banner / Watermark",
+    step6: "Dynamic Captions (Optional)",
+    youtubeShorts: "YouTube Shorts",
+    youtubeShortsDesc: "AI Telugu voiceover, Tenglish subtitles, and automatic duration sync.",
+    instagram: "Instagram Reels",
+    instagramDesc: "6-second looped background video with background music from library.",
+    chooseImage: "Choose Image",
+    centerImageScale: "Center Image Scale (Width)",
+    centerImageScaleDesc: "Slide to adjust the center image width scale from 40% to 100% of the video canvas.",
+    noImageSelected: "No image selected yet. Center image overlays above the background.",
+    aiVoiceStudio: "AI Voice Studio (Microsoft Edge TTS)",
+    freeUnlimited: "Free · Unlimited",
+    teluguScript: "Telugu Script (for generating voice)",
+    tenglishScript: "Tenglish Text box (for generating captions)",
+    femaleVoices: "♀ Female Pro Voices",
+    maleVoices: "♂ Male Pro Voices",
+    voicePitch: "Voice Pitch (Speed/Style)",
+    generateAudio: "Generate AI Audio",
+    generatingAudio: "Generating Voice...",
+    audioGenerated: "Audio voice generated successfully!",
+    manualAudioUpload: "Or manually upload your own MP3/WAV audio",
+    manualUploadLabel: "Upload Audio File",
+    searchSongs: "Search music files...",
+    selectMusic: "Select Background Music",
+    trimAudio: "Select 6-Second Music Trim Segment",
+    trimStart: "Start Position",
+    noMusicFiles: "No music files found in backend/music folder.",
+    bottomBanner: "Bottom Banner / Watermark",
+    compulsoryBanner: "Compulsory Bottom Banner (Watermark-movable)",
+    uploadBanner: "Upload custom bottom banner PNG to overwrite",
+    bannerPositioning: "Banner Positioning & Cropping Controls",
+    bannerScale: "Watermark Scale (Width)",
+    bannerX: "Watermark X Position",
+    bannerY: "Watermark Y Position",
+    topCrop: "Top Crop",
+    bottomCrop: "Bottom Crop",
+    leftCrop: "Left Crop",
+    rightCrop: "Right Crop",
+    movableWatermark2: "Movable Watermark 2 (Optional corner / logo)",
+    enableMovable2: "Enable Movable Watermark 2",
+    watermark2Positioning: "Watermark 2 Positioning & Cropping Controls",
+    watermark2Scale: "Watermark 2 Scale (Width)",
+    watermark2X: "Watermark 2 X Position",
+    watermark2Y: "Watermark 2 Y Position",
+    captionStyleAndColor: "Caption Style & Color Settings",
+    generateVideo: "Generate Video",
+    videoConsole: "Video Generation Console",
+    googleDriveRequired: "Google Drive Connection Required",
+    googleDriveRequiredDesc: "Since generated videos are sent directly to Google Drive and are not stored locally, you must link your Google Account first.",
+    connectGoogleDrive: "Connect Google Drive",
+    selectDriveFolder: "Select Google Drive Destination Folder",
+    disconnectGoogle: "Disconnect Google Account",
+    activeFolder: "Active Destination Folder",
+    generateVideoBtn: "Generate Video",
+    generatingVideoBtn: "Generating video on server...",
+    videoDone: "Video generation completed successfully!",
+    driveUploadDone: "Uploaded and saved to Google Drive!",
+    driveUploadBtn: "Upload & Save to Google Drive",
+    viewOnDrive: "View on Google Drive",
+    downloadVideo: "Download Video File",
+    errorOccurred: "An error occurred:",
+    previewWorkspace: "Live Preview Workspace",
+    noTemplateSelected: "No template selected. Choose a background video from Step 1.",
+    loadingProgress: "Loading template...",
+    signOut: "Sign Out",
+  },
+  te: {
+    title: "PDR యొక్క ఆటోమేటెడ్ వీడియో స్టూడియో",
+    subtitle: "అనుకూల వాటర్‌మార్క్‌లు, AI వాయిస్ జనరేషన్ మరియు ఆటోమేటెడ్ Google డ్రైవ్ అప్‌లోడ్‌లతో ఆటోమేటిక్ షార్ట్-ఫార్మ్ వీడియోలను సృష్టించండి.",
+    step1: "నేపథ్య వీడియోను ఎంచుకోండి",
+    step2: "ప్లాట్‌ఫారమ్ / వీడియో రకాన్ని ఎంచుకోండి",
+    step3: "మధ్య చిత్రాన్ని అప్‌లోడ్ చేయండి",
+    step4: "సౌండ్‌ట్రాక్ (ఆడియో)",
+    step5: "దిగువ బ్యానర్ / వాటర్‌మార్క్",
+    step6: "డైనమిక్ శీర్షికలు (ఐచ్ఛికం)",
+    youtubeShorts: "యూట్యూబ్ షార్ట్స్",
+    youtubeShortsDesc: "AI తెలుగు వాయిస్ ఓవర్, టెంగ్లీష్ శీర్షికలు మరియు ఆటోమేటిక్ డ్యూరేషన్ సమకాలీకరణ.",
+    instagram: "ఇన్‌స్టాగ్రామ్ రీల్స్",
+    instagramDesc: "లైబ్రరీ నుండి బ్యాక్‌గ్రౌండ్ మ్యూజిక్‌తో కూడిన 6-సెకన్ల లూప్ బ్యాక్‌గ్రౌండ్ వీడియో.",
+    chooseImage: "చిత్రాన్ని ఎంచుకోండి",
+    centerImageScale: "మధ్య చిత్రం స్కేల్ (వెడల్పు)",
+    centerImageScaleDesc: "మధ్య చిత్రం వెడల్పును వీడియో కాన్వాస్ యొక్క 40% నుండి 100% కి సర్దుబాటు చేయడానికి స్లయిడ్ చేయండి.",
+    noImageSelected: "ఇంకా ఏ చిత్రం ఎంచుకోబడలేదు. మధ్య చిత్రం నేపథ్యంలో పైన కనిపిస్తుంది.",
+    aiVoiceStudio: "AI వాయిస్ స్టూడియో (Microsoft Edge TTS)",
+    freeUnlimited: "ఉచితం · అపరిమితం",
+    teluguScript: "తెలుగు స్క్రిప్ట్ (వాయిస్ జనరేషన్ కొరకు)",
+    tenglishScript: "టెంగ్లీష్ టెక్స్ట్ బాక్స్ (శీర్షికల జనరేషన్ కొరకు)",
+    femaleVoices: "♀ స్త్రీ ప్రొఫెషనల్ వాయిస్లు",
+    maleVoices: "♂ పురుష ప్రొఫెషనల్ వాయిస్లు",
+    voicePitch: "వాయిస్ పిచ్ (వేగం/శైలి)",
+    generateAudio: "AI ఆడియోను సృష్టించండి",
+    generatingAudio: "వాయిస్ సృష్టించబడుతోంది...",
+    audioGenerated: "ఆడియో వాయిస్ విజయవంతంగా సృష్టించబడింది!",
+    manualAudioUpload: "లేదా మీ స్వంత MP3/WAV ఆడియోను అప్‌లోడ్ చేయండి",
+    manualUploadLabel: "ఆడియో ఫైల్‌ను అప్‌లోడ్ చేయండి",
+    searchSongs: "పాటలను శోధించండి...",
+    selectMusic: "నేపథ్య సంగీతాన్ని ఎంచుకోండి",
+    trimAudio: "6-సెకన్ల మ్యూజిక్ ట్రిమ్ భాగాన్ని ఎంచుకోండి",
+    trimStart: "ప్రారంభ స్థానం",
+    noMusicFiles: "backend/music ఫోల్డర్‌లో ఎటువంటి సంగీత ఫైల్‌లు కనుగోనబడలేదు.",
+    bottomBanner: "దిగువ బ్యానర్ / వాటర్‌మార్క్",
+    compulsoryBanner: "తప్పనిసరి దిగువ బ్యానర్ (వాటర్‌మార్క్-కదిలేది)",
+    uploadBanner: "భర్తీ చేయడానికి అనుకూల దిగువ బ్యానర్ PNGని అప్‌లోడ్ చేయండి",
+    bannerPositioning: "బ్యానర్ పొజిషనింగ్ & క్రాపింగ్ నియంత్రణలు",
+    bannerScale: "వాటర్‌మార్క్ స్కేల్ (వెడల్పు)",
+    bannerX: "వాటర్‌మార్క్ X స్థానం",
+    bannerY: "వాటర్‌మార్క్ Y స్థానం",
+    topCrop: "పై క్రాప్ (Top Crop)",
+    bottomCrop: "క్రింది క్రాప్ (Bottom Crop)",
+    leftCrop: "ఎడమ క్రాప్ (Left Crop)",
+    rightCrop: "కుడి క్రాప్ (Right Crop)",
+    movableWatermark2: "కదిలే వాటర్‌మార్క్ 2 (ఐచ్ఛిక మూలలో / లోగో)",
+    enableMovable2: "కదిలే వాటర్‌మార్క్ 2 ని ప్రారంభించండి",
+    watermark2Positioning: "వాటర్‌మార్క్ 2 పొజిషనింగ్ & క్రాపింగ్ నియంత్రణలు",
+    watermark2Scale: "వాటర్‌మార్క్ 2 స్కేల్ (వెడల్పు)",
+    watermark2X: "వాటర్‌మార్క్ 2 X స్థానం",
+    watermark2Y: "వాటర్‌మార్క్ 2 Y స్థానం",
+    captionStyleAndColor: "శీర్షిక శైలి & రంగు సెట్టింగులు",
+    generateVideo: "వీడియోను సృష్టించండి",
+    videoConsole: "వీడియో జనరేషన్ కన్సోల్",
+    googleDriveRequired: "Google డ్రైవ్ కనెక్షన్ అవసరం",
+    googleDriveRequiredDesc: "సృష్టించబడిన వీడియోలు నేరుగా Google డ్రైవ్‌కు పంపబడతాయి మరియు స్థానికంగా నిల్వ చేయబడవు కాబట్టి, ముందుగా మీ Google ఖాతాను అనుసంధానించాలి.",
+    connectGoogleDrive: "Google డ్రైవ్‌ను కనెక్ట్ చేయండి",
+    selectDriveFolder: "Google డ్రైవ్ గమ్యస్థాన ఫోల్డర్‌ను ఎంచుకోండి",
+    disconnectGoogle: "Google ఖాతాను డిస్‌కనెక్ట్ చేయండి",
+    activeFolder: "సక్రియ గమ్యస్థాన ఫోల్డర్",
+    generateVideoBtn: "వీడియోను సృష్టించండి",
+    generatingVideoBtn: "సర్వర్‌లో వీడియో సృష్టించబడుతోంది...",
+    videoDone: "వీడియో జనరేషన్ విజయవంతంగా పూర్తయింది!",
+    driveUploadDone: "అప్‌లోడ్ చేయబడింది మరియు Google డ్రైవ్‌లో సేవ్ చేయబడింది!",
+    driveUploadBtn: "అప్‌లోడ్ చేసి Google డ్రైవ్‌లో సేవ్ చేయండి",
+    viewOnDrive: "Google డ్రైవ్‌లో చూడండి",
+    downloadVideo: "వీడియో ఫైల్‌ను డౌన్లోడ్ చేయండి",
+    errorOccurred: "ఒక లోపం సంభవించింది:",
+    previewWorkspace: "లైవ్ ప్రివ్యూ వర్క్‌స్పేస్",
+    noTemplateSelected: "టెంప్లేట్ ఎంచుకోబడలేదు. దశ 1 నుండి నేపథ్య వీడియోను ఎంచుకోండి.",
+    loadingProgress: "టెంప్లేట్ లోడ్ అవుతోంది...",
+    signOut: "సైన్ అవుట్",
+  }
+};
+
+export default function StudioPage({ isTelugu = false }: { isTelugu?: boolean }) {
+  const t = (key: keyof typeof translations.en) => {
+    const lang = isTelugu ? 'te' : 'en';
+    return translations[lang][key] || translations.en[key];
+  };
+
+  // Platform and Audio Library state
+  const [videoPlatform, setVideoPlatform] = useState<'youtube' | 'instagram'>('youtube');
+  const [musicFiles, setMusicFiles] = useState<any[]>([]);
+  const [selectedMusicFile, setSelectedMusicFile] = useState<string>('');
+  const [musicTrimStart, setMusicTrimStart] = useState<number>(0);
+  const [musicSearchQuery, setMusicSearchQuery] = useState<string>('');
+  const [musicDuration, setMusicDuration] = useState<number>(0);
+
   // Config & Data
   const [backgrounds, setBackgrounds] = useState<any[]>([]);
   const [watermark, setWatermark] = useState<any>({
@@ -163,7 +325,70 @@ export default function StudioPage() {
     fetchWatermark();
     checkGoogleAuth();
     fetchTTSVoices();
+    fetchMusicFiles();
   }, []);
+
+  // Update dynamic audio duration and source based on platform and selected song
+  useEffect(() => {
+    if (videoPlatform === 'instagram' && selectedMusicFile) {
+      const url = `${BACKEND_URL}/music/${selectedMusicFile}`;
+      setAudioUrl(url);
+      setMusicTrimStart(0);
+      
+      const tempAudio = new Audio(url);
+      tempAudio.addEventListener('loadedmetadata', () => {
+        setMusicDuration(tempAudio.duration);
+        setAudioDuration(tempAudio.duration);
+      });
+    }
+  }, [selectedMusicFile, videoPlatform]);
+
+  useEffect(() => {
+    if (videoPlatform === 'youtube') {
+      if (audioFile) {
+        const url = URL.createObjectURL(audioFile);
+        setAudioUrl(url);
+        const tempAudio = new Audio(url);
+        tempAudio.addEventListener('loadedmetadata', () => {
+          setAudioDuration(tempAudio.duration);
+        });
+      } else {
+        setAudioUrl('');
+        setAudioDuration(0);
+      }
+    } else {
+      if (selectedMusicFile) {
+        const url = `${BACKEND_URL}/music/${selectedMusicFile}`;
+        setAudioUrl(url);
+        const tempAudio = new Audio(url);
+        tempAudio.addEventListener('loadedmetadata', () => {
+          setMusicDuration(tempAudio.duration);
+          setAudioDuration(tempAudio.duration);
+        });
+      } else {
+        setAudioUrl('');
+        setAudioDuration(0);
+      }
+    }
+    pausePreview();
+    setPreviewCurrentTime(0);
+    setPreviewProgress(0);
+  }, [videoPlatform]);
+
+  const fetchMusicFiles = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/music`);
+      if (res.ok) {
+        const data = await res.json();
+        setMusicFiles(data);
+        if (data.length > 0) {
+          setSelectedMusicFile(data[0].filename);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch library music files:', e);
+    }
+  };
 
   // Update movable watermark aspect ratio when image URL changes
   useEffect(() => {
@@ -646,7 +871,14 @@ export default function StudioPage() {
   const playPreview = () => {
     setIsPlaying(true);
     if (videoRef.current) videoRef.current.play().catch(err => console.warn(err));
-    if (audioRef.current && audioUrl) audioRef.current.play().catch(err => console.warn(err));
+    if (audioRef.current && audioUrl) {
+      if (videoPlatform === 'instagram') {
+        if (audioRef.current.currentTime < musicTrimStart || audioRef.current.currentTime > musicTrimStart + 6) {
+          audioRef.current.currentTime = musicTrimStart;
+        }
+      }
+      audioRef.current.play().catch(err => console.warn(err));
+    }
   };
 
   const pausePreview = () => {
@@ -657,6 +889,15 @@ export default function StudioPage() {
 
   // Video looping / end of audio handling
   const handleVideoEnded = () => {
+    if (videoPlatform === 'instagram') {
+      // Loop background video indefinitely for Instagram
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch(err => console.warn(err));
+      }
+      return;
+    }
+
     if (!audioFile) {
       // Loop background video indefinitely if no audio is uploaded
       if (videoRef.current) {
@@ -679,12 +920,29 @@ export default function StudioPage() {
   const handleAudioTimeUpdate = () => {
     if (audioRef.current) {
       const current = audioRef.current.currentTime;
-      setPreviewCurrentTime(current);
-      setPreviewProgress((current / audioDuration) * 100);
-      // Word-level sync: find which word is currently being spoken
-      if (wordTimestamps.length > 0) {
-        const idx = wordTimestamps.findIndex(w => current >= w.start && current < w.end);
-        setCurrentWordIdx(idx);
+      if (videoPlatform === 'instagram') {
+        const relativeTime = current - musicTrimStart;
+        if (relativeTime < 0 || relativeTime > 6) {
+          // Loop back to start of trim
+          audioRef.current.currentTime = musicTrimStart;
+          setPreviewCurrentTime(0);
+          setPreviewProgress(0);
+          if (videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(err => console.warn(err));
+          }
+        } else {
+          setPreviewCurrentTime(relativeTime);
+          setPreviewProgress((relativeTime / 6) * 100);
+        }
+      } else {
+        setPreviewCurrentTime(current);
+        setPreviewProgress((current / audioDuration) * 100);
+        // Word-level sync: find which word is currently being spoken
+        if (wordTimestamps.length > 0) {
+          const idx = wordTimestamps.findIndex(w => current >= w.start && current < w.end);
+          setCurrentWordIdx(idx);
+        }
       }
     }
   };
@@ -692,7 +950,13 @@ export default function StudioPage() {
   const handleAudioEnded = () => {
     pausePreview();
     if (videoRef.current) videoRef.current.currentTime = 0;
-    if (audioRef.current) audioRef.current.currentTime = 0;
+    if (audioRef.current) {
+      if (videoPlatform === 'instagram') {
+        audioRef.current.currentTime = musicTrimStart;
+      } else {
+        audioRef.current.currentTime = 0;
+      }
+    }
     setPreviewCurrentTime(0);
     setPreviewProgress(0);
   };
@@ -1383,14 +1647,14 @@ export default function StudioPage() {
           </div>
 
 
-          {/* Step 4: Bottom Banner / Watermark */}
+          {/* Step 5: Bottom Banner / Watermark */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
-                  4
+                  5
                 </div>
-                <h2 className="text-lg font-semibold text-slate-200">Bottom Banner / Watermark</h2>
+                <h2 className="text-lg font-semibold text-slate-200">{t('step5')}</h2>
               </div>
               <span className="text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full font-semibold">Active</span>
             </div>
@@ -1681,133 +1945,135 @@ export default function StudioPage() {
             </div>
           </div>
 
-          {/* Step 5: Dynamic Captions (Optional) */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
-                  5
+          {/* Step 6: Dynamic Captions (Optional) */}
+          {videoPlatform === 'youtube' && (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
+                    6
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-200">{t('step6')}</h2>
                 </div>
-                <h2 className="text-lg font-semibold text-slate-200">Dynamic Captions (Optional)</h2>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2.5">
-                <button
-                  type="button"
-                  onClick={handleAutoTranscribe}
-                  disabled={isTranscribing || !audioFile}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-orange-500/30 bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isTranscribing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Transcribing Audio...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" />
-                      Auto-Transcribe with Gemini
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleAddCaptionSegment}
-                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-200 font-semibold text-xs transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Caption
-                </button>
-
-                {captions.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2.5">
                   <button
                     type="button"
-                    onClick={handleClearAllCaptions}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-red-500/20 bg-red-950/10 hover:bg-red-950/20 text-red-400 font-semibold text-xs transition-colors"
+                    onClick={handleAutoTranscribe}
+                    disabled={isTranscribing || !audioFile}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-orange-500/30 bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Trash2 className="h-4 w-4" />
-                    Clear
+                    {isTranscribing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Transcribing Audio...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Auto-Transcribe with Gemini
+                      </>
+                    )}
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAddCaptionSegment}
+                    className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-slate-700 bg-slate-800/60 hover:bg-slate-800 text-slate-200 font-semibold text-xs transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Caption
+                  </button>
+
+                  {captions.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAllCaptions}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-red-500/20 bg-red-950/10 hover:bg-red-950/20 text-red-400 font-semibold text-xs transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                {!audioFile && (
+                  <p className="text-[11px] text-amber-400/90 bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-lg">
+                    ⚠️ <strong>Note:</strong> You must upload a soundtrack in Step 4 before using auto-transcription.
+                  </p>
+                )}
+
+                {transcriptionError && (
+                  <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 p-2.5 rounded-lg flex items-start gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>{transcriptionError}</span>
+                  </p>
+                )}
+
+                {captions.length > 0 && (
+                  <div className="space-y-2.5">
+                    <div className="max-h-[300px] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/50 p-2 space-y-2 custom-scrollbar">
+                      {captions.map((caption, idx) => (
+                        <div
+                          key={caption.id}
+                          className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-900/40 p-3 hover:border-slate-700 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-mono text-slate-500">
+                              #{idx + 1}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-500">Start:</span>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={caption.start}
+                                  onChange={(e) => handleUpdateCaptionSegment(caption.id, 'start', e.target.value)}
+                                  className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-orange-500 focus:outline-none"
+                                />
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-500">End:</span>
+                                <input
+                                  type="number"
+                                  step="0.1"
+                                  min="0"
+                                  value={caption.end}
+                                  onChange={(e) => handleUpdateCaptionSegment(caption.id, 'end', e.target.value)}
+                                  className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-orange-500 focus:outline-none"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCaptionSegment(caption.id)}
+                                className="rounded p-1 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          <textarea
+                            rows={2}
+                            value={caption.text}
+                            onChange={(e) => handleUpdateCaptionSegment(caption.id, 'text', e.target.value)}
+                            placeholder="Caption text..."
+                            className="w-full rounded border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40">
+                      💡 <strong>Tip:</strong> Timestamps are in seconds. The simulator dynamically highlights the active caption during playback and bounces it with a CSS animation.
+                    </p>
+                  </div>
                 )}
               </div>
-
-              {!audioFile && (
-                <p className="text-[11px] text-amber-400/90 bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-lg">
-                  ⚠️ <strong>Note:</strong> You must upload a soundtrack in Step 3 before using auto-transcription.
-                </p>
-              )}
-
-              {transcriptionError && (
-                <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 p-2.5 rounded-lg flex items-start gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  <span>{transcriptionError}</span>
-                </p>
-              )}
-
-              {captions.length > 0 && (
-                <div className="space-y-2.5">
-                  <div className="max-h-[300px] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/50 p-2 space-y-2 custom-scrollbar">
-                    {captions.map((caption, idx) => (
-                      <div
-                        key={caption.id}
-                        className="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-900/40 p-3 hover:border-slate-700 transition-colors"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-mono text-slate-500">
-                            #{idx + 1}
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <div className="flex items-center gap-1">
-                              <span className="text-[9px] text-slate-500">Start:</span>
-                              <input
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                value={caption.start}
-                                onChange={(e) => handleUpdateCaptionSegment(caption.id, 'start', e.target.value)}
-                                className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-orange-500 focus:outline-none"
-                              />
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[9px] text-slate-500">End:</span>
-                              <input
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                value={caption.end}
-                                onChange={(e) => handleUpdateCaptionSegment(caption.id, 'end', e.target.value)}
-                                className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-orange-500 focus:outline-none"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCaptionSegment(caption.id)}
-                              className="rounded p-1 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                        <textarea
-                          rows={2}
-                          value={caption.text}
-                          onChange={(e) => handleUpdateCaptionSegment(caption.id, 'text', e.target.value)}
-                          placeholder="Caption text..."
-                          className="w-full rounded border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40">
-                    💡 <strong>Tip:</strong> Timestamps are in seconds. The simulator dynamically highlights the active caption during playback and bounces it with a CSS animation.
-                  </p>
-                </div>
-              )}
             </div>
-          </div>
+          )}
         </div>
 
         {/* Live Simulation Preview & Export (Right side) */}
@@ -2033,7 +2299,7 @@ export default function StudioPage() {
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-transparent p-4 flex flex-col gap-2">
                 
                 {/* Timeline slider */}
-                {audioFile && (
+                {(audioFile || (videoPlatform === 'instagram' && selectedMusicFile)) && (
                   <div className="w-full space-y-1">
                     <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
                       <div 
@@ -2043,7 +2309,7 @@ export default function StudioPage() {
                     </div>
                     <div className="flex justify-between text-[8px] text-slate-400 font-mono">
                       <span>{previewCurrentTime.toFixed(1)}s</span>
-                      <span>{audioDuration.toFixed(1)}s</span>
+                      <span>{videoPlatform === 'instagram' ? '6.0s' : `${audioDuration.toFixed(1)}s`}</span>
                     </div>
                   </div>
                 )}
@@ -2122,11 +2388,15 @@ export default function StudioPage() {
 
                       <button
                         onClick={handleGenerateVideo}
-                        disabled={!selectedBgId || !imageFile || !audioFile}
+                        disabled={
+                          videoPlatform === 'instagram'
+                            ? !selectedBgId || !imageFile || !selectedMusicFile
+                            : !selectedBgId || !imageFile || !audioFile
+                        }
                         className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-blue-500 text-white font-semibold text-sm shadow-lg shadow-orange-500/15 hover:opacity-95 disabled:from-slate-800 disabled:via-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group"
                       >
                         <Sparkles className="h-4 w-4 group-hover:rotate-12 transition-transform" />
-                        Generate Video
+                        {t('generateVideoBtn')}
                       </button>
                     </>
                   )}

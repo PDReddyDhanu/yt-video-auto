@@ -78,19 +78,11 @@ async function runVerification() {
   }
 
   const data1 = await res1.json();
-  console.log("Render Success. Output:", data1.videoUrl);
+  console.log("Render Success. Drive Link:", data1.driveLink);
+  console.log(`Output Duration: ${data1.duration}s (Expected: ~5s)`);
   
-  const outPath1 = path.join(__dirname, 'output', data1.videoFilename);
-  const duration1 = await getMediaDuration(outPath1);
-  const resolution1 = await getMediaResolution(outPath1);
-  console.log(`Output Duration: ${duration1}s (Expected: ~5s)`);
-  console.log(`Output Resolution: ${resolution1} (Expected: 1080x1920)`);
-  
-  if (Math.abs(duration1 - 5) > 0.5) {
-    throw new Error(`Scenario B failed: Video duration is ${duration1}s instead of ~5s`);
-  }
-  if (resolution1 !== "1080x1920") {
-    throw new Error(`Scenario B failed: Video resolution is ${resolution1} instead of 1080x1920`);
+  if (Math.abs(data1.duration - 5) > 0.5) {
+    throw new Error(`Scenario B failed: Video duration is ${data1.duration}s instead of ~5s`);
   }
   console.log("Scenario B: Trim works perfectly!");
 
@@ -108,21 +100,37 @@ async function runVerification() {
   }
 
   const data2 = await res2.json();
-  console.log("Render Success. Output:", data2.videoUrl);
+  console.log("Render Success. Drive Link:", data2.driveLink);
+  console.log(`Output Duration: ${data2.duration}s (Expected: ~18s)`);
 
-  const outPath2 = path.join(__dirname, 'output', data2.videoFilename);
-  const duration2 = await getMediaDuration(outPath2);
-  const resolution2 = await getMediaResolution(outPath2);
-  console.log(`Output Duration: ${duration2}s (Expected: ~18s)`);
-  console.log(`Output Resolution: ${resolution2} (Expected: 1080x1920)`);
-
-  if (Math.abs(duration2 - 18) > 0.5) {
-    throw new Error(`Scenario A failed: Video duration is ${duration2}s instead of ~18s`);
-  }
-  if (resolution2 !== "1080x1920") {
-    throw new Error(`Scenario A failed: Video resolution is ${resolution2} instead of 1080x1920`);
+  if (Math.abs(data2.duration - 18) > 0.5) {
+    throw new Error(`Scenario A failed: Video duration is ${data2.duration}s instead of ~18s`);
   }
   console.log("Scenario A: Loop works perfectly!");
+  
+  // Verification C: Instagram Mode (should produce a video of exactly 6s using library audio)
+  console.log("\n--- VERIFYING SCENARIO C: Instagram mode 6-second trim with library music ---");
+  const form3 = new FormData();
+  form3.append('bgId', selectedBg.id);
+  form3.append('image', new Blob([fs.readFileSync(MOCK_IMAGE)]), 'mock_image.png');
+  form3.append('mode', 'instagram');
+  form3.append('musicFile', 'Telugu_Song_1.mp3');
+  form3.append('trimStart', '3.5');
+
+  const res3 = await fetch(generateUrl, { method: 'POST', body: form3 });
+  if (!res3.ok) {
+    const err = await res3.json();
+    throw new Error(`Scenario C render failed: ${err.error || JSON.stringify(err)}`);
+  }
+
+  const data3 = await res3.json();
+  console.log("Render Success. Drive Link:", data3.driveLink);
+  console.log(`Output Duration: ${data3.duration}s (Expected: ~6s)`);
+
+  if (Math.abs(data3.duration - 6) > 0.5) {
+    throw new Error(`Scenario C failed: Video duration is ${data3.duration}s instead of ~6s`);
+  }
+  console.log("Scenario C: Instagram mode works perfectly!");
   
   // Clean up mock files
   try {
