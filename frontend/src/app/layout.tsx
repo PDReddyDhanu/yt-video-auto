@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoVideo Studio - Automated Video Generation",
+  title: "PDR-Edits",
   description: "Generate beautiful, engaging portrait videos automatically from templates, images, and audio.",
 };
 

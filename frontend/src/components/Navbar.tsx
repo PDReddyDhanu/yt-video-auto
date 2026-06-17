@@ -12,11 +12,13 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-blue-500 shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-105">
-            <Film className="h-5 w-5 text-white" />
-          </div>
+          <img 
+            src="/logo.jpg" 
+            alt="PDR-Edits Logo" 
+            className="h-10 w-10 rounded-xl object-cover shadow-lg shadow-orange-500/20 border border-orange-500/20 transition-transform duration-300 group-hover:scale-105"
+          />
           <span className="bg-gradient-to-r from-amber-100 via-orange-200 to-blue-200 bg-clip-text text-xl font-bold tracking-tight text-transparent">
-            AutoVideo
+            PDR Edits Auto Video
           </span>
         </Link>
 

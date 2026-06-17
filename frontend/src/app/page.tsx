@@ -976,12 +976,14 @@ export default function StudioPage() {
         <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[350px] h-[350px] bg-pink-600/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="w-full max-w-md rounded-2xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-2xl backdrop-blur-md relative z-10 flex flex-col items-center">
-          <div className="h-12 w-12 rounded-xl bg-orange-600/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-6">
-            <Sparkles className="h-6 w-6" />
-          </div>
+          <img 
+            src="/logo.jpg" 
+            alt="PDR-Edits Logo" 
+            className="h-16 w-16 rounded-2xl object-cover shadow-lg border border-orange-500/20 mb-6"
+          />
 
           <h1 className="bg-gradient-to-r from-amber-100 via-orange-200 to-blue-200 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl text-center">
-            AutoVideo Studio
+            PDR-Edits
           </h1>
           <p className="mt-2.5 text-slate-400 text-xs text-center leading-relaxed max-w-[280px]">
             Please sign in with your Google account to access the video editing workspace and templates.
@@ -1025,7 +1027,7 @@ export default function StudioPage() {
       <div className="mb-8 border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="bg-gradient-to-r from-amber-100 via-orange-200 to-blue-200 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
-            Automated Video Studio
+            PDR's Automated Video Studio
           </h1>
           <p className="mt-2 text-slate-400">
             Combine templates, images, and audio into professional portrait MP4s instantly.
