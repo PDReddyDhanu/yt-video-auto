@@ -310,7 +310,7 @@ app.post('/api/watermark', upload.single('watermarkImage'), (req, res) => {
 
 // ---------------- TEXT-TO-SPEECH PROXY API ----------------
 
-const TTS_API = 'http://127.0.0.1:8001';
+const TTS_API = process.env.TTS_API_URL || 'http://127.0.0.1:8001';
 
 // Proxy: Get available voices from TTS server
 app.get('/api/tts/voices', async (req, res) => {

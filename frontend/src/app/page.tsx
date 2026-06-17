@@ -23,6 +23,8 @@ import {
   Type
 } from 'lucide-react';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+
 export default function StudioPage() {
   // Config & Data
   const [backgrounds, setBackgrounds] = useState<any[]>([]);
@@ -46,7 +48,7 @@ export default function StudioPage() {
   // Movable Watermark State
   const [enableMovable, setEnableMovable] = useState<boolean>(true); // always true/compulsory
   const [movableFile, setMovableFile] = useState<File | null>(null);
-  const [movableUrl, setMovableUrl] = useState<string>('http://localhost:3001/uploads/ChatGPT%20Image%20Jun%2017,%202026,%2003_36_57%20AM.png');
+  const [movableUrl, setMovableUrl] = useState<string>(`${BACKEND_URL}/uploads/ChatGPT%20Image%20Jun%2017,%202026,%2003_36_57%20AM.png`);
   const [movableX, setMovableX] = useState<number>(4); // initial X percentage
   const [movableY, setMovableY] = useState<number>(83); // initial Y percentage
   const [movableScale, setMovableScale] = useState<number>(91.78571428571428); // initial width scale
@@ -58,7 +60,7 @@ export default function StudioPage() {
   
   // Movable Watermark 2 State (Optional / Toggleable)
   const [showMovable2, setShowMovable2] = useState<boolean>(false);
-  const [movable2Url, setMovable2Url] = useState<string>('http://localhost:3001/uploads/watermark2p.png');
+  const [movable2Url, setMovable2Url] = useState<string>(`${BACKEND_URL}/uploads/watermark2p.png`);
   const [movable2X, setMovable2X] = useState<number>(75); // initial X percentage (top right corner)
   const [movable2Y, setMovable2Y] = useState<number>(5); // initial Y percentage
   const [movable2Scale, setMovable2Scale] = useState<number>(20); // initial width scale (20%)
@@ -152,8 +154,6 @@ export default function StudioPage() {
   // Refs for Synced Playback
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  const BACKEND_URL = 'http://localhost:3001';
 
   // Fetch templates, watermark config, and Drive status on load
   useEffect(() => {

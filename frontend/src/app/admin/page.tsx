@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminPage() {
-  const BACKEND_URL = 'http://localhost:3001';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
   // State Management
   const [backgrounds, setBackgrounds] = useState<any[]>([]);
@@ -36,7 +36,7 @@ export default function AdminPage() {
   const [driveConfig, setDriveConfig] = useState<any>({
     clientId: '',
     clientSecret: '',
-    redirectUri: 'http://localhost:3001/api/auth/google/callback',
+    redirectUri: `${BACKEND_URL}/api/auth/google/callback`,
     hasSecret: false
   });
   const [history, setHistory] = useState<any[]>([]);
