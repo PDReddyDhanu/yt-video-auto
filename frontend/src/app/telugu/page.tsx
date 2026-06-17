@@ -3,5 +3,5 @@
 import StudioPage from '../page';
 
 export default function TeluguPage() {
-  return <StudioPage isTelugu={true} />;
+  return <StudioPage initialPlatform="instagram" />;
 }

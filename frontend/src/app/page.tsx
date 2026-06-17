@@ -176,14 +176,13 @@ const translations = {
   }
 };
 
-export default function StudioPage({ isTelugu = false }: { isTelugu?: boolean }) {
+export default function StudioPage({ initialPlatform = 'youtube' }: { initialPlatform?: 'youtube' | 'instagram' }) {
   const t = (key: keyof typeof translations.en) => {
-    const lang = isTelugu ? 'te' : 'en';
-    return translations[lang][key] || translations.en[key];
+    return translations.en[key];
   };
 
   // Platform and Audio Library state
-  const [videoPlatform, setVideoPlatform] = useState<'youtube' | 'instagram'>('youtube');
+  const [videoPlatform, setVideoPlatform] = useState<'youtube' | 'instagram'>(initialPlatform);
   const [musicFiles, setMusicFiles] = useState<any[]>([]);
   const [selectedMusicFile, setSelectedMusicFile] = useState<string>('');
   const [musicTrimStart, setMusicTrimStart] = useState<number>(0);
