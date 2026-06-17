@@ -564,7 +564,7 @@ app.post('/api/generate', upload.fields([
     }
     mwmFilter += `,scale=${mwmWidth}:-1[mwm];`;
     filterComplexParts.push(mwmFilter);
-    filterComplexParts.push(`[bg_img][mwm]overlay=${mwmX}:${mwmY}[bg_mwm]`);
+    filterComplexParts.push(`[bg_img][mwm]overlay=${mwmX}:${mwmY}[bg_mwm];`);
     let lastLabel = '[bg_mwm]';
 
     // 3:v is the optional second movable watermark
@@ -588,15 +588,15 @@ app.post('/api/generate', upload.fields([
       }
       mwm2Filter += `,scale=${mwm2Width}:-1[mwm2];`;
       filterComplexParts.push(mwm2Filter);
-      filterComplexParts.push(`[bg_mwm][mwm2]overlay=${mwm2X}:${mwm2Y}[bg_mwm2]`);
+      filterComplexParts.push(`[bg_mwm][mwm2]overlay=${mwm2X}:${mwm2Y}[bg_mwm2];`);
       lastLabel = '[bg_mwm2]';
     }
 
     // Burn subtitles into video if present, otherwise just pipe the stream
     if (assFilename) {
-      filterComplexParts.push(`;${lastLabel}subtitles='${assFilename}'[outv]`);
+      filterComplexParts.push(`${lastLabel}subtitles='${assFilename}'[outv]`);
     } else {
-      filterComplexParts.push(`;${lastLabel}null[outv]`);
+      filterComplexParts.push(`${lastLabel}null[outv]`);
     }
 
     const filterComplex = filterComplexParts.join('');
