@@ -962,7 +962,7 @@ export default function StudioPage() {
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-200">
-        <Loader2 className="h-10 w-10 text-indigo-500 animate-spin mb-4" />
+        <Loader2 className="h-10 w-10 text-orange-500 animate-spin mb-4" />
         <p className="text-slate-400 text-sm font-semibold tracking-wide">Validating system authentication...</p>
       </div>
     );
@@ -972,15 +972,15 @@ export default function StudioPage() {
     return (
       <div className="min-h-screen bg-slate-950 relative flex items-center justify-center overflow-hidden px-4">
         {/* Background gradient glow blobs */}
-        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-orange-600/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[350px] h-[350px] bg-pink-600/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="w-full max-w-md rounded-2xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-2xl backdrop-blur-md relative z-10 flex flex-col items-center">
-          <div className="h-12 w-12 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-6">
+          <div className="h-12 w-12 rounded-xl bg-orange-600/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-6">
             <Sparkles className="h-6 w-6" />
           </div>
 
-          <h1 className="bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl text-center">
+          <h1 className="bg-gradient-to-r from-amber-100 via-orange-200 to-blue-200 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl text-center">
             AutoVideo Studio
           </h1>
           <p className="mt-2.5 text-slate-400 text-xs text-center leading-relaxed max-w-[280px]">
@@ -1024,7 +1024,7 @@ export default function StudioPage() {
       {/* Title Header */}
       <div className="mb-8 border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
+          <h1 className="bg-gradient-to-r from-amber-100 via-orange-200 to-blue-200 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
             Automated Video Studio
           </h1>
           <p className="mt-2 text-slate-400">
@@ -1050,11 +1050,11 @@ export default function StudioPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Workspace Controls (Left side) */}
-        <div className="space-y-6 lg:col-span-7">
+        <div className="space-y-6 lg:col-span-7 order-2 lg:order-1">
           {/* Step 1: Background Template */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-sm border border-indigo-500/20">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
                 1
               </div>
               <h2 className="text-lg font-semibold text-slate-200">Select Background Video</h2>
@@ -1062,7 +1062,7 @@ export default function StudioPage() {
             
             {backgrounds.length === 0 ? (
               <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 p-8 text-center">
-                <Loader2 className="h-8 w-8 text-indigo-500 animate-spin mb-3" />
+                <Loader2 className="h-8 w-8 text-orange-500 animate-spin mb-3" />
                 <p className="text-slate-400 text-sm">Generating default background templates...</p>
               </div>
             ) : (
@@ -1076,7 +1076,7 @@ export default function StudioPage() {
                     }}
                     className={`group relative overflow-hidden rounded-xl border text-left transition-all duration-300 ${
                       selectedBgId === bg.id
-                        ? 'border-indigo-500 bg-indigo-950/20 ring-1 ring-indigo-500'
+                        ? 'border-orange-500 bg-indigo-950/20 ring-1 ring-indigo-500'
                         : 'border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/40'
                     }`}
                   >
@@ -1107,7 +1107,7 @@ export default function StudioPage() {
           {/* Step 2: Overlay Image */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-sm border border-indigo-500/20">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
                 2
               </div>
               <h2 className="text-lg font-semibold text-slate-200">Upload Center Image</h2>
@@ -1117,7 +1117,7 @@ export default function StudioPage() {
               <div>
                 <label className="flex flex-col items-center justify-center aspect-square rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all group">
                   <div className="flex flex-col items-center justify-center p-5 text-center">
-                    <ImageIcon className="h-8 w-8 text-slate-500 group-hover:text-indigo-400 transition-colors mb-2.5" />
+                    <ImageIcon className="h-8 w-8 text-slate-500 group-hover:text-orange-400 transition-colors mb-2.5" />
                     <span className="text-xs font-semibold text-slate-300">Choose Image</span>
                     <span className="text-[10px] text-slate-500 mt-1">PNG, JPG, JPEG, WEBP</span>
                   </div>
@@ -1184,7 +1184,7 @@ export default function StudioPage() {
           {/* Step 3: Soundtrack — TTS Studio or Manual Upload */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-sm border border-indigo-500/20">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
                 3
               </div>
               <h2 className="text-lg font-semibold text-slate-200">Soundtrack</h2>
@@ -1192,34 +1192,34 @@ export default function StudioPage() {
 
             <div className="space-y-5">
               {/* === TTS Script Studio === */}
-              <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/10 p-4 space-y-3">
+              <div className="rounded-xl border border-orange-500/20 bg-indigo-950/10 p-4 space-y-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <Mic className="h-4 w-4 text-indigo-400" />
-                  <span className="text-sm font-semibold text-indigo-300">AI Voice Studio (Microsoft Edge TTS)</span>
+                  <Mic className="h-4 w-4 text-orange-400" />
+                  <span className="text-sm font-semibold text-orange-300">AI Voice Studio (Microsoft Edge TTS)</span>
                   <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free · Unlimited</span>
                 </div>
 
                 {/* Script textarea */}
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-indigo-400">Telugu Script (for generating voice)</span>
+                  <span className="text-xs font-semibold text-orange-400">Telugu Script (for generating voice)</span>
                   <textarea
                     rows={4}
                     placeholder="Type your Telugu script here... (e.g.: నమస్కారం! శుభోదయం. ఈ వీడియో మీకు నచ్చుతుందని ఆశిస్తున్నాను.)"
                     value={ttsScript}
                     onChange={(e) => setTtsScript(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none leading-relaxed"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
                   />
                 </div>
 
                 {/* Tenglish Script textarea */}
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-indigo-400">Tenglish Text box (for generating captions)</span>
+                  <span className="text-xs font-semibold text-orange-400">Tenglish Text box (for generating captions)</span>
                   <textarea
                     rows={4}
                     placeholder="Type your Tenglish captions script here... (e.g.: Namaskaram! Shubhodhayam. Ee video meeku nachutundhani aashistunnanu.)"
                     value={tenglishScript}
                     onChange={(e) => setTenglishScript(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none leading-relaxed"
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
                   />
                 </div>
 
@@ -1248,7 +1248,7 @@ export default function StudioPage() {
                           <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-pink-300' : 'text-slate-500'}`}>{preset.id}</span>
                           <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
                           {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
-                          <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-pink-400' : 'text-slate-600'}`}>
+                          <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-blue-400' : 'text-slate-600'}`}>
                             Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
                           </span>
                           {isActive && (
@@ -1298,7 +1298,7 @@ export default function StudioPage() {
                   <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                   <span className="text-[10px] text-emerald-400 font-semibold">Studio Clarity Boost</span>
                   <span className="text-[9px] text-slate-500 ml-auto">DSP: 7-band EQ · HP 80Hz · Locked</span>
-                  <span className="text-[10px] font-mono text-indigo-300 ml-2">1.65×</span>
+                  <span className="text-[10px] font-mono text-orange-300 ml-2">1.65×</span>
                 </div>
 
                 <p className="text-[9px] text-slate-600 text-center">
@@ -1316,7 +1316,7 @@ export default function StudioPage() {
                   type="button"
                   onClick={handleGenerateTTS}
                   disabled={isGeneratingTTS || !ttsScript.trim()}
-                  className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-orange-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 transition-colors"
                 >
                   {isGeneratingTTS ? (
                     <><Loader2 className="h-4 w-4 animate-spin" />Generating Audio + Captions...</>
@@ -1339,7 +1339,7 @@ export default function StudioPage() {
 
               {/* Manual Upload */}
               <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all p-5 text-center group">
-                <AudioIcon className="h-7 w-7 text-slate-500 group-hover:text-indigo-400 transition-colors mb-2" />
+                <AudioIcon className="h-7 w-7 text-slate-500 group-hover:text-orange-400 transition-colors mb-2" />
                 <span className="text-xs font-semibold text-slate-300">Choose Audio File</span>
                 <span className="text-[10px] text-slate-500 mt-1">MP3, WAV, AAC (Determines final video duration)</span>
                 <input
@@ -1353,7 +1353,7 @@ export default function StudioPage() {
               {audioFile && (
                 <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950 p-4">
                   <div className="flex items-center gap-3 truncate">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 border border-purple-500/20 text-orange-400">
                       <AudioIcon className="h-5 w-5" />
                     </div>
                     <div className="truncate">
@@ -1383,12 +1383,12 @@ export default function StudioPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-sm border border-indigo-500/20">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
                   4
                 </div>
                 <h2 className="text-lg font-semibold text-slate-200">Bottom Banner / Watermark</h2>
               </div>
-              <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-semibold">Active</span>
+              <span className="text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full font-semibold">Active</span>
             </div>
 
             <div className="space-y-4 pt-2 border-t border-slate-850 animate-[fadeIn_0.2s_ease-out]">
@@ -1427,7 +1427,7 @@ export default function StudioPage() {
                       setMovableX(4);
                       setMovableY(83);
                     }}
-                    className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
+                    className="text-orange-400 hover:text-orange-300 font-semibold transition-colors"
                   >
                     Reset Position
                   </button>
@@ -1511,7 +1511,7 @@ export default function StudioPage() {
                         setCropLeft(0);
                         setCropRight(0);
                       }}
-                      className="text-[10px] text-slate-400 hover:text-indigo-400 underline font-medium transition-colors"
+                      className="text-[10px] text-slate-400 hover:text-orange-400 underline font-medium transition-colors"
                     >
                       Reset Crop
                     </button>
@@ -1681,7 +1681,7 @@ export default function StudioPage() {
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 font-semibold text-sm border border-indigo-500/20">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
                   5
                 </div>
                 <h2 className="text-lg font-semibold text-slate-200">Dynamic Captions (Optional)</h2>
@@ -1694,7 +1694,7 @@ export default function StudioPage() {
                   type="button"
                   onClick={handleAutoTranscribe}
                   disabled={isTranscribing || !audioFile}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-indigo-500/30 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-orange-500/30 bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isTranscribing ? (
                     <>
@@ -1764,7 +1764,7 @@ export default function StudioPage() {
                                 min="0"
                                 value={caption.start}
                                 onChange={(e) => handleUpdateCaptionSegment(caption.id, 'start', e.target.value)}
-                                className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-indigo-500 focus:outline-none"
+                                className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-orange-500 focus:outline-none"
                               />
                             </div>
                             <div className="flex items-center gap-1">
@@ -1775,7 +1775,7 @@ export default function StudioPage() {
                                 min="0"
                                 value={caption.end}
                                 onChange={(e) => handleUpdateCaptionSegment(caption.id, 'end', e.target.value)}
-                                className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-indigo-500 focus:outline-none"
+                                className="w-14 rounded border border-slate-800 bg-slate-950 px-1 py-0.5 text-[10px] font-mono text-slate-300 focus:border-orange-500 focus:outline-none"
                               />
                             </div>
                             <button
@@ -1792,7 +1792,7 @@ export default function StudioPage() {
                           value={caption.text}
                           onChange={(e) => handleUpdateCaptionSegment(caption.id, 'text', e.target.value)}
                           placeholder="Caption text..."
-                          className="w-full rounded border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none"
+                          className="w-full rounded border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none"
                         />
                       </div>
                     ))}
@@ -1807,10 +1807,10 @@ export default function StudioPage() {
         </div>
 
         {/* Live Simulation Preview & Export (Right side) */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="lg:col-span-5 space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm flex flex-col items-center">
             <h2 className="text-lg font-semibold text-slate-200 mb-4 self-start flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-indigo-400" />
+              <Sparkles className="h-4 w-4 text-orange-400" />
               Live Output Simulation
             </h2>
 
@@ -1864,7 +1864,7 @@ export default function StudioPage() {
                     userSelect: 'none',
                     touchAction: 'none',
                     zIndex: 40,
-                    border: '1.5px dashed #4f46e5',
+                    border: '1.5px dashed #FF9100',
                     padding: '2px',
                     boxShadow: '0 0 10px rgba(0,0,0,0.5)',
                     transition: (isDragging || isResizing) ? 'none' : 'left 0.1s ease, top 0.1s ease, width 0.1s ease'
@@ -1893,22 +1893,22 @@ export default function StudioPage() {
                   <div
                     onMouseDown={(e) => handleResizeStart(e, 'tl', 'wm1')}
                     onTouchStart={(e) => handleResizeTouchStart(e, 'tl', 'wm1')}
-                    className="w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full absolute -top-1.75 -left-1.75 cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
+                    className="w-3.5 h-3.5 bg-white border-2 border-orange-500 rounded-full absolute -top-1.75 -left-1.75 cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
                   />
                   <div
                     onMouseDown={(e) => handleResizeStart(e, 'tr', 'wm1')}
                     onTouchStart={(e) => handleResizeTouchStart(e, 'tr', 'wm1')}
-                    className="w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full absolute -top-1.75 -right-1.75 cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
+                    className="w-3.5 h-3.5 bg-white border-2 border-orange-500 rounded-full absolute -top-1.75 -right-1.75 cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
                   />
                   <div
                     onMouseDown={(e) => handleResizeStart(e, 'bl', 'wm1')}
                     onTouchStart={(e) => handleResizeTouchStart(e, 'bl', 'wm1')}
-                    className="w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full absolute -bottom-1.75 -left-1.75 cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
+                    className="w-3.5 h-3.5 bg-white border-2 border-orange-500 rounded-full absolute -bottom-1.75 -left-1.75 cursor-nesw-resize shadow-md hover:scale-125 transition-transform"
                   />
                   <div
                     onMouseDown={(e) => handleResizeStart(e, 'br', 'wm1')}
                     onTouchStart={(e) => handleResizeTouchStart(e, 'br', 'wm1')}
-                    className="w-3.5 h-3.5 bg-white border-2 border-indigo-600 rounded-full absolute -bottom-1.75 -right-1.75 cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
+                    className="w-3.5 h-3.5 bg-white border-2 border-orange-500 rounded-full absolute -bottom-1.75 -right-1.75 cursor-nwse-resize shadow-md hover:scale-125 transition-transform"
                   />
                 </div>
               )}
@@ -1930,7 +1930,7 @@ export default function StudioPage() {
                     userSelect: 'none',
                     touchAction: 'none',
                     zIndex: 40,
-                    border: '1.5px dashed #10b981',
+                    border: '1.5px dashed #039BE5',
                     padding: '2px',
                     boxShadow: '0 0 10px rgba(0,0,0,0.5)',
                     transition: (isDragging || isResizing) ? 'none' : 'left 0.1s ease, top 0.1s ease, width 0.1s ease, aspect-ratio 0.1s ease'
@@ -2033,7 +2033,7 @@ export default function StudioPage() {
                   <div className="w-full space-y-1">
                     <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-indigo-500 rounded-full transition-all duration-100 ease-linear"
+                        className="h-full bg-orange-500 rounded-full transition-all duration-100 ease-linear"
                         style={{ width: `${previewProgress}%` }}
                       />
                     </div>
@@ -2079,7 +2079,7 @@ export default function StudioPage() {
                       ) : (
                         <button
                           onClick={handleGoogleConnect}
-                          className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2"
+                          className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2"
                         >
                           <RefreshCw className="h-3.5 w-3.5 animate-pulse" />
                           Connect Google Account
@@ -2103,7 +2103,7 @@ export default function StudioPage() {
                             <select
                               value={selectedFolderId}
                               onChange={(e) => setSelectedFolderId(e.target.value)}
-                              className="w-full rounded-lg border border-slate-800 bg-slate-900 pl-9 pr-4 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-colors appearance-none cursor-pointer"
+                              className="w-full rounded-lg border border-slate-800 bg-slate-900 pl-9 pr-4 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors appearance-none cursor-pointer"
                             >
                               <option value="root">My Drive (Root)</option>
                               {folders.map((folder) => (
@@ -2119,7 +2119,7 @@ export default function StudioPage() {
                       <button
                         onClick={handleGenerateVideo}
                         disabled={!selectedBgId || !imageFile || !audioFile}
-                        className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold text-sm shadow-lg shadow-indigo-500/20 hover:opacity-95 disabled:from-slate-800 disabled:via-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group"
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-blue-500 text-white font-semibold text-sm shadow-lg shadow-orange-500/15 hover:opacity-95 disabled:from-slate-800 disabled:via-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group"
                       >
                         <Sparkles className="h-4 w-4 group-hover:rotate-12 transition-transform" />
                         Generate Video
@@ -2132,7 +2132,7 @@ export default function StudioPage() {
               {/* Rendering status indicator */}
               {(generationStatus === 'uploading' || generationStatus === 'processing') && (
                 <div className="w-full border border-slate-800 rounded-xl bg-slate-950/40 p-4 text-center space-y-3">
-                  <Loader2 className="h-6 w-6 text-indigo-400 animate-spin mx-auto" />
+                  <Loader2 className="h-6 w-6 text-orange-400 animate-spin mx-auto" />
                   <div>
                     <p className="text-xs font-semibold text-slate-200">
                       {generationStatus === 'uploading' ? 'Uploading Media files...' : 'Rendering portrait video...'}
@@ -2142,7 +2142,7 @@ export default function StudioPage() {
                     </p>
                   </div>
                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-500 rounded-full animate-[pulse_1.5s_infinite] w-[75%]" />
+                    <div className="h-full bg-orange-500 rounded-full animate-[pulse_1.5s_infinite] w-[75%]" />
                   </div>
                 </div>
               )}

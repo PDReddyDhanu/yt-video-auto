@@ -335,7 +335,7 @@ export default function AdminPage() {
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-200">
-        <Loader2 className="h-10 w-10 text-indigo-500 animate-spin mb-4" />
+        <Loader2 className="h-10 w-10 text-orange-500 animate-spin mb-4" />
         <p className="text-slate-400 text-sm font-semibold tracking-wide">Validating system authentication...</p>
       </div>
     );
@@ -345,15 +345,15 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-slate-950 relative flex items-center justify-center overflow-hidden px-4">
         {/* Background gradient glow blobs */}
-        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-orange-600/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[350px] h-[350px] bg-pink-600/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="w-full max-w-md rounded-2xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-2xl backdrop-blur-md relative z-10 flex flex-col items-center">
-          <div className="h-12 w-12 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-6">
+          <div className="h-12 w-12 rounded-xl bg-orange-600/10 border border-orange-500/20 flex items-center justify-center text-orange-400 mb-6">
             <Sparkles className="h-6 w-6" />
           </div>
 
-          <h1 className="bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl text-center">
+          <h1 className="bg-gradient-to-r from-amber-100 via-orange-200 to-blue-200 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl text-center">
             AutoVideo Control Center
           </h1>
           <p className="mt-2.5 text-slate-400 text-xs text-center leading-relaxed max-w-[280px]">
@@ -395,7 +395,7 @@ export default function AdminPage() {
       {/* Title */}
       <div className="mb-8 border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="bg-gradient-to-r from-slate-200 via-indigo-200 to-slate-200 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent">
+          <h1 className="bg-gradient-to-r from-slate-200 via-orange-200 to-slate-200 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent">
             System Control Center
           </h1>
           <p className="mt-2 text-slate-400 text-sm">
@@ -426,7 +426,7 @@ export default function AdminPage() {
           {/* Background Video Management */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <h2 className="text-lg font-semibold text-slate-200 mb-6 flex items-center gap-2">
-              <Film className="h-5 w-5 text-indigo-400" />
+              <Film className="h-5 w-5 text-orange-400" />
               Manage Background Videos
             </h2>
 
@@ -493,7 +493,7 @@ export default function AdminPage() {
                     placeholder="e.g. Cyber City Drive"
                     value={bgName}
                     onChange={(e) => setBgName(e.target.value)}
-                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors"
                   />
                 </div>
 
@@ -518,7 +518,7 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={loadingBgs || !bgUploadFile}
-                className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5"
               >
                 {loadingBgs ? (
                   <>
@@ -538,7 +538,7 @@ export default function AdminPage() {
           {/* Google Drive credentials config */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <h2 className="text-lg font-semibold text-slate-200 mb-6 flex items-center gap-2">
-              <Key className="h-5 w-5 text-indigo-400" />
+              <Key className="h-5 w-5 text-orange-400" />
               Google Drive API Credentials
             </h2>
 
@@ -576,7 +576,7 @@ export default function AdminPage() {
                     value={driveConfig.clientId}
                     onChange={(e) => setDriveConfig({ ...driveConfig, clientId: e.target.value })}
                     placeholder="Enter Google Client ID"
-                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors"
                   />
                 </div>
 
@@ -588,7 +588,7 @@ export default function AdminPage() {
                     type="password"
                     placeholder={driveConfig.hasSecret ? '••••••••••••••••••••' : 'Enter Google Client Secret'}
                     onChange={(e) => setDriveConfig({ ...driveConfig, clientSecret: e.target.value })}
-                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors"
                   />
                 </div>
               </div>
@@ -596,7 +596,7 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={loadingDrive}
-                className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5"
               >
                 {loadingDrive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save API Credentials'}
               </button>
@@ -610,7 +610,7 @@ export default function AdminPage() {
           {/* Watermark Config */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <h2 className="text-lg font-semibold text-slate-200 mb-6 flex items-center gap-2">
-              <Settings className="h-5 w-5 text-indigo-400" />
+              <Settings className="h-5 w-5 text-orange-400" />
               Watermark Brand
             </h2>
 
@@ -664,7 +664,7 @@ export default function AdminPage() {
                 <select
                   value={watermark.position}
                   onChange={(e) => setWatermark({ ...watermark, position: e.target.value })}
-                  className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors"
                 >
                   <option value="top-left">Top Left Corner</option>
                   <option value="top-right">Top Right Corner</option>
@@ -686,7 +686,7 @@ export default function AdminPage() {
                   step="0.05"
                   value={watermark.opacity}
                   onChange={(e) => setWatermark({ ...watermark, opacity: parseFloat(e.target.value) })}
-                  className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                  className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
                 />
               </div>
 
@@ -701,7 +701,7 @@ export default function AdminPage() {
                     required
                     value={watermark.size}
                     onChange={(e) => setWatermark({ ...watermark, size: parseInt(e.target.value) || 0 })}
-                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors"
                   />
                 </div>
 
@@ -714,7 +714,7 @@ export default function AdminPage() {
                     required
                     value={watermark.margin}
                     onChange={(e) => setWatermark({ ...watermark, margin: parseInt(e.target.value) || 0 })}
-                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors"
                   />
                 </div>
               </div>
@@ -722,7 +722,7 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={loadingWatermark}
-                className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-1.5"
               >
                 {loadingWatermark ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save Branding Config'}
               </button>
@@ -735,7 +735,7 @@ export default function AdminPage() {
       <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-            <FolderOpen className="h-5 w-5 text-indigo-400" />
+            <FolderOpen className="h-5 w-5 text-orange-400" />
             Render History
           </h2>
           {history.length > 0 && (
@@ -776,7 +776,7 @@ export default function AdminPage() {
                       <a
                         href={`${BACKEND_URL}/output/${item.filename}`}
                         download={item.filename}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-900 text-[10px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950/50 hover:bg-slate-900 text-[10px] font-semibold text-orange-400 hover:text-orange-300 transition-colors"
                       >
                         <Download className="h-3 w-3" />
                         Download

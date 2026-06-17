@@ -12,10 +12,10 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-lg shadow-indigo-500/30 transition-transform duration-300 group-hover:scale-105">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-blue-500 shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-105">
             <Film className="h-5 w-5 text-white" />
           </div>
-          <span className="bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+          <span className="bg-gradient-to-r from-amber-100 via-orange-200 to-blue-200 bg-clip-text text-xl font-bold tracking-tight text-transparent">
             AutoVideo
           </span>
         </Link>
@@ -26,7 +26,7 @@ export default function Navbar() {
             href="/"
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               pathname === '/'
-                ? 'bg-slate-900 text-indigo-400'
+                ? 'bg-slate-900 text-orange-400'
                 : 'text-slate-400 hover:bg-slate-900/50 hover:text-slate-200'
             }`}
           >
@@ -38,7 +38,7 @@ export default function Navbar() {
             href="/admin"
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 ${
               pathname === '/admin'
-                ? 'bg-slate-900 text-indigo-400'
+                ? 'bg-slate-900 text-orange-400'
                 : 'text-slate-400 hover:bg-slate-900/50 hover:text-slate-200'
             }`}
           >
