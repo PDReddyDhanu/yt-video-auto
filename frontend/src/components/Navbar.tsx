@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Video, Settings, Film } from 'lucide-react';
+import { logoDataUri } from './LogoData';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -13,7 +14,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <img 
-            src="/logo.jpg" 
+            src={logoDataUri} 
             alt="PDR-Edits Logo" 
             className="h-10 w-10 rounded-xl object-cover shadow-lg shadow-orange-500/20 border border-orange-500/20 transition-transform duration-300 group-hover:scale-105"
           />

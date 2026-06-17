@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { logoDataUri } from "@/components/LogoData";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "PDR-Edits",
   description: "Generate beautiful, engaging portrait videos automatically from templates, images, and audio.",
+  icons: {
+    icon: logoDataUri,
+  }
 };
 
 export default function RootLayout({

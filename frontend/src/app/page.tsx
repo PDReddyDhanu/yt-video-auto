@@ -23,6 +23,8 @@ import {
   Type
 } from 'lucide-react';
 
+import { logoDataUri } from '@/components/LogoData';
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 export default function StudioPage() {
@@ -977,7 +979,7 @@ export default function StudioPage() {
 
         <div className="w-full max-w-md rounded-2xl border border-slate-800/80 bg-slate-900/40 p-8 shadow-2xl backdrop-blur-md relative z-10 flex flex-col items-center">
           <img 
-            src="/logo.jpg" 
+            src={logoDataUri} 
             alt="PDR-Edits Logo" 
             className="h-16 w-16 rounded-2xl object-cover shadow-lg border border-orange-500/20 mb-6"
           />
