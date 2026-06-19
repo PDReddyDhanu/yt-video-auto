@@ -1,18 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-/**
- * Converts a local file to a Google GenAI inline data part.
- */
-function fileToGenerativePart(filePath, mimeType) {
-  return {
-    inlineData: {
-      data: Buffer.from(fs.readFileSync(filePath)).toString("base64"),
-      mimeType
-    },
-  };
-}
 
 /**
  * Call Groq Vision API to perform OCR extraction from the image.
@@ -103,29 +90,6 @@ async function generateGroqScript(ocrText, duration, apiKey) {
 }
 
 /**
- * Fallback / Primary pipeline using Gemini
- */
-async function runGeminiPipeline(imagePath, mimeType, duration, apiKey) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  const imagePart = fileToGenerativePart(imagePath, mimeType);
-  const ocrPrompt = `Analyze this image. First, perform complete OCR text extraction (Step 1). Then, correct spelling/grammar errors (Step 2). Finally, generate structured video scripts based on this prompt:\n\n${getScriptPrompt("", duration)}`;
-
-  const result = await model.generateContent([ocrPrompt, imagePart]);
-  const text = result.response.text();
-
-  // Parse JSON from markdown block if present
-  let jsonString = text.trim();
-  if (jsonString.includes("```")) {
-    const match = jsonString.match(/```(?:json)?([\s\S]*?)```/);
-    if (match) jsonString = match[1].trim();
-  }
-
-  return JSON.parse(jsonString);
-}
-
-/**
  * System prompt to enforce the user's template and rules.
  */
 function getScriptPrompt(ocrText, duration) {
@@ -164,26 +128,15 @@ You MUST respond strictly with a valid JSON object matching this schema:
  */
 export async function generateScriptFromImage(imagePath, mimeType, duration) {
   const groqApiKey = process.env.GROQ_API_KEY;
-  const geminiApiKey = process.env.GEMINI_API_KEY;
 
-  if (groqApiKey && groqApiKey.trim()) {
-    try {
-      console.log("[AI Helper] Running Groq Pipeline...");
-      // Step 1 & 2: OCR Extraction
-      const ocrText = await performGroqOCR(imagePath, mimeType, groqApiKey);
-      // Step 3: Script Generation
-      const scriptData = await generateGroqScript(ocrText, duration, groqApiKey);
-      return scriptData;
-    } catch (err) {
-      console.warn("[AI Helper] Groq Pipeline failed. Falling back to Gemini...", err.message);
-    }
+  if (!groqApiKey || !groqApiKey.trim()) {
+    throw new Error("Groq API Key (GROQ_API_KEY) is not configured in backend .env file.");
   }
 
-  // Fallback to Gemini
-  if (geminiApiKey && geminiApiKey.trim()) {
-    console.log("[AI Helper] Running Gemini Pipeline...");
-    return await runGeminiPipeline(imagePath, mimeType, duration, geminiApiKey);
-  }
-
-  throw new Error("No API keys found for script generation (configure GEMINI_API_KEY or GROQ_API_KEY).");
+  console.log("[AI Helper] Running Groq Pipeline...");
+  // Step 1 & 2: OCR Extraction
+  const ocrText = await performGroqOCR(imagePath, mimeType, groqApiKey);
+  // Step 3: Script Generation
+  const scriptData = await generateGroqScript(ocrText, duration, groqApiKey);
+  return scriptData;
 }
