@@ -11,6 +11,7 @@ import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generateScriptFromImage } from './aiHelper.js';
 
 dotenv.config();
 
@@ -469,6 +470,44 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
       } catch (e) {}
     }
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------------- AI OCR SCRIPT GENERATION API ----------------
+
+app.post('/api/generate-script-from-image', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    const imagePath = req.file.path;
+    const mimeType = req.file.mimetype || 'image/png';
+    const duration = parseInt(req.body.duration) || 20;
+
+    console.log(`[OCR Script Gen] Processing image ${imagePath} with mimeType ${mimeType} for duration ${duration}s...`);
+
+    const result = await generateScriptFromImage(imagePath, mimeType, duration);
+
+    // Clean up temporary uploaded image file
+    try {
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    } catch (e) {
+      console.warn("Could not delete temp image file after script generation:", e);
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    console.error("[OCR Script Gen] API crash:", error);
+    if (req.file && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (e) {}
+    }
+    res.status(500).json({ error: error.message || 'Failed to generate script from image.' });
   }
 });
 

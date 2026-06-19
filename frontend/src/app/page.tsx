@@ -208,6 +208,10 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [audioDuration, setAudioDuration] = useState<number>(0);
   const [customFilename, setCustomFilename] = useState<string>('');
+  const [scriptDuration, setScriptDuration] = useState<number>(20);
+  const [isGeneratingScript, setIsGeneratingScript] = useState<boolean>(false);
+  const [recommendedVoice, setRecommendedVoice] = useState<string>('');
+  const [scriptError, setScriptError] = useState<string>('');
 
   // Movable Watermark State
   const [enableMovable, setEnableMovable] = useState<boolean>(true); // always true/compulsory
@@ -423,6 +427,78 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       }
     } catch (e) {
       console.error('Failed to fetch TTS voices:', e);
+    }
+  };
+
+  // Helper to generate options: multiples of 10s up to 10 minutes
+  const generateDurationOptions = () => {
+    const options = [];
+    for (let s = 10; s <= 600; s += 10) {
+      if (s < 60) {
+        options.push({ value: s, label: `${s} seconds` });
+      } else if (s === 60) {
+        options.push({ value: s, label: `1 minute` });
+      } else {
+        const mins = Math.floor(s / 60);
+        const secs = s % 60;
+        if (secs === 0) {
+          options.push({ value: s, label: `${mins} minutes` });
+        } else {
+          options.push({ value: s, label: `${mins} min ${secs} seconds` });
+        }
+      }
+    }
+    return options;
+  };
+
+  // Action handler to perform OCR and script generation using backend API
+  const handleGetAIScript = async () => {
+    if (!imageFile) {
+      setScriptError('Please upload a center image in Step 2 first.');
+      return;
+    }
+
+    setIsGeneratingScript(true);
+    setScriptError('');
+    setRecommendedVoice('');
+
+    try {
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      formData.append('duration', scriptDuration.toString());
+
+      const res = await fetch(`${BACKEND_URL}/api/generate-script-from-image`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to generate AI script.');
+      }
+
+      const data = await res.json();
+      
+      // Update textareas with Telugu and Tenglish scripts
+      setTtsScript(data.teluguScript || '');
+      setTenglishScript(data.tenglishScript || '');
+      
+      // Voice recommendation and auto-selection
+      if (data.recommendedVoiceGender) {
+        setRecommendedVoice(data.recommendedVoiceGender);
+        const genderCode = data.recommendedVoiceGender === 'Male' ? 'M' : 'F';
+        // Auto-select the first voice of matching gender
+        const matchingPreset = TTS_PRESETS.find(p => p.gender === genderCode);
+        if (matchingPreset) {
+          setSelectedPresetId(matchingPreset.id);
+        }
+      }
+
+    } catch (e: any) {
+      console.error(e);
+      setScriptError(e.message || 'An error occurred during AI script generation.');
+    } finally {
+      setIsGeneratingScript(false);
     }
   };
 
@@ -1439,6 +1515,60 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   <span className="text-sm font-semibold text-orange-300">AI Voice Studio (Microsoft Edge TTS)</span>
                   <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free · Unlimited</span>
                 </div>
+
+                {/* AI Script Generation Controls */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 pb-3 border-b border-slate-800/60">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Target Script Duration</label>
+                    <select
+                      value={scriptDuration}
+                      onChange={(e) => setScriptDuration(parseInt(e.target.value))}
+                      className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors cursor-pointer"
+                    >
+                      {generateDurationOptions().map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={handleGetAIScript}
+                      disabled={isGeneratingScript || !imageFile}
+                      className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-650 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-semibold text-xs py-2 transition-all border border-indigo-500/20 shadow-md"
+                    >
+                      {isGeneratingScript ? (
+                        <><Loader2 className="h-3.5 w-3.5 animate-spin" />Generating AI Script...</>
+                      ) : (
+                        <><Sparkles className="h-3.5 w-3.5" />Get AI Script from Image</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {!imageFile && (
+                  <p className="text-[10px] text-amber-400/90 bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-lg leading-relaxed">
+                    ⚠️ <strong>Note:</strong> Upload a center image with text in Step 2 to generate script with AI.
+                  </p>
+                )}
+
+                {scriptError && (
+                  <p className="text-[10px] text-red-400 bg-red-950/20 border border-red-500/25 p-2.5 rounded-lg leading-relaxed">
+                    ❌ {scriptError}
+                  </p>
+                )}
+
+                {recommendedVoice && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-950/20 border border-emerald-500/20 text-[10px] text-emerald-400 font-medium">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <span>
+                      Recommended Voice Category: <strong>{recommendedVoice === 'Male' ? 'Male Voice (M)' : 'Female Voice (F)'}</strong> - Auto-selected a preset.
+                    </span>
+                  </div>
+                )}
 
                 {/* Script textarea */}
                 <div className="space-y-1">
