@@ -207,6 +207,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [audioDuration, setAudioDuration] = useState<number>(0);
+  const [customFilename, setCustomFilename] = useState<string>('');
 
   // Movable Watermark State
   const [enableMovable, setEnableMovable] = useState<boolean>(true); // always true/compulsory
@@ -327,52 +328,23 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     fetchMusicFiles();
   }, []);
 
-  // Update dynamic audio duration and source based on platform and selected song
+  // Update dynamic audio duration and source based on selected audio file
   useEffect(() => {
-    if (videoPlatform === 'instagram' && selectedMusicFile) {
-      const url = `${BACKEND_URL}/music/${selectedMusicFile}`;
+    if (audioFile) {
+      const url = URL.createObjectURL(audioFile);
       setAudioUrl(url);
-      setMusicTrimStart(0);
-      
       const tempAudio = new Audio(url);
       tempAudio.addEventListener('loadedmetadata', () => {
-        setMusicDuration(tempAudio.duration);
         setAudioDuration(tempAudio.duration);
       });
-    }
-  }, [selectedMusicFile, videoPlatform]);
-
-  useEffect(() => {
-    if (videoPlatform === 'youtube') {
-      if (audioFile) {
-        const url = URL.createObjectURL(audioFile);
-        setAudioUrl(url);
-        const tempAudio = new Audio(url);
-        tempAudio.addEventListener('loadedmetadata', () => {
-          setAudioDuration(tempAudio.duration);
-        });
-      } else {
-        setAudioUrl('');
-        setAudioDuration(0);
-      }
     } else {
-      if (selectedMusicFile) {
-        const url = `${BACKEND_URL}/music/${selectedMusicFile}`;
-        setAudioUrl(url);
-        const tempAudio = new Audio(url);
-        tempAudio.addEventListener('loadedmetadata', () => {
-          setMusicDuration(tempAudio.duration);
-          setAudioDuration(tempAudio.duration);
-        });
-      } else {
-        setAudioUrl('');
-        setAudioDuration(0);
-      }
+      setAudioUrl('');
+      setAudioDuration(0);
     }
     pausePreview();
     setPreviewCurrentTime(0);
     setPreviewProgress(0);
-  }, [videoPlatform]);
+  }, [audioFile, videoPlatform]);
 
   const fetchMusicFiles = async () => {
     try {
@@ -872,8 +844,8 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     if (videoRef.current) videoRef.current.play().catch(err => console.warn(err));
     if (audioRef.current && audioUrl) {
       if (videoPlatform === 'instagram') {
-        if (audioRef.current.currentTime < musicTrimStart || audioRef.current.currentTime > musicTrimStart + 6) {
-          audioRef.current.currentTime = musicTrimStart;
+        if (audioRef.current.currentTime < 0 || audioRef.current.currentTime > 10) {
+          audioRef.current.currentTime = 0;
         }
       }
       audioRef.current.play().catch(err => console.warn(err));
@@ -920,10 +892,9 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     if (audioRef.current) {
       const current = audioRef.current.currentTime;
       if (videoPlatform === 'instagram') {
-        const relativeTime = current - musicTrimStart;
-        if (relativeTime < 0 || relativeTime > 6) {
-          // Loop back to start of trim
-          audioRef.current.currentTime = musicTrimStart;
+        if (current < 0 || current > 10) {
+          // Loop back to start
+          audioRef.current.currentTime = 0;
           setPreviewCurrentTime(0);
           setPreviewProgress(0);
           if (videoRef.current) {
@@ -931,8 +902,13 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
             videoRef.current.play().catch(err => console.warn(err));
           }
         } else {
-          setPreviewCurrentTime(relativeTime);
-          setPreviewProgress((relativeTime / 6) * 100);
+          setPreviewCurrentTime(current);
+          setPreviewProgress((current / 10) * 100);
+          // Word-level sync: find which word is currently being spoken
+          if (wordTimestamps.length > 0) {
+            const idx = wordTimestamps.findIndex(w => current >= w.start && current < w.end);
+            setCurrentWordIdx(idx);
+          }
         }
       } else {
         setPreviewCurrentTime(current);
@@ -950,11 +926,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     pausePreview();
     if (videoRef.current) videoRef.current.currentTime = 0;
     if (audioRef.current) {
-      if (videoPlatform === 'instagram') {
-        audioRef.current.currentTime = musicTrimStart;
-      } else {
-        audioRef.current.currentTime = 0;
-      }
+      audioRef.current.currentTime = 0;
     }
     setPreviewCurrentTime(0);
     setPreviewProgress(0);
@@ -1085,6 +1057,8 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     formData.append('image', imageFile);
     formData.append('audio', audioFile);
     formData.append('folderId', selectedFolderId);
+    formData.append('mode', videoPlatform);
+    formData.append('customFilename', customFilename);
 
     // Movable watermark is compulsory mandatory and uses the permanent default image
     formData.append('showMovable', 'true');
@@ -1448,7 +1422,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
             )}
           </div>
 
-          {/* Step 3: Soundtrack — TTS Studio or Instagram Music Library */}
+          {/* Step 3: Soundtrack */}
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
@@ -1457,323 +1431,192 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
               <h2 className="text-lg font-semibold text-slate-200">Soundtrack</h2>
             </div>
 
-            {videoPlatform === 'instagram' ? (
-              /* ================= INSTAGRAM MUSIC LIBRARY & TRIMMER ================= */
-              <div className="space-y-4 animate-[fadeIn_0.2s_ease-out]">
+            <div className="space-y-5">
+              {/* === TTS Script Studio === */}
+              <div className="rounded-xl border border-orange-500/20 bg-indigo-950/10 p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Mic className="h-4 w-4 text-orange-400" />
+                  <span className="text-sm font-semibold text-orange-300">AI Voice Studio (Microsoft Edge TTS)</span>
+                  <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free · Unlimited</span>
+                </div>
+
+                {/* Script textarea */}
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold text-orange-400">Search Background Music</span>
-                  <input
-                    type="text"
-                    placeholder="Search music files..."
-                    value={musicSearchQuery}
-                    onChange={(e) => setMusicSearchQuery(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+                  <span className="text-xs font-semibold text-orange-400">Telugu Script (for generating voice)</span>
+                  <textarea
+                    rows={4}
+                    placeholder="Type your Telugu script here... (e.g.: నమస్కారం! శుభోదయం. ఈ వీడియో మీకు నచ్చుతుందని ఆశిస్తున్నాను.)"
+                    value={ttsScript}
+                    onChange={(e) => setTtsScript(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
                   />
                 </div>
 
-                <div className="max-h-52 overflow-y-auto border border-slate-800 rounded-lg divide-y divide-slate-800 bg-slate-950/40">
-                  {musicFiles.filter(f => f.name.toLowerCase().includes(musicSearchQuery.toLowerCase())).length === 0 ? (
-                    <div className="p-4 text-center text-xs text-slate-500">
-                      No music files found in backend/music folder.
-                    </div>
-                  ) : (
-                    musicFiles
-                      .filter(f => f.name.toLowerCase().includes(musicSearchQuery.toLowerCase()))
-                      .map(f => {
-                        const isSelected = selectedMusicFile === f.filename;
-                        return (
-                          <button
-                            key={f.filename}
-                            type="button"
-                            onClick={() => {
-                              setSelectedMusicFile(f.filename);
-                            }}
-                            className={`w-full flex items-center justify-between p-3 text-left transition-colors ${
-                              isSelected ? 'bg-orange-500/10 hover:bg-orange-500/15' : 'hover:bg-slate-900/50'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 truncate">
-                              <AudioIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-orange-400 animate-pulse' : 'text-slate-500'}`} />
-                              <span className={`text-xs truncate ${isSelected ? 'text-orange-400 font-medium' : 'text-slate-300'}`}>
-                                {f.name}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <CheckCircle2 className="h-4 w-4 text-orange-400 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })
-                  )}
+                {/* Tenglish Script textarea */}
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-orange-400">Tenglish Text box (for generating captions)</span>
+                  <textarea
+                    rows={4}
+                    placeholder="Type your Tenglish captions script here... (e.g.: Namaskaram! Shubhodhayam. Ee video meeku nachutundhani aashistunnanu.)"
+                    value={tenglishScript}
+                    onChange={(e) => setTenglishScript(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
+                  />
                 </div>
 
-                {selectedMusicFile && (
-                  <div className="rounded-xl border border-orange-500/20 bg-indigo-950/10 p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-orange-300">Select 6-Second Music Trim Segment</span>
-                      <span className="ml-auto text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 px-2 py-0.5 rounded-full font-semibold">6s Fixed Trim</span>
-                    </div>
-
-                    {/* Custom Visual Timeline / Waveform Slider */}
-                    <div className="space-y-2">
-                      <div className="relative h-12 bg-slate-950 border border-slate-800 rounded-lg overflow-hidden flex items-end px-1 gap-[2px]">
-                        {/* Simulated waveform bars */}
-                        {Array.from({ length: 48 }).map((_, i) => {
-                          const duration = musicDuration || 30;
-                          const percentStart = musicTrimStart / duration;
-                          const percentEnd = (musicTrimStart + 6) / duration;
-                          const barPercent = i / 48;
-                          const isSelected = barPercent >= percentStart && barPercent <= percentEnd;
-
-                          // Generate static random height for waveform look
-                          const heights = [30, 60, 45, 80, 20, 50, 75, 40, 90, 35, 65, 55, 25, 70, 85, 40, 50, 30, 60, 45, 80, 20, 50, 75, 40, 90, 35, 65, 55, 25, 70, 85, 40, 50, 30, 60, 45, 80, 20, 50, 75, 40, 90, 35, 65, 55, 25, 70];
-                          const h = heights[i % heights.length];
-
-                          return (
-                            <div
-                              key={i}
-                              className="flex-1 transition-colors"
-                              style={{
-                                height: `${h}%`,
-                                backgroundColor: isSelected ? 'rgba(249, 115, 22, 0.7)' : 'rgba(71, 85, 105, 0.3)',
-                                borderRadius: '1px'
-                              }}
-                            />
-                          );
-                        })}
-
-                        {/* Slider track indicator */}
-                        <div 
-                          className="absolute top-0 bottom-0 border-l-2 border-r-2 border-orange-500 bg-orange-500/10 pointer-events-none transition-all duration-75"
-                          style={{
-                            left: `${musicDuration ? (musicTrimStart / musicDuration) * 100 : 0}%`,
-                            width: `${musicDuration ? (6 / musicDuration) * 100 : 20}%`
+                {/* Pro Voice Preset Cards */}
+                <div className="space-y-2">
+                  {/* Female Presets */}
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">♀ Female Pro Voices</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {TTS_PRESETS.filter(p => p.gender === 'F').map(preset => {
+                      const isActive = selectedPresetId === preset.id;
+                      const pitch = getCurrentPitch(preset.id);
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            if (isActive) cyclePresetPitch(preset.id);
+                            else setSelectedPresetId(preset.id);
                           }}
-                        />
-                      </div>
-
-                      {/* HTML5 Range Slider */}
-                      <input
-                        type="range"
-                        min={0}
-                        max={Math.max(0, (musicDuration || 6) - 6)}
-                        step={0.1}
-                        value={musicTrimStart}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          setMusicTrimStart(val);
-                          if (audioRef.current) {
-                            audioRef.current.currentTime = val;
-                            if (isPlaying) {
-                              audioRef.current.play().catch(err => console.warn(err));
-                            }
-                          }
-                        }}
-                        className="w-full accent-orange-500 cursor-pointer bg-slate-800 rounded-lg h-1.5 focus:outline-none"
-                      />
-
-                      <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                        <span>Trim Start: {musicTrimStart.toFixed(1)}s</span>
-                        <span>Duration: 6.0s Reel Audio</span>
-                        <span>Trim End: {(musicTrimStart + 6).toFixed(1)}s</span>
-                      </div>
-                    </div>
-
-                    <p className="text-[10px] text-slate-400 text-center leading-relaxed">
-                      Instagram Reels are limited to 6.0s. Drag the crop slider to choose your favorite section from <strong>{selectedMusicFile}</strong> (total song length: {(musicDuration || 0).toFixed(1)}s).
-                    </p>
+                          className={`relative rounded-lg border p-2.5 text-left transition-all group ${
+                            isActive
+                              ? 'border-pink-500/60 bg-pink-950/20 shadow-[0_0_12px_rgba(236,72,153,0.15)]'
+                              : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                          }`}
+                        >
+                          <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-pink-300' : 'text-slate-500'}`}>{preset.id}</span>
+                          <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
+                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
+                          <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-blue-400' : 'text-slate-600'}`}>
+                            Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
+                          </span>
+                          {isActive && (
+                            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-pink-400 animate-pulse" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            ) : (
-              /* ================= YOUTUBE SHORTS TTS STUDIO & MANUAL UPLOAD ================= */
-              <div className="space-y-5">
-                {/* === TTS Script Studio === */}
-                <div className="rounded-xl border border-orange-500/20 bg-indigo-950/10 p-4 space-y-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Mic className="h-4 w-4 text-orange-400" />
-                    <span className="text-sm font-semibold text-orange-300">AI Voice Studio (Microsoft Edge TTS)</span>
-                    <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free · Unlimited</span>
+                  {/* Male Presets */}
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">♂ Male Pro Voices</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {TTS_PRESETS.filter(p => p.gender === 'M').map(preset => {
+                      const isActive = selectedPresetId === preset.id;
+                      const pitch = getCurrentPitch(preset.id);
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => {
+                            if (isActive) cyclePresetPitch(preset.id);
+                            else setSelectedPresetId(preset.id);
+                          }}
+                          className={`relative rounded-lg border p-2.5 text-left transition-all group ${
+                            isActive
+                              ? 'border-sky-500/60 bg-sky-950/20 shadow-[0_0_12px_rgba(14,165,233,0.15)]'
+                              : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
+                          }`}
+                        >
+                          <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-sky-300' : 'text-slate-500'}`}>{preset.id}</span>
+                          <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
+                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
+                          <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-sky-300' : 'text-slate-600'}`}>
+                            Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
+                          </span>
+                          {isActive && (
+                            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+                </div>
 
-                  {/* Script textarea */}
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold text-orange-400">Telugu Script (for generating voice)</span>
-                    <textarea
-                      rows={4}
-                      placeholder="Type your Telugu script here... (e.g.: నమస్కారం! శుభోదయం. ఈ వీడియో మీకు నచ్చుతుందని ఆశిస్తున్నాను.)"
-                      value={ttsScript}
-                      onChange={(e) => setTtsScript(e.target.value)}
-                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
-                    />
-                  </div>
+                {/* DSP Badge + Speed info */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-800/60">
+                  <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-[10px] text-emerald-400 font-semibold">Studio Clarity Boost</span>
+                  <span className="text-[9px] text-slate-500 ml-auto">DSP: 7-band EQ · HP 80Hz · Locked</span>
+                  <span className="text-[10px] font-mono text-orange-300 ml-2">1.65×</span>
+                </div>
 
-                  {/* Tenglish Script textarea */}
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold text-orange-400">Tenglish Text box (for generating captions)</span>
-                    <textarea
-                      rows={4}
-                      placeholder="Type your Tenglish captions script here... (e.g.: Namaskaram! Shubhodhayam. Ee video meeku nachutundhani aashistunnanu.)"
-                      value={tenglishScript}
-                      onChange={(e) => setTenglishScript(e.target.value)}
-                      className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
-                    />
-                  </div>
+                <p className="text-[9px] text-slate-600 text-center">
+                  Tap a preset to select · Tap again to cycle pitch variant
+                </p>
 
-                  {/* Pro Voice Preset Cards */}
-                  <div className="space-y-2">
-                    {/* Female Presets */}
-                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">♀ Female Pro Voices</div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {TTS_PRESETS.filter(p => p.gender === 'F').map(preset => {
-                        const isActive = selectedPresetId === preset.id;
-                        const pitch = getCurrentPitch(preset.id);
-                        return (
-                          <button
-                            key={preset.id}
-                            type="button"
-                            onClick={() => {
-                              if (isActive) cyclePresetPitch(preset.id);
-                              else setSelectedPresetId(preset.id);
-                            }}
-                            className={`relative rounded-lg border p-2.5 text-left transition-all group ${
-                              isActive
-                                ? 'border-pink-500/60 bg-pink-950/20 shadow-[0_0_12px_rgba(236,72,153,0.15)]'
-                                : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
-                            }`}
-                          >
-                            <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-pink-300' : 'text-slate-500'}`}>{preset.id}</span>
-                            <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
-                            {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
-                            <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-blue-400' : 'text-slate-600'}`}>
-                              Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
-                            </span>
-                            {isActive && (
-                              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-pink-400 animate-pulse" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {/* Male Presets */}
-                    <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">♂ Male Pro Voices</div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {TTS_PRESETS.filter(p => p.gender === 'M').map(preset => {
-                        const isActive = selectedPresetId === preset.id;
-                        const pitch = getCurrentPitch(preset.id);
-                        return (
-                          <button
-                            key={preset.id}
-                            type="button"
-                            onClick={() => {
-                              if (isActive) cyclePresetPitch(preset.id);
-                              else setSelectedPresetId(preset.id);
-                            }}
-                            className={`relative rounded-lg border p-2.5 text-left transition-all group ${
-                              isActive
-                                ? 'border-sky-500/60 bg-sky-950/20 shadow-[0_0_12px_rgba(14,165,233,0.15)]'
-                                : 'border-slate-800 bg-slate-950/40 hover:border-slate-700'
-                            }`}
-                          >
-                            <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-sky-300' : 'text-slate-500'}`}>{preset.id}</span>
-                            <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
-                            {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
-                            <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-sky-300' : 'text-slate-600'}`}>
-                              Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
-                            </span>
-                            {isActive && (
-                              <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-sky-400 animate-pulse" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* DSP Badge + Speed info */}
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-800/60">
-                    <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                    <span className="text-[10px] text-emerald-400 font-semibold">Studio Clarity Boost</span>
-                    <span className="text-[9px] text-slate-500 ml-auto">DSP: 7-band EQ · HP 80Hz · Locked</span>
-                    <span className="text-[10px] font-mono text-orange-300 ml-2">1.65×</span>
-                  </div>
-
-                  <p className="text-[9px] text-slate-600 text-center">
-                    Tap a preset to select · Tap again to cycle pitch variant
+                {ttsError && (
+                  <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 p-2 rounded-lg flex items-start gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>{ttsError}</span>
                   </p>
+                )}
 
-                  {ttsError && (
-                    <p className="text-[11px] text-red-400 bg-red-950/20 border border-red-500/20 p-2 rounded-lg flex items-start gap-1.5">
-                      <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                      <span>{ttsError}</span>
-                    </p>
+                <button
+                  type="button"
+                  onClick={handleGenerateTTS}
+                  disabled={isGeneratingTTS || !ttsScript.trim()}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-orange-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 transition-colors"
+                >
+                  {isGeneratingTTS ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" />Generating Audio + Captions...</>
+                  ) : (
+                    <><Mic className="h-4 w-4" />Generate Audio & Auto-Fill Captions</>
                   )}
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={handleGenerateTTS}
-                    disabled={isGeneratingTTS || !ttsScript.trim()}
-                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-500 disabled:bg-orange-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-2.5 transition-colors"
-                  >
-                    {isGeneratingTTS ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" />Generating Audio + Captions...</>
-                    ) : (
-                      <><Mic className="h-4 w-4" />Generate Audio & Auto-Fill Captions</>
-                    )}
-                  </button>
-
-                  <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-                    💡 The script is automatically split into caption segments and synced with the generated audio.
-                  </p>
-                </div>
-
-                {/* Divider */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-slate-800" />
-                  <span className="text-[10px] font-semibold text-slate-500">OR UPLOAD MANUALLY</span>
-                  <div className="flex-1 h-px bg-slate-800" />
-                </div>
-
-                {/* Manual Upload */}
-                <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all p-5 text-center group">
-                  <AudioIcon className="h-7 w-7 text-slate-500 group-hover:text-orange-400 transition-colors mb-2" />
-                  <span className="text-xs font-semibold text-slate-300">Choose Audio File</span>
-                  <span className="text-[10px] text-slate-500 mt-1">MP3, WAV, AAC (Determines final video duration)</span>
-                  <input
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleAudioChange}
-                    className="hidden"
-                  />
-                </label>
-
-                {audioFile && (
-                  <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950 p-4">
-                    <div className="flex items-center gap-3 truncate">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 border border-purple-500/20 text-orange-400">
-                        <AudioIcon className="h-5 w-5" />
-                      </div>
-                      <div className="truncate">
-                        <p className="text-xs font-medium text-slate-200 truncate">{audioFile.name}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          Duration: {audioDuration.toFixed(1)}s (timeline master)
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setAudioFile(null);
-                        setAudioUrl('');
-                        setAudioDuration(0);
-                      }}
-                      className="rounded-lg p-2 text-slate-500 hover:bg-slate-900 hover:text-red-400 transition-colors border border-transparent hover:border-slate-800"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
+                <p className="text-[10px] text-slate-500 text-center leading-relaxed">
+                  💡 The script is automatically split into caption segments and synced with the generated audio.
+                </p>
               </div>
-            )}
+
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-slate-800" />
+                <span className="text-[10px] font-semibold text-slate-500">OR UPLOAD MANUALLY</span>
+                <div className="flex-1 h-px bg-slate-800" />
+              </div>
+
+              {/* Manual Upload */}
+              <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all p-5 text-center group">
+                <AudioIcon className="h-7 w-7 text-slate-500 group-hover:text-orange-400 transition-colors mb-2" />
+                <span className="text-xs font-semibold text-slate-300">Choose Audio File</span>
+                <span className="text-[10px] text-slate-500 mt-1">MP3, WAV, AAC (Determines final video duration)</span>
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioChange}
+                  className="hidden"
+                />
+              </label>
+
+              {audioFile && (
+                <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950 p-4">
+                  <div className="flex items-center gap-3 truncate">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 border border-purple-500/20 text-orange-400">
+                      <AudioIcon className="h-5 w-5" />
+                    </div>
+                    <div className="truncate">
+                      <p className="text-xs font-medium text-slate-200 truncate">{audioFile.name}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        Duration: {audioDuration.toFixed(1)}s (timeline master)
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setAudioFile(null);
+                      setAudioUrl('');
+                      setAudioDuration(0);
+                    }}
+                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-900 hover:text-red-400 transition-colors border border-transparent hover:border-slate-800"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
 
@@ -2076,7 +1919,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
           </div>
 
           {/* Step 6: Dynamic Captions (Optional) */}
-          {videoPlatform === 'youtube' && (
+          {(videoPlatform === 'youtube' || videoPlatform === 'instagram') && (
             <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -2429,7 +2272,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950/90 via-slate-950/45 to-transparent p-4 flex flex-col gap-2">
                 
                 {/* Timeline slider */}
-                {(audioFile || (videoPlatform === 'instagram' && selectedMusicFile)) && (
+                {audioFile && (
                   <div className="w-full space-y-1">
                     <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
                       <div 
@@ -2439,7 +2282,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                     </div>
                     <div className="flex justify-between text-[8px] text-slate-400 font-mono">
                       <span>{previewCurrentTime.toFixed(1)}s</span>
-                      <span>{videoPlatform === 'instagram' ? '6.0s' : `${audioDuration.toFixed(1)}s`}</span>
+                      <span>{videoPlatform === 'instagram' ? '10.0s' : `${audioDuration.toFixed(1)}s`}</span>
                     </div>
                   </div>
                 )}
@@ -2516,13 +2359,23 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                         </div>
                       </div>
 
+                      {/* Custom Filename Input */}
+                      <div className="w-full border border-slate-800 rounded-xl bg-slate-950/40 p-4 text-left space-y-2">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Custom Filename (Optional)</label>
+                          <input
+                            type="text"
+                            placeholder="Enter filename (e.g. MyAmazingVideo)"
+                            value={customFilename}
+                            onChange={(e) => setCustomFilename(e.target.value)}
+                            className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors placeholder-slate-600"
+                          />
+                        </div>
+                      </div>
+
                       <button
                         onClick={handleGenerateVideo}
-                        disabled={
-                          videoPlatform === 'instagram'
-                            ? !selectedBgId || !imageFile || !selectedMusicFile
-                            : !selectedBgId || !imageFile || !audioFile
-                        }
+                        disabled={!selectedBgId || !imageFile || !audioFile}
                         className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-blue-500 text-white font-semibold text-sm shadow-lg shadow-orange-500/15 hover:opacity-95 disabled:from-slate-800 disabled:via-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 group"
                       >
                         <Sparkles className="h-4 w-4 group-hover:rotate-12 transition-transform" />

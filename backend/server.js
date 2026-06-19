@@ -482,13 +482,13 @@ app.post('/api/generate', upload.fields([
   let progressState = 'Uploading';
   
   try {
-    const { mode, musicFile, trimStart, bgId, showMovable, movableX, movableY, movableScale, cropTop, cropBottom, cropLeft, cropRight, showMovable2, movable2X, movable2Y, movable2Scale, crop2Top, crop2Bottom, crop2Left, crop2Right, imageScale, folderId, captions } = req.body;
+    const { customFilename, mode, bgId, showMovable, movableX, movableY, movableScale, cropTop, cropBottom, cropLeft, cropRight, showMovable2, movable2X, movable2Y, movable2Scale, crop2Top, crop2Bottom, crop2Left, crop2Right, imageScale, folderId, captions } = req.body;
     const files = req.files;
 
     const isInstagram = mode === 'instagram';
 
-    // Parse captions and generate ASS subtitles if present (no subtitles for Instagram mode)
-    const hasSubtitles = !isInstagram && captions && captions !== '[]';
+    // Parse captions and generate ASS subtitles if present
+    const hasSubtitles = captions && captions !== '[]';
     let assFilename = null;
     let assPath = null;
     if (hasSubtitles) {
@@ -508,8 +508,7 @@ app.post('/api/generate', upload.fields([
 
     if (!bgId) return res.status(400).json({ error: 'Missing background video ID (bgId)' });
     if (!files.image || !files.image[0]) return res.status(400).json({ error: 'Missing image file' });
-    if (!isInstagram && (!files.audio || !files.audio[0])) return res.status(400).json({ error: 'Missing audio file' });
-    if (isInstagram && !musicFile) return res.status(400).json({ error: 'Missing musicFile parameter for Instagram mode' });
+    if (!files.audio || !files.audio[0]) return res.status(400).json({ error: 'Missing audio file' });
 
     const db = readDb();
     const client = getOAuthClient(db);
@@ -522,25 +521,15 @@ app.post('/api/generate', upload.fields([
 
     const bgPath = path.join(UPLOADS_DIR, bg.filename);
     const imgPath = files.image[0].path;
-    
-    let audioPath = '';
-    let duration = 6;
+    const audioPath = files.audio[0].path;
 
-    if (isInstagram) {
-      audioPath = path.join(MUSIC_DIR, musicFile);
-      if (!fs.existsSync(audioPath)) {
-        return res.status(400).json({ error: `Music file "${musicFile}" not found in music folder` });
-      }
-      duration = 6;
-    } else {
-      audioPath = files.audio[0].path;
-      progressState = 'Analyzing Duration';
-      const audioDuration = await getMediaDuration(audioPath);
-      if (audioDuration <= 0) {
-        return res.status(400).json({ error: 'Could not determine audio duration' });
-      }
-      duration = audioDuration;
+    progressState = 'Analyzing Duration';
+    const audioDuration = await getMediaDuration(audioPath);
+    if (audioDuration <= 0) {
+      return res.status(400).json({ error: 'Could not determine audio duration' });
     }
+
+    const duration = isInstagram ? 10 : audioDuration;
 
     const watermarkPath = path.join(UPLOADS_DIR, db.watermark.filename || 'default_watermark.png');
 
@@ -655,12 +644,7 @@ app.post('/api/generate', upload.fields([
       '-i', movable2Path
     ];
 
-    if (isInstagram) {
-      const tStart = parseFloat(trimStart) || 0;
-      ffmpegArgs.push('-ss', tStart.toString(), '-t', '6', '-i', audioPath);
-    } else {
-      ffmpegArgs.push('-i', audioPath);
-    }
+    ffmpegArgs.push('-i', audioPath);
 
     const audioInputIndex = 4;
 
@@ -689,7 +673,7 @@ app.post('/api/generate', upload.fields([
       // Clean up uploaded user temp files
       try {
         if (imgPath && fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
-        if (!isInstagram && audioPath && fs.existsSync(audioPath)) fs.unlinkSync(audioPath);
+        if (audioPath && fs.existsSync(audioPath)) fs.unlinkSync(audioPath);
         if (files.movableWatermark && files.movableWatermark[0] && fs.existsSync(files.movableWatermark[0].path)) {
           fs.unlinkSync(files.movableWatermark[0].path);
         }
@@ -710,8 +694,18 @@ app.post('/api/generate', upload.fields([
           // Use folderId from request, or targetFolderId from DB/env, or default to root
           const targetFolderId = folderId || db.googleDrive.targetFolderId || process.env.DRIVE_FOLDER_ID || 'root';
           
+          let finalDriveName = outputFilename;
+          if (customFilename && customFilename.trim()) {
+            let name = customFilename.trim();
+            name = name.replace(/[^a-zA-Z0-9_\-\s]/g, '');
+            if (!name.toLowerCase().endsWith('.mp4')) {
+              name += '.mp4';
+            }
+            finalDriveName = name;
+          }
+
           const fileMetadata = {
-            name: outputFilename,
+            name: finalDriveName,
             parents: targetFolderId && targetFolderId !== 'root' ? [targetFolderId] : []
           };
 
@@ -740,7 +734,7 @@ app.post('/api/generate', upload.fields([
             driveFileId: driveResponse.data.id,
             driveLink: driveResponse.data.webViewLink,
             duration: duration,
-            videoFilename: outputFilename,
+            videoFilename: finalDriveName,
             videoUrl: `/output/${outputFilename}`
           });
         } catch (driveErr) {

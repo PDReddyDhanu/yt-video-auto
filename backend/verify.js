@@ -108,14 +108,14 @@ async function runVerification() {
   }
   console.log("Scenario A: Loop works perfectly!");
   
-  // Verification C: Instagram Mode (should produce a video of exactly 6s using library audio)
-  console.log("\n--- VERIFYING SCENARIO C: Instagram mode 6-second trim with library music ---");
+  // Verification C: Instagram Mode (should produce a video of exactly 10s using uploaded audio and custom filename)
+  console.log("\n--- VERIFYING SCENARIO C: Instagram mode 10-second cap with custom filename ---");
   const form3 = new FormData();
   form3.append('bgId', selectedBg.id);
   form3.append('image', new Blob([fs.readFileSync(MOCK_IMAGE)]), 'mock_image.png');
+  form3.append('audio', new Blob([fs.readFileSync(MOCK_AUDIO_LONG)]), 'mock_audio_long.mp3');
   form3.append('mode', 'instagram');
-  form3.append('musicFile', 'Telugu_Song_1.mp3');
-  form3.append('trimStart', '3.5');
+  form3.append('customFilename', 'VerifyCustomReel');
 
   const res3 = await fetch(generateUrl, { method: 'POST', body: form3 });
   if (!res3.ok) {
@@ -125,10 +125,14 @@ async function runVerification() {
 
   const data3 = await res3.json();
   console.log("Render Success. Drive Link:", data3.driveLink);
-  console.log(`Output Duration: ${data3.duration}s (Expected: ~6s)`);
+  console.log("Output Filename:", data3.videoFilename);
+  console.log(`Output Duration: ${data3.duration}s (Expected: 10s)`);
 
-  if (Math.abs(data3.duration - 6) > 0.5) {
-    throw new Error(`Scenario C failed: Video duration is ${data3.duration}s instead of ~6s`);
+  if (Math.abs(data3.duration - 10) > 0.5) {
+    throw new Error(`Scenario C failed: Video duration is ${data3.duration}s instead of ~10s`);
+  }
+  if (data3.videoFilename !== 'VerifyCustomReel.mp4') {
+    throw new Error(`Scenario C failed: Video filename is "${data3.videoFilename}" instead of "VerifyCustomReel.mp4"`);
   }
   console.log("Scenario C: Instagram mode works perfectly!");
   
