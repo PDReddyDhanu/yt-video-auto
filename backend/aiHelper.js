@@ -113,13 +113,18 @@ CRITICAL RULES:
    - Tenglish: "[Topic Category in English/Tenglish] thaaja official updates kosam... mana channel-ni ippude subscribe cheyandi!"
    - (For example, use "ఉద్యోగ" / "udyoga" or "పథకాల" / "pathakaala" as the category depending on context).
 7. **Tenglish Alignment**: The Tenglish script must be an exact 1-to-1 transliterated version of the Telugu script, matching line-by-line and section-by-section.
-8. **Voice Recommendation**: Recommend a voice gender ("Male" or "Female") based on the script's topic. Government alerts, career guides, schemes, and informative news should recommend "Male". Soft topics, tutorials, or lifestyle should recommend "Female".
+8. **Voice Recommendation**: Do not suggest a voice gender randomly or statically. Instead, analyze who would deliver the post context best based on the text contents, tone, word density, and breathing spaces:
+   - Recommend **Male** if the topic is highly formal, very dense in data (large numbers, detailed tables, fast pacing), requires an authoritative announcement style, or requires speaking a lot of text in a short duration.
+   - Recommend **Female** if the script tone is informative yet clear, conversational, advisory, announcements like crypto-updates, schemes, or welfare topics where conversational clarity, rhythmic breathing gaps, and detailed voiceover cadence work best.
+   - Select either 'Male' or 'Female' based strictly on this content delivery assessment.
+9. **Auto Filename**: Based on the post's text content, create an auto-generated filename of about 10 words. It must be a clean statement summarizing the post, using only lowercase letters, numbers, and underscores (e.g. 'telangana_government_announces_new_welfare_scheme_for_farmers'). Do not include any file extension.
 
 You MUST respond strictly with a valid JSON object matching this schema:
 {
   "teluguScript": "The complete Telugu script including ... pauses",
   "tenglishScript": "The complete matching Tenglish script including ... pauses",
-  "recommendedVoiceGender": "Male" or "Female"
+  "recommendedVoiceGender": "Male" or "Female",
+  "autoFilename": "slugified_10_word_filename_here"
 }`;
 }
 
