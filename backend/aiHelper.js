@@ -86,7 +86,23 @@ async function generateGroqScript(ocrText, duration, apiKey) {
 
   const result = await response.json();
   const content = result.choices[0].message.content;
-  return JSON.parse(content);
+  const parsed = JSON.parse(content);
+
+  // Safeguard: Ensure autoFilename is always populated
+  if (!parsed.autoFilename) {
+    const baseText = parsed.tenglishScript || ocrText || "rendered_video";
+    const cleaned = baseText
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-_]/g, '')
+      .trim()
+      .replace(/[\s-_]+/g, '_')
+      .split('_')
+      .slice(0, 10)
+      .join('_');
+    parsed.autoFilename = cleaned || "rendered_video";
+  }
+
+  return parsed;
 }
 
 /**
