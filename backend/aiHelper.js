@@ -1,6 +1,49 @@
 import fs from 'fs';
 import path from 'path';
 
+// --- In-memory tracking of Groq API Keys and Quotas ---
+let apiKeysCached = null;
+let keyStatuses = [];
+
+function initKeysIfNeeded() {
+  if (apiKeysCached) return;
+  try {
+    const keys = getApiKeyPool();
+    apiKeysCached = keys;
+    keyStatuses = keys.map((key, i) => {
+      // mask the key: keep first 7 chars and last 5 chars, replace middle with ...
+      const masked = key.length > 12 
+        ? `${key.slice(0, 7)}...${key.slice(-5)}`
+        : 'Invalid Key';
+      return {
+        index: i + 1,
+        keyMasked: masked,
+        status: 'Active', // 'Active' or 'Exhausted'
+        exhaustedModels: [], // array of model strings
+        lastUsed: null,
+        lastError: null
+      };
+    });
+  } catch (err) {
+    console.error('[AI Helper] failed to init key pool:', err.message);
+  }
+}
+
+export function getGroqStatus() {
+  initKeysIfNeeded();
+  return keyStatuses;
+}
+
+export function resetGroqStatus() {
+  initKeysIfNeeded();
+  keyStatuses.forEach(k => {
+    k.status = 'Active';
+    k.exhaustedModels = [];
+    k.lastError = null;
+  });
+  return keyStatuses;
+}
+
 /**
  * Multi-key pool — loads all GROQ_API_KEY_* env vars in order.
  * Falls back to GROQ_API_KEY (single key) if no numbered keys are set.
@@ -41,12 +84,14 @@ function isRetryableStatus(status) {
  * Automatically rotates through all available API keys on quota errors.
  */
 async function performGroqOCR(imagePath, mimeType) {
+  initKeysIfNeeded();
   const keys = getApiKeyPool();
   const imageBase64 = Buffer.from(fs.readFileSync(imagePath)).toString('base64');
   const imageDataUrl = `data:${mimeType};base64,${imageBase64}`;
+  const modelName = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
   const requestBody = {
-    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+    model: modelName,
     messages: [
       {
         role: 'user',
@@ -70,6 +115,9 @@ async function performGroqOCR(imagePath, mimeType) {
   for (let i = 0; i < keys.length; i++) {
     const apiKey = keys[i];
     console.log(`[AI Helper] OCR — trying key ${i + 1}/${keys.length} (index ${i})`);
+    if (keyStatuses[i]) {
+      keyStatuses[i].lastUsed = new Date().toISOString();
+    }
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -83,11 +131,26 @@ async function performGroqOCR(imagePath, mimeType) {
     if (response.ok) {
       const result = await response.json();
       console.log(`[AI Helper] OCR succeeded with key ${i + 1}`);
+      if (keyStatuses[i]) {
+        keyStatuses[i].status = 'Active';
+        keyStatuses[i].exhaustedModels = keyStatuses[i].exhaustedModels.filter(m => m !== modelName);
+        keyStatuses[i].lastError = null;
+      }
       return { text: result.choices[0].message.content, keyIndex: i + 1, model: requestBody.model };
     }
 
     const errorText = await response.text();
     console.warn(`[AI Helper] OCR key ${i + 1} failed — HTTP ${response.status}: ${errorText.slice(0, 200)}`);
+
+    if (keyStatuses[i]) {
+      keyStatuses[i].lastError = `${response.status}: ${errorText.slice(0, 150)}`;
+      if (isRetryableStatus(response.status)) {
+        keyStatuses[i].status = 'Exhausted';
+        if (!keyStatuses[i].exhaustedModels.includes(modelName)) {
+          keyStatuses[i].exhaustedModels.push(modelName);
+        }
+      }
+    }
 
     if (isRetryableStatus(response.status)) {
       // Quota/capacity error — try next key
@@ -111,11 +174,13 @@ async function performGroqOCR(imagePath, mimeType) {
  * Automatically rotates through all available API keys on quota errors.
  */
 async function generateGroqScript(ocrText, duration) {
+  initKeysIfNeeded();
   const keys = getApiKeyPool();
   const prompt = getScriptPrompt(ocrText, duration);
+  const modelName = 'llama-3.3-70b-versatile';
 
   const requestBody = {
-    model: 'llama-3.3-70b-versatile',
+    model: modelName,
     messages: [
       {
         role: 'system',
@@ -135,6 +200,9 @@ async function generateGroqScript(ocrText, duration) {
   for (let i = 0; i < keys.length; i++) {
     const apiKey = keys[i];
     console.log(`[AI Helper] Script Gen — trying key ${i + 1}/${keys.length} (index ${i})`);
+    if (keyStatuses[i]) {
+      keyStatuses[i].lastUsed = new Date().toISOString();
+    }
 
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -165,11 +233,26 @@ async function generateGroqScript(ocrText, duration) {
       }
 
       console.log(`[AI Helper] Script Gen succeeded with key ${i + 1}`);
+      if (keyStatuses[i]) {
+        keyStatuses[i].status = 'Active';
+        keyStatuses[i].exhaustedModels = keyStatuses[i].exhaustedModels.filter(m => m !== modelName);
+        keyStatuses[i].lastError = null;
+      }
       return { data: parsed, keyIndex: i + 1, model: requestBody.model };
     }
 
     const errorText = await response.text();
     console.warn(`[AI Helper] Script key ${i + 1} failed — HTTP ${response.status}: ${errorText.slice(0, 200)}`);
+
+    if (keyStatuses[i]) {
+      keyStatuses[i].lastError = `${response.status}: ${errorText.slice(0, 150)}`;
+      if (isRetryableStatus(response.status)) {
+        keyStatuses[i].status = 'Exhausted';
+        if (!keyStatuses[i].exhaustedModels.includes(modelName)) {
+          keyStatuses[i].exhaustedModels.push(modelName);
+        }
+      }
+    }
 
     if (isRetryableStatus(response.status)) {
       lastError = new Error(`Groq Chat API error (key ${i + 1}): ${response.status} - ${errorText}`);

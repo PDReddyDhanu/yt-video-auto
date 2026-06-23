@@ -221,6 +221,17 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     totalKeys?: number; timestamp?: string;
   } | null>(null);
 
+  interface GroqKeyStatus {
+    index: number;
+    keyMasked: string;
+    status: 'Active' | 'Exhausted';
+    exhaustedModels: string[];
+    lastUsed: string | null;
+    lastError: string | null;
+  }
+
+  const [groqStatusPool, setGroqStatusPool] = useState<GroqKeyStatus[]>([]);
+
   // Movable Watermark State
   const [enableMovable, setEnableMovable] = useState<boolean>(true); // always true/compulsory
   const [movableFile, setMovableFile] = useState<File | null>(null);
@@ -342,6 +353,15 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     checkGoogleAuth();
     fetchTTSVoices();
     fetchMusicFiles();
+    fetchGroqStatus();
+  }, []);
+
+  // Poll Groq status pool every 20 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchGroqStatus();
+    }, 20000);
+    return () => clearInterval(interval);
   }, []);
 
   // Update dynamic audio duration and source based on selected audio file
@@ -442,6 +462,34 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     }
   };
 
+  const fetchGroqStatus = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/groq-status`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status) {
+          setGroqStatusPool(data.status);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch Groq API status:', err);
+    }
+  };
+
+  const handleResetGroqStatus = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/groq-status/reset`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status) {
+          setGroqStatusPool(data.status);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to reset Groq API status:', err);
+    }
+  };
+
   // Helper to generate options: multiples of 10s up to 10 minutes
   const generateDurationOptions = () => {
     const options = [];
@@ -532,6 +580,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       setScriptError(e.message || 'An error occurred during AI script generation.');
     } finally {
       setIsGeneratingScript(false);
+      fetchGroqStatus();
     }
   };
 
@@ -2338,52 +2387,92 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
         {/* Live Simulation Preview & Export (Right side) */}
         <div className="lg:col-span-5 space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
 
-          {/* ─── Live API Status Panel ─── */}
-          {apiStatus && (
-            <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-3 space-y-2 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Live API Status</span>
-                {apiStatus.timestamp && (
-                  <span className="ml-auto text-[9px] text-slate-500 font-mono">
-                    {new Date(apiStatus.timestamp).toLocaleTimeString()}
-                  </span>
-                )}
+          {/* ─── Live API Key & Quota Status Panel ─── */}
+          <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 space-y-3 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">Live API Key & Quota Status</span>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {/* OCR Model */}
-                <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-2">
-                  <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wide mb-1">OCR · Vision</div>
-                  <div className="text-[10px] font-mono text-sky-300 truncate" title={apiStatus.ocrModel}>
-                    {apiStatus.ocrModel?.replace('meta-llama/', '') ?? '—'}
+              <button
+                type="button"
+                onClick={handleResetGroqStatus}
+                className="text-[9px] font-bold text-orange-400 hover:text-orange-300 bg-slate-900 border border-orange-500/30 px-2 py-1 rounded transition-colors"
+              >
+                Reset Quotas
+              </button>
+            </div>
+
+            {/* List of keys and status */}
+            <div className="space-y-2">
+              {groqStatusPool.length > 0 ? (
+                groqStatusPool.map((keyStatus) => (
+                  <div key={keyStatus.index} className="rounded-lg bg-slate-950/70 border border-slate-800/80 p-2.5 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-indigo-400">Key #{keyStatus.index}</span>
+                        <span className="text-[10px] font-mono text-slate-450 bg-slate-900 px-1 py-0.5 rounded">
+                          {keyStatus.keyMasked}
+                        </span>
+                      </div>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${
+                        keyStatus.status === 'Active' 
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                          : 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse'
+                      }`}>
+                        {keyStatus.status}
+                      </span>
+                    </div>
+
+                    {/* Models exhausted list */}
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      <span className="text-[9px] text-slate-500">Exhausted Models:</span>
+                      {keyStatus.exhaustedModels.length > 0 ? (
+                        keyStatus.exhaustedModels.map((model, midx) => (
+                          <span key={midx} className="text-[8px] bg-red-950/45 text-red-300 border border-red-900/30 px-1 rounded font-mono">
+                            {model.replace('meta-llama/', '').replace('llama-', '')}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[8px] text-emerald-400 font-semibold">None</span>
+                      )}
+                    </div>
+
+                    {keyStatus.lastError && (
+                      <div className="text-[8px] text-rose-400 bg-rose-950/20 border border-rose-900/20 px-1.5 py-0.5 rounded font-mono truncate" title={keyStatus.lastError}>
+                        Error: {keyStatus.lastError}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-[9px] text-slate-500">API Key</span>
-                    <span className="text-[10px] font-bold text-emerald-400">#{apiStatus.ocrKeyIndex ?? '?'}</span>
-                    <span className="text-[9px] text-slate-600">/ {apiStatus.totalKeys}</span>
-                  </div>
+                ))
+              ) : (
+                <div className="text-[10px] text-slate-500 text-center py-2 bg-slate-950/40 rounded-lg border border-slate-800/40">
+                  <Loader2 className="h-3 w-3 animate-spin inline mr-1 text-indigo-400" />
+                  Loading API Key statuses...
                 </div>
-                {/* Script Model */}
-                <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-2">
-                  <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wide mb-1">Script · Chat</div>
-                  <div className="text-[10px] font-mono text-orange-300 truncate" title={apiStatus.scriptModel}>
-                    {apiStatus.scriptModel?.replace('llama-', 'Llama-') ?? '—'}
+              )}
+            </div>
+
+            {/* Display info of last successful query if available */}
+            {apiStatus && (
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60">
+                <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
+                  <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last OCR Model</div>
+                  <div className="text-[9px] font-mono text-sky-400 truncate mt-0.5" title={apiStatus.ocrModel}>
+                    {apiStatus.ocrModel?.replace('meta-llama/', '') || '—'}
                   </div>
-                  <div className="flex items-center gap-1 mt-1">
-                    <span className="text-[9px] text-slate-500">API Key</span>
-                    <span className="text-[10px] font-bold text-emerald-400">#{apiStatus.scriptKeyIndex ?? '?'}</span>
-                    <span className="text-[9px] text-slate-600">/ {apiStatus.totalKeys}</span>
+                  <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.ocrKeyIndex ?? '?'} used</div>
+                </div>
+                <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
+                  <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last Script Model</div>
+                  <div className="text-[9px] font-mono text-orange-400 truncate mt-0.5" title={apiStatus.scriptModel}>
+                    {apiStatus.scriptModel?.replace('llama-', 'Llama-') || '—'}
                   </div>
+                  <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.scriptKeyIndex ?? '?'} used</div>
                 </div>
               </div>
-            </div>
-          )}
-          {!apiStatus && (
-            <div className="rounded-xl border border-slate-800/50 bg-slate-900/20 p-3 flex items-center gap-2.5">
-              <span className="h-2 w-2 rounded-full bg-slate-600 shrink-0" />
-              <span className="text-[10px] text-slate-500">Live API Status · Will appear after <strong className="text-slate-400">Get AI Script</strong> is run</span>
-            </div>
-          )}
+            )}
+          </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm flex flex-col items-center">
             <div className="w-full flex items-center justify-between mb-4">
@@ -2391,26 +2480,64 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 <Sparkles className="h-4 w-4 text-orange-400" />
                 Live Output Simulation
               </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold text-slate-400">WM2 Layer</span>
-                <button
-                  type="button"
-                  onClick={() => setShowMovable2(!showMovable2)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    showMovable2 ? 'bg-emerald-500' : 'bg-slate-700'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      showMovable2 ? 'translate-x-4' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
             </div>
 
-            {/* Player + Quick Action Sidebar layout */}
+            {/* Player + Dual Quick Action Sidebars layout */}
             <div className="flex gap-3 w-full justify-center items-start">
+
+              {/* ─── Left Quick Action Sidebar ─── */}
+              <div className="flex flex-col gap-2 w-[88px] flex-shrink-0">
+                {/* WM2 Toggle */}
+                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col items-center gap-1.5">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide text-center leading-tight">WM2 Layer</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowMovable2(!showMovable2)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${showMovable2 ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showMovable2 ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+
+                {/* Paste Image */}
+                <button
+                  type="button"
+                  onClick={handlePasteImage}
+                  title="Paste image from clipboard (Ctrl+V)"
+                  className="rounded-xl border border-dashed border-slate-700 bg-slate-900/80 hover:bg-indigo-950/40 hover:border-indigo-500/50 transition-all p-2 flex flex-col items-center gap-1 group w-full"
+                >
+                  <Clipboard className="h-4 w-4 text-slate-500 group-hover:text-indigo-400 transition-colors" />
+                  <span className="text-[8px] font-semibold text-slate-450 group-hover:text-indigo-300 text-center leading-tight">Paste Image</span>
+                  <span className="text-[7px] text-slate-600 font-mono">Ctrl+V</span>
+                </button>
+
+                {/* Duration + Get AI Script */}
+                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col gap-1.5 w-full">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide text-center">Duration</span>
+                  <select
+                    value={scriptDuration}
+                    onChange={(e) => setScriptDuration(parseInt(e.target.value))}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-1 py-1 text-[9px] text-slate-200 outline-none focus:border-orange-500 cursor-pointer"
+                  >
+                    {generateDurationOptions().map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleGetAIScript}
+                    disabled={isGeneratingScript || !imageFile}
+                    className="w-full flex items-center justify-center gap-1 rounded-lg bg-indigo-700 hover:bg-indigo-600 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-bold text-[8px] py-1.5 transition-all"
+                    title="Get AI Script from Image"
+                  >
+                    {isGeneratingScript ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <><Sparkles className="h-3 w-3" />AI Script</>
+                    )}
+                  </button>
+                </div>
+              </div>
 
               {/* Simulating Portrait Player 9:16 */}
               <div ref={containerRef} className="relative aspect-[9/16] flex-shrink-0 w-[200px] sm:w-[240px] rounded-2xl overflow-hidden border-4 border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/80">
@@ -2635,67 +2762,15 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
             </div>
 
-              {/* ─── Quick Action Sidebar (right of video) ─── */}
+              {/* ─── Right Quick Action Sidebar ─── */}
               <div className="flex flex-col gap-2 w-[88px] flex-shrink-0">
-
-                {/* WM2 Toggle */}
-                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col items-center gap-1.5">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide text-center leading-tight">WM2 Layer</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowMovable2(!showMovable2)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${showMovable2 ? 'bg-emerald-500' : 'bg-slate-700'}`}
-                  >
-                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showMovable2 ? 'translate-x-4' : 'translate-x-0'}`} />
-                  </button>
-                </div>
-
-                {/* Paste Image */}
-                <button
-                  type="button"
-                  onClick={handlePasteImage}
-                  title="Paste image from clipboard (Ctrl+V)"
-                  className="rounded-xl border border-dashed border-slate-700 bg-slate-900/80 hover:bg-indigo-950/40 hover:border-indigo-500/50 transition-all p-2 flex flex-col items-center gap-1 group"
-                >
-                  <Clipboard className="h-4 w-4 text-slate-500 group-hover:text-indigo-400 transition-colors" />
-                  <span className="text-[8px] font-semibold text-slate-400 group-hover:text-indigo-300 text-center leading-tight">Paste Image</span>
-                  <span className="text-[7px] text-slate-600 font-mono">Ctrl+V</span>
-                </button>
-
-                {/* Duration + Get AI Script */}
-                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col gap-1.5">
-                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide text-center">Duration</span>
-                  <select
-                    value={scriptDuration}
-                    onChange={(e) => setScriptDuration(parseInt(e.target.value))}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-1 py-1 text-[9px] text-slate-200 outline-none focus:border-orange-500 cursor-pointer"
-                  >
-                    {generateDurationOptions().map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={handleGetAIScript}
-                    disabled={isGeneratingScript || !imageFile}
-                    className="w-full flex items-center justify-center gap-1 rounded-lg bg-indigo-700 hover:bg-indigo-600 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-bold text-[8px] py-1.5 transition-all"
-                    title="Get AI Script from Image"
-                  >
-                    {isGeneratingScript ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <><Sparkles className="h-3 w-3" />AI Script</>
-                    )}
-                  </button>
-                </div>
-
                 {/* Voice Presets Mini */}
-                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col gap-1.5">
+                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col gap-1.5 w-full">
                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide text-center">Voice</span>
                   {/* Female */}
                   <div className="text-[7px] text-pink-400 font-semibold text-center">♀ F</div>
                   <div className="flex flex-col gap-1">
-                    {TTS_PRESETS.filter(p => p.gender === 'F').map(preset => (
+                    {TTS_PRESETS.filter(p => p.id === 'FM1').map(preset => (
                       <button
                         key={preset.id}
                         type="button"
@@ -2703,7 +2778,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                           if (selectedPresetId === preset.id) cyclePresetPitch(preset.id);
                           else setSelectedPresetId(preset.id);
                         }}
-                        className={`rounded-md border px-1 py-0.5 text-[8px] font-bold transition-all ${
+                        className={`relative rounded-md border px-1 py-0.5 text-[8px] font-bold transition-all ${
                           selectedPresetId === preset.id
                             ? 'border-pink-500/60 bg-pink-950/30 text-pink-300'
                             : 'border-slate-700 bg-slate-950/40 text-slate-500 hover:border-slate-600'
@@ -2717,7 +2792,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   {/* Male */}
                   <div className="text-[7px] text-sky-400 font-semibold text-center mt-0.5">♂ M</div>
                   <div className="flex flex-col gap-1">
-                    {TTS_PRESETS.filter(p => p.gender === 'M').map(preset => (
+                    {TTS_PRESETS.filter(p => p.id === 'MV1' || p.id === 'MV2').map(preset => (
                       <button
                         key={preset.id}
                         type="button"
@@ -2737,7 +2812,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   </div>
                   {/* Active indicator */}
                   {selectedPresetId && (
-                    <div className="text-[7px] text-center text-slate-500 mt-0.5 font-mono">
+                    <div className="text-[7px] text-center text-slate-500 mt-0.5 font-mono leading-tight truncate animate-pulse" title={TTS_PRESETS.find(p => p.id === selectedPresetId)?.label}>
                       {TTS_PRESETS.find(p => p.id === selectedPresetId)?.label}
                     </div>
                   )}
@@ -2748,7 +2823,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   type="button"
                   onClick={handleGenerateTTS}
                   disabled={isGeneratingTTS || !ttsScript.trim()}
-                  className="rounded-xl border border-orange-500/40 bg-orange-600/20 hover:bg-orange-600/40 disabled:bg-slate-900/80 disabled:border-slate-700 disabled:cursor-not-allowed transition-all p-2 flex flex-col items-center gap-1 group"
+                  className="rounded-xl border border-orange-500/40 bg-orange-600/20 hover:bg-orange-600/40 disabled:bg-slate-900/80 disabled:border-slate-700 disabled:cursor-not-allowed transition-all p-2 flex flex-col items-center gap-1 group w-full"
                   title="Generate Audio & Auto-fill Captions"
                 >
                   {isGeneratingTTS ? (
@@ -2760,7 +2835,6 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                     {isGeneratingTTS ? 'Generating...' : 'Gen Audio'}
                   </span>
                 </button>
-
               </div>
             </div>{/* end flex gap-3 */}
 

@@ -11,7 +11,7 @@ import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { generateScriptFromImage } from './aiHelper.js';
+import { generateScriptFromImage, getGroqStatus, resetGroqStatus } from './aiHelper.js';
 
 dotenv.config();
 
@@ -469,6 +469,26 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
         fs.unlinkSync(req.file.path);
       } catch (e) {}
     }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ---------------- GROQ KEY POOL STATUS ENDPOINTS ----------------
+
+app.get('/api/groq-status', (req, res) => {
+  try {
+    const status = getGroqStatus();
+    res.json({ status });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/groq-status/reset', (req, res) => {
+  try {
+    const status = resetGroqStatus();
+    res.json({ status });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
