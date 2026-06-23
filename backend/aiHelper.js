@@ -2,27 +2,62 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Call Groq Vision API to perform OCR extraction from the image.
+ * Multi-key pool — loads all GROQ_API_KEY_* env vars in order.
+ * Falls back to GROQ_API_KEY (single key) if no numbered keys are set.
+ * Keys are tried in sequence; exhausted/rate-limited keys are skipped automatically.
  */
-async function performGroqOCR(imagePath, mimeType, apiKey) {
-  const imageBase64 = Buffer.from(fs.readFileSync(imagePath)).toString("base64");
-  const imageUrl = `data:${mimeType};base64,${imageBase64}`;
+function getApiKeyPool() {
+  const keys = [];
+
+  // Primary key
+  if (process.env.GROQ_API_KEY && process.env.GROQ_API_KEY.trim()) {
+    keys.push(process.env.GROQ_API_KEY.trim());
+  }
+
+  // Additional numbered keys: GROQ_API_KEY_2, GROQ_API_KEY_3, ... GROQ_API_KEY_10
+  for (let i = 2; i <= 10; i++) {
+    const k = process.env[`GROQ_API_KEY_${i}`];
+    if (k && k.trim()) {
+      keys.push(k.trim());
+    }
+  }
+
+  if (keys.length === 0) {
+    throw new Error('No Groq API keys configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2 ... GROQ_API_KEY_6) in backend .env');
+  }
+
+  return keys;
+}
+
+/**
+ * Helper: determine if an HTTP status code is a retryable quota/capacity error.
+ */
+function isRetryableStatus(status) {
+  return status === 429 || status === 503 || status === 529;
+}
+
+/**
+ * Call Groq Vision API to perform OCR extraction from the image.
+ * Automatically rotates through all available API keys on quota errors.
+ */
+async function performGroqOCR(imagePath, mimeType) {
+  const keys = getApiKeyPool();
+  const imageBase64 = Buffer.from(fs.readFileSync(imagePath)).toString('base64');
+  const imageDataUrl = `data:${mimeType};base64,${imageBase64}`;
 
   const requestBody = {
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
     messages: [
       {
-        role: "user",
+        role: 'user',
         content: [
           {
-            type: "text",
-            text: "Analyze this image and perform complete OCR extraction. Return all text content, headlines, tables, dates, numbers, and key metadata you find in the image. Be extremely precise."
+            type: 'text',
+            text: 'Analyze this image and perform complete OCR extraction. Return all text content, headlines, tables, dates, numbers, and key metadata you find in the image. Be extremely precise.'
           },
           {
-            type: "image_url",
-            image_url: {
-              url: imageUrl
-            }
+            type: 'image_url',
+            image_url: { url: imageDataUrl }
           }
         ]
       }
@@ -30,79 +65,124 @@ async function performGroqOCR(imagePath, mimeType, apiKey) {
     temperature: 0.1
   };
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(requestBody)
-  });
+  let lastError = null;
 
-  if (!response.ok) {
+  for (let i = 0; i < keys.length; i++) {
+    const apiKey = keys[i];
+    console.log(`[AI Helper] OCR — trying key ${i + 1}/${keys.length} (index ${i})`);
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log(`[AI Helper] OCR succeeded with key ${i + 1}`);
+      return result.choices[0].message.content;
+    }
+
     const errorText = await response.text();
+    console.warn(`[AI Helper] OCR key ${i + 1} failed — HTTP ${response.status}: ${errorText.slice(0, 200)}`);
+
+    if (isRetryableStatus(response.status)) {
+      // Quota/capacity error — try next key
+      lastError = new Error(`Groq Vision API error (key ${i + 1}): ${response.status} - ${errorText}`);
+      continue;
+    }
+
+    // Non-retryable error (e.g. 400 bad request, 401 invalid key) — throw immediately
     throw new Error(`Groq Vision API error: ${response.status} - ${errorText}`);
   }
 
-  const result = await response.json();
-  return result.choices[0].message.content;
+  // All keys exhausted
+  throw new Error(
+    `All ${keys.length} Groq API key(s) are over capacity or rate-limited for OCR. ` +
+    `Last error: ${lastError?.message}`
+  );
 }
 
 /**
  * Call Groq Chat API to refine OCR and generate the structured scripts.
+ * Automatically rotates through all available API keys on quota errors.
  */
-async function generateGroqScript(ocrText, duration, apiKey) {
+async function generateGroqScript(ocrText, duration) {
+  const keys = getApiKeyPool();
   const prompt = getScriptPrompt(ocrText, duration);
 
   const requestBody = {
-    model: "llama-3.3-70b-versatile",
+    model: 'llama-3.3-70b-versatile',
     messages: [
       {
-        role: "system",
-        content: "You are a professional Telugu news writer and voiceover script designer. You output strictly valid JSON matching the requested schema."
+        role: 'system',
+        content: 'You are a professional Telugu news writer and voiceover script designer. You output strictly valid JSON matching the requested schema.'
       },
       {
-        role: "user",
+        role: 'user',
         content: prompt
       }
     ],
-    response_format: { type: "json_object" },
+    response_format: { type: 'json_object' },
     temperature: 0.3
   };
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(requestBody)
-  });
+  let lastError = null;
 
-  if (!response.ok) {
+  for (let i = 0; i < keys.length; i++) {
+    const apiKey = keys[i];
+    console.log(`[AI Helper] Script Gen — trying key ${i + 1}/${keys.length} (index ${i})`);
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      const content = result.choices[0].message.content;
+      const parsed = JSON.parse(content);
+
+      // Safeguard: Ensure autoFilename is always populated
+      if (!parsed.autoFilename) {
+        const baseText = parsed.tenglishScript || ocrText || 'rendered_video';
+        const cleaned = baseText
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-_]/g, '')
+          .trim()
+          .replace(/[\s-_]+/g, '_')
+          .split('_')
+          .slice(0, 10)
+          .join('_');
+        parsed.autoFilename = cleaned || 'rendered_video';
+      }
+
+      console.log(`[AI Helper] Script Gen succeeded with key ${i + 1}`);
+      return parsed;
+    }
+
     const errorText = await response.text();
+    console.warn(`[AI Helper] Script key ${i + 1} failed — HTTP ${response.status}: ${errorText.slice(0, 200)}`);
+
+    if (isRetryableStatus(response.status)) {
+      lastError = new Error(`Groq Chat API error (key ${i + 1}): ${response.status} - ${errorText}`);
+      continue;
+    }
+
     throw new Error(`Groq Chat API error: ${response.status} - ${errorText}`);
   }
 
-  const result = await response.json();
-  const content = result.choices[0].message.content;
-  const parsed = JSON.parse(content);
-
-  // Safeguard: Ensure autoFilename is always populated
-  if (!parsed.autoFilename) {
-    const baseText = parsed.tenglishScript || ocrText || "rendered_video";
-    const cleaned = baseText
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-_]/g, '')
-      .trim()
-      .replace(/[\s-_]+/g, '_')
-      .split('_')
-      .slice(0, 10)
-      .join('_');
-    parsed.autoFilename = cleaned || "rendered_video";
-  }
-
-  return parsed;
+  throw new Error(
+    `All ${keys.length} Groq API key(s) are over capacity or rate-limited for Script Generation. ` +
+    `Last error: ${lastError?.message}`
+  );
 }
 
 /**
@@ -112,7 +192,7 @@ function getScriptPrompt(ocrText, duration) {
   // Average speaking pace is ~2.5 - 3 words per second.
   const targetWords = Math.round(duration * 2.5);
 
-  return `Based on the extracted text content/image data${ocrText ? `: "${ocrText}"` : ""}, generate a professional informative audio voiceover script in Telugu and its exact transliterated Tenglish counterpart.
+  return `Based on the extracted text content/image data${ocrText ? `: "${ocrText}"` : ''}, generate a professional informative audio voiceover script in Telugu and its exact transliterated Tenglish counterpart.
 
 CRITICAL RULES:
 1. **Total Duration**: The script MUST take exactly ${duration} seconds when spoken. For ${duration} seconds, keep the script to approximately ${targetWords} words total. Keep it extremely crisp and remove fluff.
@@ -146,18 +226,17 @@ You MUST respond strictly with a valid JSON object matching this schema:
 
 /**
  * Main entry point function for script generation.
+ * Uses automatic API key rotation across all configured GROQ_API_KEY_* keys.
  */
 export async function generateScriptFromImage(imagePath, mimeType, duration) {
-  const groqApiKey = process.env.GROQ_API_KEY;
+  const keys = getApiKeyPool(); // validates at least one key is set
+  console.log(`[AI Helper] Running Groq Pipeline with ${keys.length} key(s) available...`);
 
-  if (!groqApiKey || !groqApiKey.trim()) {
-    throw new Error("Groq API Key (GROQ_API_KEY) is not configured in backend .env file.");
-  }
+  // Step 1: OCR Extraction (with auto key rotation)
+  const ocrText = await performGroqOCR(imagePath, mimeType);
 
-  console.log("[AI Helper] Running Groq Pipeline...");
-  // Step 1 & 2: OCR Extraction
-  const ocrText = await performGroqOCR(imagePath, mimeType, groqApiKey);
-  // Step 3: Script Generation
-  const scriptData = await generateGroqScript(ocrText, duration, groqApiKey);
+  // Step 2: Script Generation (with auto key rotation)
+  const scriptData = await generateGroqScript(ocrText, duration);
+
   return scriptData;
 }
