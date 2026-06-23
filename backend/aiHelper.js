@@ -83,7 +83,7 @@ async function performGroqOCR(imagePath, mimeType) {
     if (response.ok) {
       const result = await response.json();
       console.log(`[AI Helper] OCR succeeded with key ${i + 1}`);
-      return result.choices[0].message.content;
+      return { text: result.choices[0].message.content, keyIndex: i + 1, model: requestBody.model };
     }
 
     const errorText = await response.text();
@@ -165,7 +165,7 @@ async function generateGroqScript(ocrText, duration) {
       }
 
       console.log(`[AI Helper] Script Gen succeeded with key ${i + 1}`);
-      return parsed;
+      return { data: parsed, keyIndex: i + 1, model: requestBody.model };
     }
 
     const errorText = await response.text();
@@ -227,16 +227,29 @@ You MUST respond strictly with a valid JSON object matching this schema:
 /**
  * Main entry point function for script generation.
  * Uses automatic API key rotation across all configured GROQ_API_KEY_* keys.
+ * Returns script data + apiStatus for live status display on the frontend.
  */
 export async function generateScriptFromImage(imagePath, mimeType, duration) {
   const keys = getApiKeyPool(); // validates at least one key is set
-  console.log(`[AI Helper] Running Groq Pipeline with ${keys.length} key(s) available...`);
+  const totalKeys = keys.length;
+  console.log(`[AI Helper] Running Groq Pipeline with ${totalKeys} key(s) available...`);
 
   // Step 1: OCR Extraction (with auto key rotation)
-  const ocrText = await performGroqOCR(imagePath, mimeType);
+  const ocrResult = await performGroqOCR(imagePath, mimeType);
 
   // Step 2: Script Generation (with auto key rotation)
-  const scriptData = await generateGroqScript(ocrText, duration);
+  const scriptResult = await generateGroqScript(ocrResult.text, duration);
 
-  return scriptData;
+  return {
+    ...scriptResult.data,
+    // API status metadata for live status display on frontend
+    apiStatus: {
+      ocrModel: ocrResult.model,
+      ocrKeyIndex: ocrResult.keyIndex,
+      scriptModel: scriptResult.model,
+      scriptKeyIndex: scriptResult.keyIndex,
+      totalKeys,
+      timestamp: new Date().toISOString()
+    }
+  };
 }

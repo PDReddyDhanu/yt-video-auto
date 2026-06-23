@@ -215,6 +215,11 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [isGeneratingScript, setIsGeneratingScript] = useState<boolean>(false);
   const [recommendedVoice, setRecommendedVoice] = useState<string>('');
   const [scriptError, setScriptError] = useState<string>('');
+  const [apiStatus, setApiStatus] = useState<{
+    ocrModel?: string; ocrKeyIndex?: number;
+    scriptModel?: string; scriptKeyIndex?: number;
+    totalKeys?: number; timestamp?: string;
+  } | null>(null);
 
   // Movable Watermark State
   const [enableMovable, setEnableMovable] = useState<boolean>(true); // always true/compulsory
@@ -515,6 +520,11 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
         if (matchingPreset) {
           setSelectedPresetId(matchingPreset.id);
         }
+      }
+
+      // Capture live API status (which key & model was used)
+      if (data.apiStatus) {
+        setApiStatus(data.apiStatus);
       }
 
     } catch (e: any) {
@@ -2327,6 +2337,54 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
         {/* Live Simulation Preview & Export (Right side) */}
         <div className="lg:col-span-5 space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
+
+          {/* ─── Live API Status Panel ─── */}
+          {apiStatus && (
+            <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-3 space-y-2 backdrop-blur-sm">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">Live API Status</span>
+                {apiStatus.timestamp && (
+                  <span className="ml-auto text-[9px] text-slate-500 font-mono">
+                    {new Date(apiStatus.timestamp).toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {/* OCR Model */}
+                <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-2">
+                  <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wide mb-1">OCR · Vision</div>
+                  <div className="text-[10px] font-mono text-sky-300 truncate" title={apiStatus.ocrModel}>
+                    {apiStatus.ocrModel?.replace('meta-llama/', '') ?? '—'}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-[9px] text-slate-500">API Key</span>
+                    <span className="text-[10px] font-bold text-emerald-400">#{apiStatus.ocrKeyIndex ?? '?'}</span>
+                    <span className="text-[9px] text-slate-600">/ {apiStatus.totalKeys}</span>
+                  </div>
+                </div>
+                {/* Script Model */}
+                <div className="rounded-lg bg-slate-950/60 border border-slate-800 p-2">
+                  <div className="text-[9px] text-slate-500 font-semibold uppercase tracking-wide mb-1">Script · Chat</div>
+                  <div className="text-[10px] font-mono text-orange-300 truncate" title={apiStatus.scriptModel}>
+                    {apiStatus.scriptModel?.replace('llama-', 'Llama-') ?? '—'}
+                  </div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-[9px] text-slate-500">API Key</span>
+                    <span className="text-[10px] font-bold text-emerald-400">#{apiStatus.scriptKeyIndex ?? '?'}</span>
+                    <span className="text-[9px] text-slate-600">/ {apiStatus.totalKeys}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {!apiStatus && (
+            <div className="rounded-xl border border-slate-800/50 bg-slate-900/20 p-3 flex items-center gap-2.5">
+              <span className="h-2 w-2 rounded-full bg-slate-600 shrink-0" />
+              <span className="text-[10px] text-slate-500">Live API Status · Will appear after <strong className="text-slate-400">Get AI Script</strong> is run</span>
+            </div>
+          )}
+
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm flex flex-col items-center">
             <div className="w-full flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
@@ -2351,8 +2409,11 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
               </div>
             </div>
 
-            {/* Simulating Portrait Player 9:16 */}
-            <div ref={containerRef} className="relative aspect-[9/16] w-full max-w-[280px] rounded-2xl overflow-hidden border-4 border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/80">
+            {/* Player + Quick Action Sidebar layout */}
+            <div className="flex gap-3 w-full justify-center items-start">
+
+              {/* Simulating Portrait Player 9:16 */}
+              <div ref={containerRef} className="relative aspect-[9/16] flex-shrink-0 w-[200px] sm:w-[240px] rounded-2xl overflow-hidden border-4 border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/80">
               
               {/* Background Video */}
               {selectedBg ? (
@@ -2573,6 +2634,135 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
               )}
 
             </div>
+
+              {/* ─── Quick Action Sidebar (right of video) ─── */}
+              <div className="flex flex-col gap-2 w-[88px] flex-shrink-0">
+
+                {/* WM2 Toggle */}
+                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col items-center gap-1.5">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide text-center leading-tight">WM2 Layer</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowMovable2(!showMovable2)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${showMovable2 ? 'bg-emerald-500' : 'bg-slate-700'}`}
+                  >
+                    <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showMovable2 ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+
+                {/* Paste Image */}
+                <button
+                  type="button"
+                  onClick={handlePasteImage}
+                  title="Paste image from clipboard (Ctrl+V)"
+                  className="rounded-xl border border-dashed border-slate-700 bg-slate-900/80 hover:bg-indigo-950/40 hover:border-indigo-500/50 transition-all p-2 flex flex-col items-center gap-1 group"
+                >
+                  <Clipboard className="h-4 w-4 text-slate-500 group-hover:text-indigo-400 transition-colors" />
+                  <span className="text-[8px] font-semibold text-slate-400 group-hover:text-indigo-300 text-center leading-tight">Paste Image</span>
+                  <span className="text-[7px] text-slate-600 font-mono">Ctrl+V</span>
+                </button>
+
+                {/* Duration + Get AI Script */}
+                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col gap-1.5">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide text-center">Duration</span>
+                  <select
+                    value={scriptDuration}
+                    onChange={(e) => setScriptDuration(parseInt(e.target.value))}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-1 py-1 text-[9px] text-slate-200 outline-none focus:border-orange-500 cursor-pointer"
+                  >
+                    {generateDurationOptions().map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleGetAIScript}
+                    disabled={isGeneratingScript || !imageFile}
+                    className="w-full flex items-center justify-center gap-1 rounded-lg bg-indigo-700 hover:bg-indigo-600 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white font-bold text-[8px] py-1.5 transition-all"
+                    title="Get AI Script from Image"
+                  >
+                    {isGeneratingScript ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <><Sparkles className="h-3 w-3" />AI Script</>
+                    )}
+                  </button>
+                </div>
+
+                {/* Voice Presets Mini */}
+                <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col gap-1.5">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide text-center">Voice</span>
+                  {/* Female */}
+                  <div className="text-[7px] text-pink-400 font-semibold text-center">♀ F</div>
+                  <div className="flex flex-col gap-1">
+                    {TTS_PRESETS.filter(p => p.gender === 'F').map(preset => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => {
+                          if (selectedPresetId === preset.id) cyclePresetPitch(preset.id);
+                          else setSelectedPresetId(preset.id);
+                        }}
+                        className={`rounded-md border px-1 py-0.5 text-[8px] font-bold transition-all ${
+                          selectedPresetId === preset.id
+                            ? 'border-pink-500/60 bg-pink-950/30 text-pink-300'
+                            : 'border-slate-700 bg-slate-950/40 text-slate-500 hover:border-slate-600'
+                        }`}
+                      >
+                        {preset.id}
+                        {selectedPresetId === preset.id && <span className="absolute top-0 right-0 h-1 w-1 rounded-full bg-pink-400 animate-pulse" />}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Male */}
+                  <div className="text-[7px] text-sky-400 font-semibold text-center mt-0.5">♂ M</div>
+                  <div className="flex flex-col gap-1">
+                    {TTS_PRESETS.filter(p => p.gender === 'M').map(preset => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => {
+                          if (selectedPresetId === preset.id) cyclePresetPitch(preset.id);
+                          else setSelectedPresetId(preset.id);
+                        }}
+                        className={`rounded-md border px-1 py-0.5 text-[8px] font-bold transition-all ${
+                          selectedPresetId === preset.id
+                            ? 'border-sky-500/60 bg-sky-950/30 text-sky-300'
+                            : 'border-slate-700 bg-slate-950/40 text-slate-500 hover:border-slate-600'
+                        }`}
+                      >
+                        {preset.id}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Active indicator */}
+                  {selectedPresetId && (
+                    <div className="text-[7px] text-center text-slate-500 mt-0.5 font-mono">
+                      {TTS_PRESETS.find(p => p.id === selectedPresetId)?.label}
+                    </div>
+                  )}
+                </div>
+
+                {/* Generate Audio */}
+                <button
+                  type="button"
+                  onClick={handleGenerateTTS}
+                  disabled={isGeneratingTTS || !ttsScript.trim()}
+                  className="rounded-xl border border-orange-500/40 bg-orange-600/20 hover:bg-orange-600/40 disabled:bg-slate-900/80 disabled:border-slate-700 disabled:cursor-not-allowed transition-all p-2 flex flex-col items-center gap-1 group"
+                  title="Generate Audio & Auto-fill Captions"
+                >
+                  {isGeneratingTTS ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
+                  ) : (
+                    <Mic className="h-4 w-4 text-orange-400 group-disabled:text-slate-600" />
+                  )}
+                  <span className="text-[8px] font-bold text-orange-300 group-disabled:text-slate-600 text-center leading-tight">
+                    {isGeneratingTTS ? 'Generating...' : 'Gen Audio'}
+                  </span>
+                </button>
+
+              </div>
+            </div>{/* end flex gap-3 */}
 
             {/* Dedicated Player Controls outside the frame */}
             <div className="w-full max-w-[280px] mt-4 p-4 rounded-xl border border-slate-800 bg-slate-950/60 flex flex-col gap-3">
