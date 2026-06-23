@@ -2388,25 +2388,25 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
         <div className="lg:col-span-5 space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
 
           {/* ─── Live API Key & Quota Status Panel ─── */}
-          <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 space-y-3 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">Live API Key & Quota Status</span>
+          {groqStatusPool.length > 0 && (
+            <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 space-y-3 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">Live API Key & Quota Status</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetGroqStatus}
+                  className="text-[9px] font-bold text-orange-400 hover:text-orange-300 bg-slate-900 border border-orange-500/30 px-2 py-1 rounded transition-colors"
+                >
+                  Reset Quotas
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleResetGroqStatus}
-                className="text-[9px] font-bold text-orange-400 hover:text-orange-300 bg-slate-900 border border-orange-500/30 px-2 py-1 rounded transition-colors"
-              >
-                Reset Quotas
-              </button>
-            </div>
 
-            {/* List of keys and status */}
-            <div className="space-y-2">
-              {groqStatusPool.length > 0 ? (
-                groqStatusPool.map((keyStatus) => (
+              {/* List of keys and status */}
+              <div className="space-y-2">
+                {groqStatusPool.map((keyStatus) => (
                   <div key={keyStatus.index} className="rounded-lg bg-slate-950/70 border border-slate-800/80 p-2.5 text-xs space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
@@ -2444,30 +2444,30 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                       </div>
                     )}
                   </div>
-                ))
-              ) : null}
-            </div>
-
-            {/* Display info of last successful query if available */}
-            {apiStatus && (
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60">
-                <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
-                  <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last OCR Model</div>
-                  <div className="text-[9px] font-mono text-sky-400 truncate mt-0.5" title={apiStatus.ocrModel}>
-                    {apiStatus.ocrModel?.replace('meta-llama/', '') || '—'}
-                  </div>
-                  <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.ocrKeyIndex ?? '?'} used</div>
-                </div>
-                <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
-                  <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last Script Model</div>
-                  <div className="text-[9px] font-mono text-orange-400 truncate mt-0.5" title={apiStatus.scriptModel}>
-                    {apiStatus.scriptModel?.replace('llama-', 'Llama-') || '—'}
-                  </div>
-                  <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.scriptKeyIndex ?? '?'} used</div>
-                </div>
+                ))}
               </div>
-            )}
-          </div>
+
+              {/* Display info of last successful query if available */}
+              {apiStatus && (
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60">
+                  <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
+                    <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last OCR Model</div>
+                    <div className="text-[9px] font-mono text-sky-400 truncate mt-0.5" title={apiStatus.ocrModel}>
+                      {apiStatus.ocrModel?.replace('meta-llama/', '') || '—'}
+                    </div>
+                    <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.ocrKeyIndex ?? '?'} used</div>
+                  </div>
+                  <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
+                    <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last Script Model</div>
+                    <div className="text-[9px] font-mono text-orange-400 truncate mt-0.5" title={apiStatus.scriptModel}>
+                      {apiStatus.scriptModel?.replace('llama-', 'Llama-') || '—'}
+                    </div>
+                    <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.scriptKeyIndex ?? '?'} used</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm flex flex-col items-center">
             <div className="w-full flex items-center justify-between mb-4">
