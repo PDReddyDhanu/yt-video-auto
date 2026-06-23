@@ -2445,12 +2445,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                     )}
                   </div>
                 ))
-              ) : (
-                <div className="text-[10px] text-slate-500 text-center py-2 bg-slate-950/40 rounded-lg border border-slate-800/40">
-                  <Loader2 className="h-3 w-3 animate-spin inline mr-1 text-indigo-400" />
-                  Loading API Key statuses...
-                </div>
-              )}
+              ) : null}
             </div>
 
             {/* Display info of last successful query if available */}
