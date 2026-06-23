@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Play, 
   Pause, 
@@ -22,7 +22,8 @@ import {
   Mic,
   Type,
   Lock,
-  Unlock
+  Unlock,
+  Clipboard
 } from 'lucide-react';
 
 import { logoDataUri } from '@/components/LogoData';
@@ -687,6 +688,44 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       pausePreview();
     }
   };
+
+  // Clipboard paste handler — used by both the Paste button and Ctrl+V shortcut
+  const handlePasteImage = useCallback(async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const clipboardItem of clipboardItems) {
+        const imageType = clipboardItem.types.find((t) => t.startsWith('image/'));
+        if (imageType) {
+          const blob = await clipboardItem.getType(imageType);
+          const ext = imageType.split('/')[1] || 'png';
+          const file = new File([blob], `pasted_image.${ext}`, { type: imageType });
+          if (imageUrl) URL.revokeObjectURL(imageUrl);
+          setImageFile(file);
+          setImageUrl(URL.createObjectURL(file));
+          pausePreview();
+          return;
+        }
+      }
+      // Nothing found
+      alert('No image found in clipboard. Please copy an image first.');
+    } catch {
+      alert('Clipboard access was denied. Please allow clipboard access and try again, or use the file chooser.');
+    }
+  }, [imageUrl]);
+
+  // Desktop Ctrl+V shortcut — listen globally but only when no text input is focused
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        const tag = (document.activeElement as HTMLElement)?.tagName?.toLowerCase();
+        // Skip if user is typing in an input/textarea/select
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        handlePasteImage();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handlePasteImage]);
 
   // Audio Upload handler + duration probing
   const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1489,13 +1528,12 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <div>
-                <label className="flex flex-col items-center justify-center aspect-square rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all group">
-                  <div className="flex flex-col items-center justify-center p-5 text-center">
-                    <ImageIcon className="h-8 w-8 text-slate-500 group-hover:text-orange-400 transition-colors mb-2.5" />
-                    <span className="text-xs font-semibold text-slate-300">Choose Image</span>
-                    <span className="text-[10px] text-slate-500 mt-1">PNG, JPG, JPEG, WEBP</span>
-                  </div>
+              <div className="flex flex-col gap-3">
+                {/* File Upload Button */}
+                <label className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-800 bg-slate-950/40 hover:bg-slate-900/30 hover:border-slate-700 cursor-pointer transition-all group py-6 px-4 text-center">
+                  <ImageIcon className="h-8 w-8 text-slate-500 group-hover:text-orange-400 transition-colors mb-2.5" />
+                  <span className="text-xs font-semibold text-slate-300">Choose Image</span>
+                  <span className="text-[10px] text-slate-500 mt-1">PNG, JPG, JPEG, WEBP</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -1503,6 +1541,26 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                     className="hidden"
                   />
                 </label>
+
+                {/* Paste from Clipboard Button */}
+                <button
+                  type="button"
+                  onClick={handlePasteImage}
+                  className="flex items-center justify-center gap-2.5 rounded-xl border border-dashed border-slate-700 bg-slate-950/40 hover:bg-indigo-950/30 hover:border-indigo-500/50 transition-all py-4 px-4 group"
+                >
+                  <Clipboard className="h-5 w-5 text-slate-500 group-hover:text-indigo-400 transition-colors shrink-0" />
+                  <div className="text-left">
+                    <p className="text-xs font-semibold text-slate-300 group-hover:text-indigo-300 transition-colors">
+                      Paste from Clipboard
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-0.5 hidden sm:block">
+                      Press <kbd className="px-1 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-mono text-[9px]">Ctrl+V</kbd> or tap this button
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-0.5 sm:hidden">
+                      Tap to paste copied image
+                    </p>
+                  </div>
+                </button>
               </div>
 
               {imageFile ? (
@@ -1514,6 +1572,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   />
                   <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
+                      type="button"
                       onClick={() => {
                         setImageFile(null);
                         setImageUrl('');
@@ -1529,10 +1588,11 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 </div>
               ) : (
                 <div className="flex items-center justify-center border border-dashed border-slate-800 rounded-xl aspect-square bg-slate-950/10 text-slate-600 text-xs text-center p-4">
-                  No image selected yet. Center image is overlays above the background.
+                  No image selected yet. Center image overlays above the background.
                 </div>
               )}
             </div>
+
 
             {imageFile && (
               <div className="mt-4 pt-4 border-t border-slate-800/40 space-y-1.5 animate-[fadeIn_0.2s_ease-out]">
