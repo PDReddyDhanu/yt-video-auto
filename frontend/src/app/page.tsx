@@ -2478,10 +2478,10 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
             </div>
 
             {/* Player + Dual Quick Action Sidebars layout */}
-            <div className="flex gap-3 w-full justify-center items-start">
+            <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full justify-center items-center sm:items-start">
 
               {/* ─── Left Quick Action Sidebar ─── */}
-              <div className="flex flex-col gap-2 w-[88px] flex-shrink-0">
+              <div className="flex flex-col gap-2 w-[calc(50%-8px)] sm:w-[88px] flex-shrink-0 order-2 sm:order-1">
                 {/* WM2 Toggle */}
                 <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col items-center gap-1.5">
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide text-center leading-tight">WM2 Layer</span>
@@ -2535,7 +2535,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
               </div>
 
               {/* Simulating Portrait Player 9:16 */}
-              <div ref={containerRef} className="relative aspect-[9/16] flex-shrink-0 w-[200px] sm:w-[240px] rounded-2xl overflow-hidden border-4 border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/80">
+              <div ref={containerRef} className="relative aspect-[9/16] flex-shrink-0 w-[200px] sm:w-[240px] rounded-2xl overflow-hidden border-4 border-slate-800 bg-slate-950 shadow-2xl shadow-slate-950/80 order-1 sm:order-2">
               
               {/* Background Video */}
               {selectedBg ? (
@@ -2758,7 +2758,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
             </div>
 
               {/* ─── Right Quick Action Sidebar ─── */}
-              <div className="flex flex-col gap-2 w-[88px] flex-shrink-0">
+              <div className="flex flex-col gap-2 w-[calc(50%-8px)] sm:w-[88px] flex-shrink-0 order-3 sm:order-3">
                 {/* Voice Presets Mini */}
                 <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col gap-1.5 w-full">
                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide text-center">Voice</span>
