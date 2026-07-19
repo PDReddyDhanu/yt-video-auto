@@ -88,7 +88,7 @@ async function performGroqOCR(imagePath, mimeType) {
   const keys = getApiKeyPool();
   const imageBase64 = Buffer.from(fs.readFileSync(imagePath)).toString('base64');
   const imageDataUrl = `data:${mimeType};base64,${imageBase64}`;
-  const modelName = 'meta-llama/llama-4-scout-17b-16e-instruct';
+  const modelName = 'llama-3.2-11b-vision-preview';
 
   const requestBody = {
     model: modelName,
