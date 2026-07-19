@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { 
@@ -586,7 +586,7 @@ export default function AdminPage() {
                   </label>
                   <input
                     type="password"
-                    placeholder={driveConfig.hasSecret ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : 'Enter Google Client Secret'}
+                    placeholder={driveConfig.hasSecret ? '••••••••••••••••••••' : 'Enter Google Client Secret'}
                     onChange={(e) => setDriveConfig({ ...driveConfig, clientSecret: e.target.value })}
                     className="w-full rounded-lg border border-slate-800 bg-slate-950/80 px-3.5 py-2 text-xs text-slate-200 outline-none focus:border-orange-500 transition-colors"
                   />
