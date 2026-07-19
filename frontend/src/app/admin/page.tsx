@@ -36,7 +36,7 @@ export default function AdminPage() {
   const [driveConfig, setDriveConfig] = useState<any>({
     clientId: '',
     clientSecret: '',
-    redirectUri: `${BACKEND_URL}/api/cloudreturn`,
+    redirectUri: `${BACKEND_URL}/backend/cloudreturn`,
     hasSecret: false
   });
   const [history, setHistory] = useState<any[]>([]);
@@ -61,7 +61,7 @@ export default function AdminPage() {
   const checkGoogleAuth = async () => {
     try {
       setIsAuthLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/cloudinfo`);
+      const res = await fetch(`${BACKEND_URL}/backend/cloudinfo`);
       if (res.ok) {
         const data = await res.json();
         setDriveConfig((prev: any) => ({ 
@@ -79,7 +79,7 @@ export default function AdminPage() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/clouddisconnect`, {
+      const res = await fetch(`${BACKEND_URL}/backend/clouddisconnect`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -97,7 +97,7 @@ export default function AdminPage() {
     const top = window.screen.height / 2 - height / 2;
 
     const popup = window.open(
-      `${BACKEND_URL}/api/cloudconnect`,
+      `${BACKEND_URL}/backend/cloudconnect`,
       'GoogleAuthPopup',
       `width=${width},height=${height},left=${left},top=${top},status=0,menubar=0`
     );
@@ -120,7 +120,7 @@ export default function AdminPage() {
 
   const fetchBackgrounds = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/backgrounds`);
+      const res = await fetch(`${BACKEND_URL}/backend/backgrounds`);
       if (res.ok) setBackgrounds(await res.json());
     } catch (e) {
       console.error(e);
@@ -129,7 +129,7 @@ export default function AdminPage() {
 
   const fetchWatermark = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/watermark`);
+      const res = await fetch(`${BACKEND_URL}/backend/watermark`);
       if (res.ok) {
         const data = await res.json();
         setWatermark(data);
@@ -144,7 +144,7 @@ export default function AdminPage() {
 
   const fetchDriveConfig = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/cloudconfig`);
+      const res = await fetch(`${BACKEND_URL}/backend/cloudconfig`);
       if (res.ok) setDriveConfig(await res.json());
     } catch (e) {
       console.error(e);
@@ -153,7 +153,7 @@ export default function AdminPage() {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/history`);
+      const res = await fetch(`${BACKEND_URL}/backend/history`);
       if (res.ok) setHistory(await res.json());
     } catch (e) {
       console.error(e);
@@ -163,7 +163,7 @@ export default function AdminPage() {
   const handleClearHistory = async () => {
     if (!confirm('Are you sure you want to clear all render history and delete all rendered files from local storage?')) return;
     try {
-      const res = await fetch(`${BACKEND_URL}/api/history`, {
+      const res = await fetch(`${BACKEND_URL}/backend/history`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -187,7 +187,7 @@ export default function AdminPage() {
     formData.append('name', bgName);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/backgrounds`, {
+      const res = await fetch(`${BACKEND_URL}/backend/backgrounds`, {
         method: 'POST',
         body: formData
       });
@@ -214,7 +214,7 @@ export default function AdminPage() {
     if (!confirm('Are you sure you want to delete this background template?')) return;
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/backgrounds/${id}`, {
+      const res = await fetch(`${BACKEND_URL}/backend/backgrounds/${id}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -241,7 +241,7 @@ export default function AdminPage() {
     formData.append('margin', watermark.margin.toString());
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/watermark`, {
+      const res = await fetch(`${BACKEND_URL}/backend/watermark`, {
         method: 'POST',
         body: formData
       });
@@ -284,7 +284,7 @@ export default function AdminPage() {
     setDriveAlert(null);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/cloudconfig`, {
+      const res = await fetch(`${BACKEND_URL}/backend/cloudconfig`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -792,6 +792,7 @@ export default function AdminPage() {
     </div>
   );
 }
+
 
 
 

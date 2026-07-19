@@ -108,7 +108,7 @@ function readDb() {
     googleDrive: {
       clientId: '',
       clientSecret: '',
-      redirectUri: 'http://localhost:3001/api/cloudreturn',
+      redirectUri: 'http://localhost:3001/backend/cloudreturn',
       tokens: null,
       targetFolderId: 'root'
     },
@@ -254,13 +254,13 @@ async function syncBackgroundsFromFolder() {
   }
 }
 
-app.get('/api/backgrounds', async (req, res) => {
+app.get('/backend/backgrounds', async (req, res) => {
   await syncBackgroundsFromFolder();
   const db = readDb();
   res.json(db.backgrounds || []);
 });
 
-app.get('/api/music', (req, res) => {
+app.get('/backend/music', (req, res) => {
   try {
     if (!fs.existsSync(MUSIC_DIR)) {
       fs.mkdirSync(MUSIC_DIR, { recursive: true });
@@ -285,7 +285,7 @@ app.get('/api/music', (req, res) => {
   }
 });
 
-app.post('/api/backgrounds', upload.single('video'), async (req, res) => {
+app.post('/backend/backgrounds', upload.single('video'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No video file uploaded' });
@@ -306,7 +306,7 @@ app.post('/api/backgrounds', upload.single('video'), async (req, res) => {
   }
 });
 
-app.delete('/api/backgrounds/:id', (req, res) => {
+app.delete('/backend/backgrounds/:id', (req, res) => {
   const db = readDb();
   const index = db.backgrounds.findIndex(b => b.id === req.params.id);
   if (index === -1) {
@@ -324,12 +324,12 @@ app.delete('/api/backgrounds/:id', (req, res) => {
 
 // ---------------- WATERMARK SETTINGS API ----------------
 
-app.get('/api/watermark', (req, res) => {
+app.get('/backend/watermark', (req, res) => {
   const db = readDb();
   res.json(db.watermark);
 });
 
-app.post('/api/watermark', upload.single('watermarkImage'), (req, res) => {
+app.post('/backend/watermark', upload.single('watermarkImage'), (req, res) => {
   try {
     const db = readDb();
     if (req.file) {
@@ -358,7 +358,7 @@ app.post('/api/watermark', upload.single('watermarkImage'), (req, res) => {
 const TTS_API = process.env.TTS_API_URL || 'http://127.0.0.1:8001';
 
 // Proxy: Get available voices from TTS server
-app.get('/api/tts/voices', async (req, res) => {
+app.get('/backend/tts/voices', async (req, res) => {
   try {
     const response = await fetch(`${TTS_API}/api/voices`);
     const data = await response.json();
@@ -369,7 +369,7 @@ app.get('/api/tts/voices', async (req, res) => {
 });
 
 // Proxy: Generate audio from text, save to uploads, return URL and filename
-app.post('/api/tts/generate', async (req, res) => {
+app.post('/backend/tts/generate', async (req, res) => {
   try {
     const { text, voice_id, language_code, gender, speed, pitch } = req.body;
     if (!text || text.trim().length === 0) {
@@ -420,7 +420,7 @@ app.post('/api/tts/generate', async (req, res) => {
 
 // ---------------- AUDIO TRANSCRIPTION API ----------------
 
-app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
+app.post('/backend/transcribe', upload.single('audio'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No audio file uploaded' });
@@ -491,7 +491,7 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
 
 // ---------------- GROQ KEY POOL STATUS ENDPOINTS ----------------
 
-app.get('/api/groq-status', (req, res) => {
+app.get('/backend/groq-status', (req, res) => {
   try {
     const status = getGroqStatus();
     res.json({ status });
@@ -500,7 +500,7 @@ app.get('/api/groq-status', (req, res) => {
   }
 });
 
-app.post('/api/groq-status/reset', (req, res) => {
+app.post('/backend/groq-status/reset', (req, res) => {
   try {
     const status = resetGroqStatus();
     res.json({ status });
@@ -511,7 +511,7 @@ app.post('/api/groq-status/reset', (req, res) => {
 
 // ---------------- AI OCR SCRIPT GENERATION API ----------------
 
-app.post('/api/generate-script-from-image', upload.single('image'), async (req, res) => {
+app.post('/backend/generate-script-from-image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file uploaded' });
@@ -549,7 +549,7 @@ app.post('/api/generate-script-from-image', upload.single('image'), async (req, 
 
 // ---------------- VIDEO GENERATION API ----------------
 
-app.post('/api/generate', upload.fields([
+app.post('/backend/generate', upload.fields([
   { name: 'image', maxCount: 1 },
   { name: 'audio', maxCount: 1 },
   { name: 'movableWatermark', maxCount: 1 }
@@ -836,12 +836,12 @@ app.post('/api/generate', upload.fields([
   }
 });
 
-app.get('/api/history', (req, res) => {
+app.get('/backend/history', (req, res) => {
   const db = readDb();
   res.json(db.history || []);
 });
 
-app.delete('/api/history', (req, res) => {
+app.delete('/backend/history', (req, res) => {
   try {
     const db = readDb();
     db.history = [];
@@ -878,7 +878,7 @@ function getOAuthClient(db) {
   
   let redirectUri = process.env.GOOGLE_REDIRECT_URI || db.googleDrive.redirectUri;
   if (process.env.SPACE_HOST) {
-    redirectUri = `https://${process.env.SPACE_HOST}/api/cloudreturn`;
+    redirectUri = `https://${process.env.SPACE_HOST}/backend/cloudreturn`;
   }
   
   if (!clientId || !clientSecret) {
@@ -898,7 +898,7 @@ function getOAuthClient(db) {
 }
 
 // Update Google OAuth Client Settings
-app.post('/api/cloudconfig', (req, res) => {
+app.post('/backend/cloudconfig', (req, res) => {
   const { clientId, clientSecret, redirectUri } = req.body;
   const db = readDb();
   db.googleDrive.clientId = clientId || db.googleDrive.clientId;
@@ -912,7 +912,7 @@ app.post('/api/cloudconfig', (req, res) => {
   }});
 });
 
-app.get('/api/cloudconfig', (req, res) => {
+app.get('/backend/cloudconfig', (req, res) => {
   const db = readDb();
   const clientId = process.env.GOOGLE_CLIENT_ID || db.googleDrive.clientId;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || db.googleDrive.clientSecret;
@@ -924,7 +924,7 @@ app.get('/api/cloudconfig', (req, res) => {
 });
 
 // Get Authorization URL
-app.get('/api/cloudgeturl', (req, res) => {
+app.get('/backend/cloudgeturl', (req, res) => {
   const db = readDb();
   const client = getOAuthClient(db);
   if (!client) {
@@ -940,7 +940,7 @@ app.get('/api/cloudgeturl', (req, res) => {
 });
 
 // Direct Redirect Login Endpoint
-app.get('/api/cloudconnect', (req, res) => {
+app.get('/backend/cloudconnect', (req, res) => {
   const db = readDb();
   const client = getOAuthClient(db);
   if (!client) {
@@ -956,7 +956,7 @@ app.get('/api/cloudconnect', (req, res) => {
 });
 
 // OAuth Callback
-app.get('/api/cloudreturn', async (req, res) => {
+app.get('/backend/cloudreturn', async (req, res) => {
   const { code } = req.query;
   if (!code) {
     return res.send('<h1>Error: No authorization code received.</h1>');
@@ -994,7 +994,7 @@ app.get('/api/cloudreturn', async (req, res) => {
 });
 
 // Authentication Status
-app.get('/api/cloudinfo', (req, res) => {
+app.get('/backend/cloudinfo', (req, res) => {
   const db = readDb();
   const clientId = process.env.GOOGLE_CLIENT_ID || db.googleDrive.clientId;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || db.googleDrive.clientSecret;
@@ -1004,7 +1004,7 @@ app.get('/api/cloudinfo', (req, res) => {
 });
 
 // Revoke Authentication
-app.post('/api/clouddisconnect', (req, res) => {
+app.post('/backend/clouddisconnect', (req, res) => {
   const db = readDb();
   db.googleDrive.tokens = null;
   writeDb(db);
@@ -1012,7 +1012,7 @@ app.post('/api/clouddisconnect', (req, res) => {
 });
 
 // Get Google Drive Folders
-app.get('/api/cloudfolders', async (req, res) => {
+app.get('/backend/cloudfolders', async (req, res) => {
   try {
     const db = readDb();
     const client = getOAuthClient(db);
@@ -1036,7 +1036,7 @@ app.get('/api/cloudfolders', async (req, res) => {
 });
 
 // Upload Video to Google Drive
-app.post('/api/cloudupload', async (req, res) => {
+app.post('/backend/cloudupload', async (req, res) => {
   try {
     const { filename, folderId } = req.body;
     if (!filename) {
@@ -1113,6 +1113,8 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.warn("Could not generate default backgrounds on startup:", e);
   }
 });
+
+
 
 
 

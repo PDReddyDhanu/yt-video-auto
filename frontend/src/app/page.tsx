@@ -384,7 +384,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const fetchMusicFiles = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/music`);
+      const res = await fetch(`${BACKEND_URL}/backend/music`);
       if (res.ok) {
         const data = await res.json();
         setMusicFiles(data);
@@ -423,7 +423,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const fetchBackgrounds = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/backgrounds`);
+      const res = await fetch(`${BACKEND_URL}/backend/backgrounds`);
       if (res.ok) {
         const data = await res.json();
         setBackgrounds(data);
@@ -438,7 +438,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const fetchWatermark = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/watermark`);
+      const res = await fetch(`${BACKEND_URL}/backend/watermark`);
       if (res.ok) {
         const data = await res.json();
         setWatermark(data);
@@ -450,7 +450,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const fetchTTSVoices = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/tts/voices`);
+      const res = await fetch(`${BACKEND_URL}/backend/tts/voices`);
       if (res.ok) {
         const data = await res.json();
         // Merge all voice lists (te-IN + en-US)
@@ -464,7 +464,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const fetchGroqStatus = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/groq-status`);
+      const res = await fetch(`${BACKEND_URL}/backend/groq-status`);
       if (res.ok) {
         const data = await res.json();
         if (data.status) {
@@ -478,7 +478,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const handleResetGroqStatus = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/groq-status/reset`, { method: 'POST' });
+      const res = await fetch(`${BACKEND_URL}/backend/groq-status/reset`, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         if (data.status) {
@@ -527,7 +527,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       formData.append('image', imageFile);
       formData.append('duration', scriptDuration.toString());
 
-      const res = await fetch(`${BACKEND_URL}/api/generate-script-from-image`, {
+      const res = await fetch(`${BACKEND_URL}/backend/generate-script-from-image`, {
         method: 'POST',
         body: formData
       });
@@ -593,7 +593,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     setTtsError('');
     const currentPitch = getCurrentPitch(selectedPresetId);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/tts/generate`, {
+      const res = await fetch(`${BACKEND_URL}/backend/tts/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -696,7 +696,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const checkGoogleAuth = async () => {
     try {
       setIsAuthLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/cloudinfo`);
+      const res = await fetch(`${BACKEND_URL}/backend/cloudinfo`);
       if (res.ok) {
         const data = await res.json();
         setDriveConfig(data);
@@ -713,7 +713,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/clouddisconnect`, {
+      const res = await fetch(`${BACKEND_URL}/backend/clouddisconnect`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -726,7 +726,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const fetchFolders = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/cloudfolders`);
+      const res = await fetch(`${BACKEND_URL}/backend/cloudfolders`);
       if (res.ok) {
         const data = await res.json();
         setFolders(data);
@@ -1178,7 +1178,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       const formData = new FormData();
       formData.append('audio', audioFile);
 
-      const res = await fetch(`${BACKEND_URL}/api/transcribe`, {
+      const res = await fetch(`${BACKEND_URL}/backend/transcribe`, {
         method: 'POST',
         body: formData
       });
@@ -1324,7 +1324,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
         setGenerationStatus('processing');
       }, 1500);
 
-      const res = await fetch(`${BACKEND_URL}/api/generate`, {
+      const res = await fetch(`${BACKEND_URL}/backend/generate`, {
         method: 'POST',
         body: formData
       });
@@ -1355,7 +1355,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     const top = window.screen.height / 2 - height / 2;
 
     const popup = window.open(
-      `${BACKEND_URL}/api/cloudconnect`,
+      `${BACKEND_URL}/backend/cloudconnect`,
       'GoogleAuthPopup',
       `width=${width},height=${height},left=${left},top=${top},status=0,menubar=0`
     );
@@ -1378,7 +1378,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     setDriveUploadLink('');
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/cloudupload`, {
+      const res = await fetch(`${BACKEND_URL}/backend/cloudupload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3041,6 +3041,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     </div>
   );
 }
+
 
 
 
