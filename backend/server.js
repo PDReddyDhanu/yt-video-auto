@@ -602,7 +602,7 @@ app.post('/backend/generate', upload.fields([
       return res.status(400).json({ error: 'Could not determine audio duration' });
     }
 
-    const duration = isInstagram ? 10 : audioDuration;
+    const duration = audioDuration;
 
     const watermarkPath = path.join(UPLOADS_DIR, db.watermark.filename || 'default_watermark.png');
 
