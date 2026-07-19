@@ -1093,6 +1093,15 @@ async function checkAndGenerateDefaultBackgrounds() {
   // Disabled as per user request to remove default backgrounds
 }
 
+// Global error handlers to prevent silent crashes
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION - keeping process alive:', err.message, err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
+});
+
 // Start Server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, '0.0.0.0', async () => {
