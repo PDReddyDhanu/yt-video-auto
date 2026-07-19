@@ -18,20 +18,23 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy python tts requirements first and install them
-COPY tts/api/requirements.txt ./tts-requirements.txt
+COPY --chown=node:node tts/api/requirements.txt ./tts-requirements.txt
 RUN pip install --no-cache-dir -r tts-requirements.txt
 
 # Copy backend package files and install dependencies
-COPY backend/package*.json ./backend/
+COPY --chown=node:node backend/package*.json ./backend/
 RUN cd backend && npm ci --only=production
 
-# Copy remaining code (both backend and tts directories)
-COPY backend/ ./backend/
-COPY tts/ ./tts/
+# Copy remaining code (both backend and tts directories) with node user ownership
+COPY --chown=node:node backend/ ./backend/
+COPY --chown=node:node tts/ ./tts/
 
 # Make startup script executable
-COPY start.sh ./
+COPY --chown=node:node start.sh ./
 RUN chmod +x start.sh
+
+# Run as the non-root node user (UID 1000)
+USER node
 
 # Expose public port (Hugging Face Spaces expects 7860)
 EXPOSE 7860

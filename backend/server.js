@@ -169,6 +169,11 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 app.use('/output', express.static(OUTPUT_DIR));
 app.use('/music', express.static(MUSIC_DIR));
 
+// Health check route for Hugging Face Spaces / load balancer
+app.get('/', (req, res) => {
+  res.send('Auto-Video Express Backend API is running!');
+});
+
 // Helper: Get audio/video duration
 async function getMediaDuration(filePath) {
   try {
@@ -1079,7 +1084,7 @@ async function checkAndGenerateDefaultBackgrounds() {
 
 // Start Server
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, async () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`Backend server running on http://localhost:${PORT}`);
   try {
     await checkAndGenerateDefaultBackgrounds();
