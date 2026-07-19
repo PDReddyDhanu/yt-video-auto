@@ -108,7 +108,7 @@ function readDb() {
     googleDrive: {
       clientId: '',
       clientSecret: '',
-      redirectUri: 'http://localhost:3001/backend/cloudreturn',
+      redirectUri: 'http://localhost:3001/backend/syncdone',
       tokens: null,
       targetFolderId: 'root'
     },
@@ -878,7 +878,7 @@ function getOAuthClient(db) {
   
   let redirectUri = process.env.GOOGLE_REDIRECT_URI || db.googleDrive.redirectUri;
   if (process.env.SPACE_HOST) {
-    redirectUri = `https://${process.env.SPACE_HOST}/backend/cloudreturn`;
+    redirectUri = `https://${process.env.SPACE_HOST}/backend/syncdone`;
   }
   
   if (!clientId || !clientSecret) {
@@ -898,7 +898,7 @@ function getOAuthClient(db) {
 }
 
 // Update Google OAuth Client Settings
-app.post('/backend/cloudconfig', (req, res) => {
+app.post('/backend/syncconfig', (req, res) => {
   const { clientId, clientSecret, redirectUri } = req.body;
   const db = readDb();
   db.googleDrive.clientId = clientId || db.googleDrive.clientId;
@@ -912,7 +912,7 @@ app.post('/backend/cloudconfig', (req, res) => {
   }});
 });
 
-app.get('/backend/cloudconfig', (req, res) => {
+app.get('/backend/syncconfig', (req, res) => {
   const db = readDb();
   const clientId = process.env.GOOGLE_CLIENT_ID || db.googleDrive.clientId;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || db.googleDrive.clientSecret;
@@ -924,7 +924,7 @@ app.get('/backend/cloudconfig', (req, res) => {
 });
 
 // Get Authorization URL
-app.get('/backend/cloudgeturl', (req, res) => {
+app.get('/backend/syncurl', (req, res) => {
   const db = readDb();
   const client = getOAuthClient(db);
   if (!client) {
@@ -940,7 +940,7 @@ app.get('/backend/cloudgeturl', (req, res) => {
 });
 
 // Direct Redirect Login Endpoint
-app.get('/backend/cloudconnect', (req, res) => {
+app.get('/backend/syncstart', (req, res) => {
   const db = readDb();
   const client = getOAuthClient(db);
   if (!client) {
@@ -956,7 +956,7 @@ app.get('/backend/cloudconnect', (req, res) => {
 });
 
 // OAuth Callback
-app.get('/backend/cloudreturn', async (req, res) => {
+app.get('/backend/syncdone', async (req, res) => {
   const { code } = req.query;
   if (!code) {
     return res.send('<h1>Error: No authorization code received.</h1>');
@@ -994,7 +994,7 @@ app.get('/backend/cloudreturn', async (req, res) => {
 });
 
 // Authentication Status
-app.get('/backend/cloudinfo', (req, res) => {
+app.get('/backend/syncstate', (req, res) => {
   const db = readDb();
   const clientId = process.env.GOOGLE_CLIENT_ID || db.googleDrive.clientId;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || db.googleDrive.clientSecret;
@@ -1004,7 +1004,7 @@ app.get('/backend/cloudinfo', (req, res) => {
 });
 
 // Revoke Authentication
-app.post('/backend/clouddisconnect', (req, res) => {
+app.post('/backend/syncreset', (req, res) => {
   const db = readDb();
   db.googleDrive.tokens = null;
   writeDb(db);
@@ -1012,7 +1012,7 @@ app.post('/backend/clouddisconnect', (req, res) => {
 });
 
 // Get Google Drive Folders
-app.get('/backend/cloudfolders', async (req, res) => {
+app.get('/backend/syncfolders', async (req, res) => {
   try {
     const db = readDb();
     const client = getOAuthClient(db);
@@ -1036,7 +1036,7 @@ app.get('/backend/cloudfolders', async (req, res) => {
 });
 
 // Upload Video to Google Drive
-app.post('/backend/cloudupload', async (req, res) => {
+app.post('/backend/syncupload', async (req, res) => {
   try {
     const { filename, folderId } = req.body;
     if (!filename) {
@@ -1113,6 +1113,7 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.warn("Could not generate default backgrounds on startup:", e);
   }
 });
+
 
 
 

@@ -36,7 +36,7 @@ export default function AdminPage() {
   const [driveConfig, setDriveConfig] = useState<any>({
     clientId: '',
     clientSecret: '',
-    redirectUri: `${BACKEND_URL}/backend/cloudreturn`,
+    redirectUri: `${BACKEND_URL}/backend/syncdone`,
     hasSecret: false
   });
   const [history, setHistory] = useState<any[]>([]);
@@ -61,7 +61,7 @@ export default function AdminPage() {
   const checkGoogleAuth = async () => {
     try {
       setIsAuthLoading(true);
-      const res = await fetch(`${BACKEND_URL}/backend/cloudinfo`);
+      const res = await fetch(`${BACKEND_URL}/backend/syncstate`);
       if (res.ok) {
         const data = await res.json();
         setDriveConfig((prev: any) => ({ 
@@ -79,7 +79,7 @@ export default function AdminPage() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/backend/clouddisconnect`, {
+      const res = await fetch(`${BACKEND_URL}/backend/syncreset`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -97,7 +97,7 @@ export default function AdminPage() {
     const top = window.screen.height / 2 - height / 2;
 
     const popup = window.open(
-      `${BACKEND_URL}/backend/cloudconnect`,
+      `${BACKEND_URL}/backend/syncstart`,
       'GoogleAuthPopup',
       `width=${width},height=${height},left=${left},top=${top},status=0,menubar=0`
     );
@@ -144,7 +144,7 @@ export default function AdminPage() {
 
   const fetchDriveConfig = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/backend/cloudconfig`);
+      const res = await fetch(`${BACKEND_URL}/backend/syncconfig`);
       if (res.ok) setDriveConfig(await res.json());
     } catch (e) {
       console.error(e);
@@ -284,7 +284,7 @@ export default function AdminPage() {
     setDriveAlert(null);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/backend/cloudconfig`, {
+      const res = await fetch(`${BACKEND_URL}/backend/syncconfig`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -792,6 +792,7 @@ export default function AdminPage() {
     </div>
   );
 }
+
 
 
 
