@@ -696,7 +696,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const checkGoogleAuth = async () => {
     try {
       setIsAuthLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/drive/status`);
+      const res = await fetch(`${BACKEND_URL}/api/gd/status`);
       if (res.ok) {
         const data = await res.json();
         setDriveConfig(data);
@@ -713,7 +713,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/drive/logout`, {
+      const res = await fetch(`${BACKEND_URL}/api/gd/logout`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -726,7 +726,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const fetchFolders = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/drive/folders`);
+      const res = await fetch(`${BACKEND_URL}/api/gd/folders`);
       if (res.ok) {
         const data = await res.json();
         setFolders(data);
@@ -1355,7 +1355,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     const top = window.screen.height / 2 - height / 2;
 
     const popup = window.open(
-      `${BACKEND_URL}/api/drive/google/login`,
+      `${BACKEND_URL}/api/gd/google/login`,
       'GoogleAuthPopup',
       `width=${width},height=${height},left=${left},top=${top},status=0,menubar=0`
     );
@@ -1378,7 +1378,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     setDriveUploadLink('');
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/drive/upload`, {
+      const res = await fetch(`${BACKEND_URL}/api/gd/upload`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3041,4 +3041,5 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     </div>
   );
 }
+
 
