@@ -696,7 +696,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const checkGoogleAuth = async () => {
     try {
       setIsAuthLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/auth/status`);
+      const res = await fetch(`${BACKEND_URL}/api/gdrive-auth/status`);
       if (res.ok) {
         const data = await res.json();
         setDriveConfig(data);
@@ -713,7 +713,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/auth/logout`, {
+      const res = await fetch(`${BACKEND_URL}/api/gdrive-auth/logout`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -1355,7 +1355,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     const top = window.screen.height / 2 - height / 2;
 
     const popup = window.open(
-      `${BACKEND_URL}/api/auth/google/login`,
+      `${BACKEND_URL}/api/gdrive-auth/google/login`,
       'GoogleAuthPopup',
       `width=${width},height=${height},left=${left},top=${top},status=0,menubar=0`
     );
