@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
@@ -587,9 +587,7 @@ app.post('/backend/generate', upload.fields([
 
     const db = readDb();
     const client = getOAuthClient(db);
-    if (!client || !db.googleDrive.tokens || !db.googleDrive.tokens.access_token) {
-      return res.status(401).json({ error: 'Google Drive is not authenticated. Please authorize Google Drive in the System Control Center first.' });
-    }
+    const hasDriveAuth = !!(client && db.googleDrive.tokens && db.googleDrive.tokens.access_token);
 
     const bg = db.backgrounds.find(b => b.id === bgId);
     if (!bg) return res.status(400).json({ error: 'Invalid background ID' });
@@ -762,66 +760,80 @@ app.post('/backend/generate', upload.fields([
       }
 
       if (code === 0) {
-        // Direct Google Drive Upload
-        try {
-          const drive = google.drive({ version: 'v3', auth: client });
-          
-          // Use folderId from request, or targetFolderId from DB/env, or default to root
-          const targetFolderId = folderId || db.googleDrive.targetFolderId || process.env.DRIVE_FOLDER_ID || 'root';
-          
-          let finalDriveName = outputFilename;
-          if (customFilename && customFilename.trim()) {
-            let name = customFilename.trim();
-            name = name.replace(/[^a-zA-Z0-9_\-\s]/g, '');
-            if (!name.toLowerCase().endsWith('.mp4')) {
-              name += '.mp4';
-            }
-            finalDriveName = name;
-          }
-
-          const fileMetadata = {
-            name: finalDriveName,
-            parents: targetFolderId && targetFolderId !== 'root' ? [targetFolderId] : []
-          };
-
-          const media = {
-            mimeType: 'video/mp4',
-            body: fs.createReadStream(outputPath)
-          };
-
-          const driveResponse = await drive.files.create({
-            resource: fileMetadata,
-            media: media,
-            fields: 'id, webViewLink'
-          });
-
-          // Upload successful, delete local output file immediately!
+        if (hasDriveAuth) {
+          // Upload to Google Drive
           try {
-            if (fs.existsSync(outputPath)) {
-              fs.unlinkSync(outputPath);
+            const drive = google.drive({ version: 'v3', auth: client });
+            
+            // Use folderId from request, or targetFolderId from DB/env, or default to root
+            const targetFolderId = folderId || db.googleDrive.targetFolderId || process.env.DRIVE_FOLDER_ID || 'root';
+            
+            let finalDriveName = outputFilename;
+            if (customFilename && customFilename.trim()) {
+              let name = customFilename.trim();
+              name = name.replace(/[^a-zA-Z0-9_\-\s]/g, '');
+              if (!name.toLowerCase().endsWith('.mp4')) {
+                name += '.mp4';
+              }
+              finalDriveName = name;
             }
-          } catch (unlinkErr) {
-            console.warn("Failed to delete local rendered file:", unlinkErr);
-          }
 
+            const fileMetadata = {
+              name: finalDriveName,
+              parents: targetFolderId && targetFolderId !== 'root' ? [targetFolderId] : []
+            };
+
+            const media = {
+              mimeType: 'video/mp4',
+              body: fs.createReadStream(outputPath)
+            };
+
+            const driveResponse = await drive.files.create({
+              resource: fileMetadata,
+              media: media,
+              fields: 'id, webViewLink'
+            });
+
+            // Upload successful, delete local output file immediately!
+            try {
+              if (fs.existsSync(outputPath)) {
+                fs.unlinkSync(outputPath);
+              }
+            } catch (unlinkErr) {
+              console.warn("Failed to delete local rendered file:", unlinkErr);
+            }
+
+            res.json({
+              success: true,
+              driveFileId: driveResponse.data.id,
+              driveLink: driveResponse.data.webViewLink,
+              duration: duration,
+              videoFilename: finalDriveName,
+              videoUrl: `/output/${outputFilename}`
+            });
+          } catch (driveErr) {
+            console.error("Direct Google Drive upload failed:", driveErr);
+            // Drive failed but video is rendered - return local download URL
+            res.json({
+              success: true,
+              driveFileId: null,
+              driveLink: null,
+              driveError: 'Google Drive upload failed: ' + driveErr.message,
+              duration: duration,
+              videoFilename: outputFilename,
+              videoUrl: `/output/${outputFilename}`
+            });
+          }
+        } else {
+          // No Drive auth - return local download URL
           res.json({
             success: true,
-            driveFileId: driveResponse.data.id,
-            driveLink: driveResponse.data.webViewLink,
+            driveFileId: null,
+            driveLink: null,
             duration: duration,
-            videoFilename: finalDriveName,
+            videoFilename: outputFilename,
             videoUrl: `/output/${outputFilename}`
           });
-        } catch (driveErr) {
-          console.error("Direct Google Drive upload failed:", driveErr);
-          // Delete local file anyway to avoid storing on local
-          try {
-            if (fs.existsSync(outputPath)) {
-              fs.unlinkSync(outputPath);
-            }
-          } catch (unlinkErr) {}
-          
-          res.status(500).json({ error: 'Video rendered successfully, but Google Drive upload failed: ' + driveErr.message });
         }
       } else {
         console.error("FFmpeg exited with error code:", code);
