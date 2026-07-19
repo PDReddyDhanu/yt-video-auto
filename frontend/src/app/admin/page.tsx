@@ -362,7 +362,7 @@ export default function AdminPage() {
 
           <div className="w-full my-8 border-t border-slate-850" />
 
-          {driveConfig.clientId && driveConfig.hasSecret ? (
+          {true ? (
             <button
               onClick={handleGoogleConnect}
               className="w-full py-3 px-4 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-semibold text-sm transition-all flex items-center justify-center gap-3 shadow-lg hover:scale-[1.01] active:scale-[0.99]"

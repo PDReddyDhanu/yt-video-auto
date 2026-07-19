@@ -1462,7 +1462,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
           <div className="w-full my-8 border-t border-slate-850" />
 
-          {driveConfig.isConfigured ? (
+          {true ? (
             <button
               onClick={handleGoogleConnect}
               className="w-full py-3 px-4 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-semibold text-sm transition-all flex items-center justify-center gap-3 shadow-lg hover:scale-[1.01] active:scale-[0.99]"
@@ -2881,11 +2881,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                           </p>
                         </div>
                       </div>
-                      {!driveConfig.isConfigured ? (
-                        <p className="text-[10px] text-slate-500 leading-normal">
-                          Please configure OAuth Credentials first in the System Control Center.
-                        </p>
-                      ) : (
+                      {true ? (
                         <button
                           onClick={handleGoogleConnect}
                           className="w-full py-2.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2"
@@ -2893,6 +2889,10 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                           <RefreshCw className="h-3.5 w-3.5 animate-pulse" />
                           Connect Google Account
                         </button>
+                      ) : (
+                        <p className="text-[10px] text-slate-500 leading-normal">
+                          Please configure OAuth Credentials first in the System Control Center.
+                        </p>
                       )}
                     </div>
                   ) : (
