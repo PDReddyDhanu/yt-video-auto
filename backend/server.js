@@ -96,27 +96,38 @@ if (!fs.existsSync(MUSIC_DIR)) fs.mkdirSync(MUSIC_DIR, { recursive: true });
 // DB Helpers
 const DB_FILE = path.join(__dirname, 'db.json');
 function readDb() {
+  const defaultDb = {
+    backgrounds: [],
+    watermark: {
+      filename: '1000429881-removebg-preview.png',
+      position: 'bottom-right',
+      size: 180,
+      opacity: 1.0,
+      margin: 40
+    },
+    googleDrive: {
+      clientId: '',
+      clientSecret: '',
+      redirectUri: 'http://localhost:3001/api/auth/google/callback',
+      tokens: null,
+      targetFolderId: 'root'
+    },
+    history: []
+  };
+
   try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-  } catch (error) {
+    if (!fs.existsSync(DB_FILE)) {
+      return defaultDb;
+    }
+    const parsed = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
     return {
-      backgrounds: [],
-      watermark: {
-        filename: '1000429881-removebg-preview.png',
-        position: 'bottom-right',
-        size: 180,
-        opacity: 1.0,
-        margin: 40
-      },
-      googleDrive: {
-        clientId: '',
-        clientSecret: '',
-        redirectUri: 'http://localhost:3001/api/auth/google/callback',
-        tokens: null,
-        targetFolderId: 'root'
-      },
-      history: []
+      backgrounds: parsed.backgrounds || defaultDb.backgrounds,
+      watermark: parsed.watermark ? { ...defaultDb.watermark, ...parsed.watermark } : defaultDb.watermark,
+      googleDrive: parsed.googleDrive ? { ...defaultDb.googleDrive, ...parsed.googleDrive } : defaultDb.googleDrive,
+      history: parsed.history || defaultDb.history
     };
+  } catch (error) {
+    return defaultDb;
   }
 }
 
