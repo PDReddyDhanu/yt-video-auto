@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
@@ -108,7 +108,7 @@ function readDb() {
     googleDrive: {
       clientId: '',
       clientSecret: '',
-      redirectUri: 'http://localhost:3001/api/gdrive-auth/google/callback',
+      redirectUri: 'http://localhost:3001/api/drive/google/callback',
       tokens: null,
       targetFolderId: 'root'
     },
@@ -878,7 +878,7 @@ function getOAuthClient(db) {
   
   let redirectUri = process.env.GOOGLE_REDIRECT_URI || db.googleDrive.redirectUri;
   if (process.env.SPACE_HOST) {
-    redirectUri = `https://${process.env.SPACE_HOST}/api/gdrive-auth/google/callback`;
+    redirectUri = `https://${process.env.SPACE_HOST}/api/drive/google/callback`;
   }
   
   if (!clientId || !clientSecret) {
@@ -924,7 +924,7 @@ app.get('/api/drive/config', (req, res) => {
 });
 
 // Get Authorization URL
-app.get('/api/gdrive-auth/google/url', (req, res) => {
+app.get('/api/drive/google/url', (req, res) => {
   const db = readDb();
   const client = getOAuthClient(db);
   if (!client) {
@@ -940,7 +940,7 @@ app.get('/api/gdrive-auth/google/url', (req, res) => {
 });
 
 // Direct Redirect Login Endpoint
-app.get('/api/gdrive-auth/google/login', (req, res) => {
+app.get('/api/drive/google/login', (req, res) => {
   const db = readDb();
   const client = getOAuthClient(db);
   if (!client) {
@@ -956,7 +956,7 @@ app.get('/api/gdrive-auth/google/login', (req, res) => {
 });
 
 // OAuth Callback
-app.get('/api/gdrive-auth/google/callback', async (req, res) => {
+app.get('/api/drive/google/callback', async (req, res) => {
   const { code } = req.query;
   if (!code) {
     return res.send('<h1>Error: No authorization code received.</h1>');
@@ -994,7 +994,7 @@ app.get('/api/gdrive-auth/google/callback', async (req, res) => {
 });
 
 // Authentication Status
-app.get('/api/gdrive-auth/status', (req, res) => {
+app.get('/api/drive/status', (req, res) => {
   const db = readDb();
   const clientId = process.env.GOOGLE_CLIENT_ID || db.googleDrive.clientId;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || db.googleDrive.clientSecret;
@@ -1004,7 +1004,7 @@ app.get('/api/gdrive-auth/status', (req, res) => {
 });
 
 // Revoke Authentication
-app.post('/api/gdrive-auth/logout', (req, res) => {
+app.post('/api/drive/logout', (req, res) => {
   const db = readDb();
   db.googleDrive.tokens = null;
   writeDb(db);
@@ -1113,3 +1113,4 @@ app.listen(PORT, '0.0.0.0', async () => {
     console.warn("Could not generate default backgrounds on startup:", e);
   }
 });
+

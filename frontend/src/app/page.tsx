@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { 
@@ -49,11 +49,11 @@ const translations = {
     centerImageScaleDesc: "Slide to adjust the center image width scale from 40% to 100% of the video canvas.",
     noImageSelected: "No image selected yet. Center image overlays above the background.",
     aiVoiceStudio: "AI Voice Studio (Microsoft Edge TTS)",
-    freeUnlimited: "Free · Unlimited",
+    freeUnlimited: "Free Â· Unlimited",
     teluguScript: "Telugu Script (for generating voice)",
     tenglishScript: "Tenglish Text box (for generating captions)",
-    femaleVoices: "♀ Female Pro Voices",
-    maleVoices: "♂ Male Pro Voices",
+    femaleVoices: "â™€ Female Pro Voices",
+    maleVoices: "â™‚ Male Pro Voices",
     voicePitch: "Voice Pitch (Speed/Style)",
     generateAudio: "Generate AI Audio",
     generatingAudio: "Generating Voice...",
@@ -105,77 +105,77 @@ const translations = {
     signOut: "Sign Out",
   },
   te: {
-    title: "PDR యొక్క ఆటోమేటెడ్ వీడియో స్టూడియో",
-    subtitle: "అనుకూల వాటర్‌మార్క్‌లు, AI వాయిస్ జనరేషన్ మరియు ఆటోమేటెడ్ Google డ్రైవ్ అప్‌లోడ్‌లతో ఆటోమేటిక్ షార్ట్-ఫార్మ్ వీడియోలను సృష్టించండి.",
-    step1: "నేపథ్య వీడియోను ఎంచుకోండి",
-    step2: "ప్లాట్‌ఫారమ్ / వీడియో రకాన్ని ఎంచుకోండి",
-    step3: "మధ్య చిత్రాన్ని అప్‌లోడ్ చేయండి",
-    step4: "సౌండ్‌ట్రాక్ (ఆడియో)",
-    step5: "దిగువ బ్యానర్ / వాటర్‌మార్క్",
-    step6: "డైనమిక్ శీర్షికలు (ఐచ్ఛికం)",
-    youtubeShorts: "యూట్యూబ్ షార్ట్స్",
-    youtubeShortsDesc: "AI తెలుగు వాయిస్ ఓవర్, టెంగ్లీష్ శీర్షికలు మరియు ఆటోమేటిక్ డ్యూరేషన్ సమకాలీకరణ.",
-    instagram: "ఇన్‌స్టాగ్రామ్ రీల్స్",
-    instagramDesc: "లైబ్రరీ నుండి బ్యాక్‌గ్రౌండ్ మ్యూజిక్‌తో కూడిన 6-సెకన్ల లూప్ బ్యాక్‌గ్రౌండ్ వీడియో.",
-    chooseImage: "చిత్రాన్ని ఎంచుకోండి",
-    centerImageScale: "మధ్య చిత్రం స్కేల్ (వెడల్పు)",
-    centerImageScaleDesc: "మధ్య చిత్రం వెడల్పును వీడియో కాన్వాస్ యొక్క 40% నుండి 100% కి సర్దుబాటు చేయడానికి స్లయిడ్ చేయండి.",
-    noImageSelected: "ఇంకా ఏ చిత్రం ఎంచుకోబడలేదు. మధ్య చిత్రం నేపథ్యంలో పైన కనిపిస్తుంది.",
-    aiVoiceStudio: "AI వాయిస్ స్టూడియో (Microsoft Edge TTS)",
-    freeUnlimited: "ఉచితం · అపరిమితం",
-    teluguScript: "తెలుగు స్క్రిప్ట్ (వాయిస్ జనరేషన్ కొరకు)",
-    tenglishScript: "టెంగ్లీష్ టెక్స్ట్ బాక్స్ (శీర్షికల జనరేషన్ కొరకు)",
-    femaleVoices: "♀ స్త్రీ ప్రొఫెషనల్ వాయిస్లు",
-    maleVoices: "♂ పురుష ప్రొఫెషనల్ వాయిస్లు",
-    voicePitch: "వాయిస్ పిచ్ (వేగం/శైలి)",
-    generateAudio: "AI ఆడియోను సృష్టించండి",
-    generatingAudio: "వాయిస్ సృష్టించబడుతోంది...",
-    audioGenerated: "ఆడియో వాయిస్ విజయవంతంగా సృష్టించబడింది!",
-    manualAudioUpload: "లేదా మీ స్వంత MP3/WAV ఆడియోను అప్‌లోడ్ చేయండి",
-    manualUploadLabel: "ఆడియో ఫైల్‌ను అప్‌లోడ్ చేయండి",
-    searchSongs: "పాటలను శోధించండి...",
-    selectMusic: "నేపథ్య సంగీతాన్ని ఎంచుకోండి",
-    trimAudio: "6-సెకన్ల మ్యూజిక్ ట్రిమ్ భాగాన్ని ఎంచుకోండి",
-    trimStart: "ప్రారంభ స్థానం",
-    noMusicFiles: "backend/music ఫోల్డర్‌లో ఎటువంటి సంగీత ఫైల్‌లు కనుగోనబడలేదు.",
-    bottomBanner: "దిగువ బ్యానర్ / వాటర్‌మార్క్",
-    compulsoryBanner: "తప్పనిసరి దిగువ బ్యానర్ (వాటర్‌మార్క్-కదిలేది)",
-    uploadBanner: "భర్తీ చేయడానికి అనుకూల దిగువ బ్యానర్ PNGని అప్‌లోడ్ చేయండి",
-    bannerPositioning: "బ్యానర్ పొజిషనింగ్ & క్రాపింగ్ నియంత్రణలు",
-    bannerScale: "వాటర్‌మార్క్ స్కేల్ (వెడల్పు)",
-    bannerX: "వాటర్‌మార్క్ X స్థానం",
-    bannerY: "వాటర్‌మార్క్ Y స్థానం",
-    topCrop: "పై క్రాప్ (Top Crop)",
-    bottomCrop: "క్రింది క్రాప్ (Bottom Crop)",
-    leftCrop: "ఎడమ క్రాప్ (Left Crop)",
-    rightCrop: "కుడి క్రాప్ (Right Crop)",
-    movableWatermark2: "కదిలే వాటర్‌మార్క్ 2 (ఐచ్ఛిక మూలలో / లోగో)",
-    enableMovable2: "కదిలే వాటర్‌మార్క్ 2 ని ప్రారంభించండి",
-    watermark2Positioning: "వాటర్‌మార్క్ 2 పొజిషనింగ్ & క్రాపింగ్ నియంత్రణలు",
-    watermark2Scale: "వాటర్‌మార్క్ 2 స్కేల్ (వెడల్పు)",
-    watermark2X: "వాటర్‌మార్క్ 2 X స్థానం",
-    watermark2Y: "వాటర్‌మార్క్ 2 Y స్థానం",
-    captionStyleAndColor: "శీర్షిక శైలి & రంగు సెట్టింగులు",
-    generateVideo: "వీడియోను సృష్టించండి",
-    videoConsole: "వీడియో జనరేషన్ కన్సోల్",
-    googleDriveRequired: "Google డ్రైవ్ కనెక్షన్ అవసరం",
-    googleDriveRequiredDesc: "సృష్టించబడిన వీడియోలు నేరుగా Google డ్రైవ్‌కు పంపబడతాయి మరియు స్థానికంగా నిల్వ చేయబడవు కాబట్టి, ముందుగా మీ Google ఖాతాను అనుసంధానించాలి.",
-    connectGoogleDrive: "Google డ్రైవ్‌ను కనెక్ట్ చేయండి",
-    selectDriveFolder: "Google డ్రైవ్ గమ్యస్థాన ఫోల్డర్‌ను ఎంచుకోండి",
-    disconnectGoogle: "Google ఖాతాను డిస్‌కనెక్ట్ చేయండి",
-    activeFolder: "సక్రియ గమ్యస్థాన ఫోల్డర్",
-    generateVideoBtn: "వీడియోను సృష్టించండి",
-    generatingVideoBtn: "సర్వర్‌లో వీడియో సృష్టించబడుతోంది...",
-    videoDone: "వీడియో జనరేషన్ విజయవంతంగా పూర్తయింది!",
-    driveUploadDone: "అప్‌లోడ్ చేయబడింది మరియు Google డ్రైవ్‌లో సేవ్ చేయబడింది!",
-    driveUploadBtn: "అప్‌లోడ్ చేసి Google డ్రైవ్‌లో సేవ్ చేయండి",
-    viewOnDrive: "Google డ్రైవ్‌లో చూడండి",
-    downloadVideo: "వీడియో ఫైల్‌ను డౌన్లోడ్ చేయండి",
-    errorOccurred: "ఒక లోపం సంభవించింది:",
-    previewWorkspace: "లైవ్ ప్రివ్యూ వర్క్‌స్పేస్",
-    noTemplateSelected: "టెంప్లేట్ ఎంచుకోబడలేదు. దశ 1 నుండి నేపథ్య వీడియోను ఎంచుకోండి.",
-    loadingProgress: "టెంప్లేట్ లోడ్ అవుతోంది...",
-    signOut: "సైన్ అవుట్",
+    title: "PDR à°¯à±Šà°•à±à°• à°†à°Ÿà±‹à°®à±‡à°Ÿà±†à°¡à± à°µà±€à°¡à°¿à°¯à±‹ à°¸à±à°Ÿà±‚à°¡à°¿à°¯à±‹",
+    subtitle: "à°…à°¨à±à°•à±‚à°² à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à±â€Œà°²à±, AI à°µà°¾à°¯à°¿à°¸à± à°œà°¨à°°à±‡à°·à°¨à± à°®à°°à°¿à°¯à± à°†à°Ÿà±‹à°®à±‡à°Ÿà±†à°¡à± Google à°¡à±à°°à±ˆà°µà± à°…à°ªà±â€Œà°²à±‹à°¡à±â€Œà°²à°¤à±‹ à°†à°Ÿà±‹à°®à±‡à°Ÿà°¿à°•à± à°·à°¾à°°à±à°Ÿà±-à°«à°¾à°°à±à°®à± à°µà±€à°¡à°¿à°¯à±‹à°²à°¨à± à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°‚à°¡à°¿.",
+    step1: "à°¨à±‡à°ªà°¥à±à°¯ à°µà±€à°¡à°¿à°¯à±‹à°¨à± à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿",
+    step2: "à°ªà±à°²à°¾à°Ÿà±â€Œà°«à°¾à°°à°®à± / à°µà±€à°¡à°¿à°¯à±‹ à°°à°•à°¾à°¨à±à°¨à°¿ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿",
+    step3: "à°®à°§à±à°¯ à°šà°¿à°¤à±à°°à°¾à°¨à±à°¨à°¿ à°…à°ªà±â€Œà°²à±‹à°¡à± à°šà±‡à°¯à°‚à°¡à°¿",
+    step4: "à°¸à±Œà°‚à°¡à±â€Œà°Ÿà±à°°à°¾à°•à± (à°†à°¡à°¿à°¯à±‹)",
+    step5: "à°¦à°¿à°—à±à°µ à°¬à±à°¯à°¾à°¨à°°à± / à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à±",
+    step6: "à°¡à±ˆà°¨à°®à°¿à°•à± à°¶à±€à°°à±à°·à°¿à°•à°²à± (à°à°šà±à°›à°¿à°•à°‚)",
+    youtubeShorts: "à°¯à±‚à°Ÿà±à°¯à±‚à°¬à± à°·à°¾à°°à±à°Ÿà±à°¸à±",
+    youtubeShortsDesc: "AI à°¤à±†à°²à±à°—à± à°µà°¾à°¯à°¿à°¸à± à°“à°µà°°à±, à°Ÿà±†à°‚à°—à±à°²à±€à°·à± à°¶à±€à°°à±à°·à°¿à°•à°²à± à°®à°°à°¿à°¯à± à°†à°Ÿà±‹à°®à±‡à°Ÿà°¿à°•à± à°¡à±à°¯à±‚à°°à±‡à°·à°¨à± à°¸à°®à°•à°¾à°²à±€à°•à°°à°£.",
+    instagram: "à°‡à°¨à±â€Œà°¸à±à°Ÿà°¾à°—à±à°°à°¾à°®à± à°°à±€à°²à±à°¸à±",
+    instagramDesc: "à°²à±ˆà°¬à±à°°à°°à±€ à°¨à±à°‚à°¡à°¿ à°¬à±à°¯à°¾à°•à±â€Œà°—à±à°°à±Œà°‚à°¡à± à°®à±à°¯à±‚à°œà°¿à°•à±â€Œà°¤à±‹ à°•à±‚à°¡à°¿à°¨ 6-à°¸à±†à°•à°¨à±à°² à°²à±‚à°ªà± à°¬à±à°¯à°¾à°•à±â€Œà°—à±à°°à±Œà°‚à°¡à± à°µà±€à°¡à°¿à°¯à±‹.",
+    chooseImage: "à°šà°¿à°¤à±à°°à°¾à°¨à±à°¨à°¿ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿",
+    centerImageScale: "à°®à°§à±à°¯ à°šà°¿à°¤à±à°°à°‚ à°¸à±à°•à±‡à°²à± (à°µà±†à°¡à°²à±à°ªà±)",
+    centerImageScaleDesc: "à°®à°§à±à°¯ à°šà°¿à°¤à±à°°à°‚ à°µà±†à°¡à°²à±à°ªà±à°¨à± à°µà±€à°¡à°¿à°¯à±‹ à°•à°¾à°¨à±à°µà°¾à°¸à± à°¯à±Šà°•à±à°• 40% à°¨à±à°‚à°¡à°¿ 100% à°•à°¿ à°¸à°°à±à°¦à±à°¬à°¾à°Ÿà± à°šà±‡à°¯à°¡à°¾à°¨à°¿à°•à°¿ à°¸à±à°²à°¯à°¿à°¡à± à°šà±‡à°¯à°‚à°¡à°¿.",
+    noImageSelected: "à°‡à°‚à°•à°¾ à° à°šà°¿à°¤à±à°°à°‚ à°Žà°‚à°šà±à°•à±‹à°¬à°¡à°²à±‡à°¦à±. à°®à°§à±à°¯ à°šà°¿à°¤à±à°°à°‚ à°¨à±‡à°ªà°¥à±à°¯à°‚à°²à±‹ à°ªà±ˆà°¨ à°•à°¨à°¿à°ªà°¿à°¸à±à°¤à±à°‚à°¦à°¿.",
+    aiVoiceStudio: "AI à°µà°¾à°¯à°¿à°¸à± à°¸à±à°Ÿà±‚à°¡à°¿à°¯à±‹ (Microsoft Edge TTS)",
+    freeUnlimited: "à°‰à°šà°¿à°¤à°‚ Â· à°…à°ªà°°à°¿à°®à°¿à°¤à°‚",
+    teluguScript: "à°¤à±†à°²à±à°—à± à°¸à±à°•à±à°°à°¿à°ªà±à°Ÿà± (à°µà°¾à°¯à°¿à°¸à± à°œà°¨à°°à±‡à°·à°¨à± à°•à±Šà°°à°•à±)",
+    tenglishScript: "à°Ÿà±†à°‚à°—à±à°²à±€à°·à± à°Ÿà±†à°•à±à°¸à±à°Ÿà± à°¬à°¾à°•à±à°¸à± (à°¶à±€à°°à±à°·à°¿à°•à°² à°œà°¨à°°à±‡à°·à°¨à± à°•à±Šà°°à°•à±)",
+    femaleVoices: "â™€ à°¸à±à°¤à±à°°à±€ à°ªà±à°°à±Šà°«à±†à°·à°¨à°²à± à°µà°¾à°¯à°¿à°¸à±à°²à±",
+    maleVoices: "â™‚ à°ªà±à°°à±à°· à°ªà±à°°à±Šà°«à±†à°·à°¨à°²à± à°µà°¾à°¯à°¿à°¸à±à°²à±",
+    voicePitch: "à°µà°¾à°¯à°¿à°¸à± à°ªà°¿à°šà± (à°µà±‡à°—à°‚/à°¶à±ˆà°²à°¿)",
+    generateAudio: "AI à°†à°¡à°¿à°¯à±‹à°¨à± à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°‚à°¡à°¿",
+    generatingAudio: "à°µà°¾à°¯à°¿à°¸à± à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°¬à°¡à±à°¤à±‹à°‚à°¦à°¿...",
+    audioGenerated: "à°†à°¡à°¿à°¯à±‹ à°µà°¾à°¯à°¿à°¸à± à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°¬à°¡à°¿à°‚à°¦à°¿!",
+    manualAudioUpload: "à°²à±‡à°¦à°¾ à°®à±€ à°¸à±à°µà°‚à°¤ MP3/WAV à°†à°¡à°¿à°¯à±‹à°¨à± à°…à°ªà±â€Œà°²à±‹à°¡à± à°šà±‡à°¯à°‚à°¡à°¿",
+    manualUploadLabel: "à°†à°¡à°¿à°¯à±‹ à°«à±ˆà°²à±â€Œà°¨à± à°…à°ªà±â€Œà°²à±‹à°¡à± à°šà±‡à°¯à°‚à°¡à°¿",
+    searchSongs: "à°ªà°¾à°Ÿà°²à°¨à± à°¶à±‹à°§à°¿à°‚à°šà°‚à°¡à°¿...",
+    selectMusic: "à°¨à±‡à°ªà°¥à±à°¯ à°¸à°‚à°—à±€à°¤à°¾à°¨à±à°¨à°¿ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿",
+    trimAudio: "6-à°¸à±†à°•à°¨à±à°² à°®à±à°¯à±‚à°œà°¿à°•à± à°Ÿà±à°°à°¿à°®à± à°­à°¾à°—à°¾à°¨à±à°¨à°¿ à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿",
+    trimStart: "à°ªà±à°°à°¾à°°à°‚à°­ à°¸à±à°¥à°¾à°¨à°‚",
+    noMusicFiles: "backend/music à°«à±‹à°²à±à°¡à°°à±â€Œà°²à±‹ à°Žà°Ÿà±à°µà°‚à°Ÿà°¿ à°¸à°‚à°—à±€à°¤ à°«à±ˆà°²à±â€Œà°²à± à°•à°¨à±à°—à±‹à°¨à°¬à°¡à°²à±‡à°¦à±.",
+    bottomBanner: "à°¦à°¿à°—à±à°µ à°¬à±à°¯à°¾à°¨à°°à± / à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à±",
+    compulsoryBanner: "à°¤à°ªà±à°ªà°¨à°¿à°¸à°°à°¿ à°¦à°¿à°—à±à°µ à°¬à±à°¯à°¾à°¨à°°à± (à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à±-à°•à°¦à°¿à°²à±‡à°¦à°¿)",
+    uploadBanner: "à°­à°°à±à°¤à±€ à°šà±‡à°¯à°¡à°¾à°¨à°¿à°•à°¿ à°…à°¨à±à°•à±‚à°² à°¦à°¿à°—à±à°µ à°¬à±à°¯à°¾à°¨à°°à± PNGà°¨à°¿ à°…à°ªà±â€Œà°²à±‹à°¡à± à°šà±‡à°¯à°‚à°¡à°¿",
+    bannerPositioning: "à°¬à±à°¯à°¾à°¨à°°à± à°ªà±Šà°œà°¿à°·à°¨à°¿à°‚à°—à± & à°•à±à°°à°¾à°ªà°¿à°‚à°—à± à°¨à°¿à°¯à°‚à°¤à±à°°à°£à°²à±",
+    bannerScale: "à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± à°¸à±à°•à±‡à°²à± (à°µà±†à°¡à°²à±à°ªà±)",
+    bannerX: "à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± X à°¸à±à°¥à°¾à°¨à°‚",
+    bannerY: "à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± Y à°¸à±à°¥à°¾à°¨à°‚",
+    topCrop: "à°ªà±ˆ à°•à±à°°à°¾à°ªà± (Top Crop)",
+    bottomCrop: "à°•à±à°°à°¿à°‚à°¦à°¿ à°•à±à°°à°¾à°ªà± (Bottom Crop)",
+    leftCrop: "à°Žà°¡à°® à°•à±à°°à°¾à°ªà± (Left Crop)",
+    rightCrop: "à°•à±à°¡à°¿ à°•à±à°°à°¾à°ªà± (Right Crop)",
+    movableWatermark2: "à°•à°¦à°¿à°²à±‡ à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± 2 (à°à°šà±à°›à°¿à°• à°®à±‚à°²à°²à±‹ / à°²à±‹à°—à±‹)",
+    enableMovable2: "à°•à°¦à°¿à°²à±‡ à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± 2 à°¨à°¿ à°ªà±à°°à°¾à°°à°‚à°­à°¿à°‚à°šà°‚à°¡à°¿",
+    watermark2Positioning: "à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± 2 à°ªà±Šà°œà°¿à°·à°¨à°¿à°‚à°—à± & à°•à±à°°à°¾à°ªà°¿à°‚à°—à± à°¨à°¿à°¯à°‚à°¤à±à°°à°£à°²à±",
+    watermark2Scale: "à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± 2 à°¸à±à°•à±‡à°²à± (à°µà±†à°¡à°²à±à°ªà±)",
+    watermark2X: "à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± 2 X à°¸à±à°¥à°¾à°¨à°‚",
+    watermark2Y: "à°µà°¾à°Ÿà°°à±â€Œà°®à°¾à°°à±à°•à± 2 Y à°¸à±à°¥à°¾à°¨à°‚",
+    captionStyleAndColor: "à°¶à±€à°°à±à°·à°¿à°• à°¶à±ˆà°²à°¿ & à°°à°‚à°—à± à°¸à±†à°Ÿà±à°Ÿà°¿à°‚à°—à±à°²à±",
+    generateVideo: "à°µà±€à°¡à°¿à°¯à±‹à°¨à± à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°‚à°¡à°¿",
+    videoConsole: "à°µà±€à°¡à°¿à°¯à±‹ à°œà°¨à°°à±‡à°·à°¨à± à°•à°¨à±à°¸à±‹à°²à±",
+    googleDriveRequired: "Google à°¡à±à°°à±ˆà°µà± à°•à°¨à±†à°•à±à°·à°¨à± à°…à°µà°¸à°°à°‚",
+    googleDriveRequiredDesc: "à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°¬à°¡à°¿à°¨ à°µà±€à°¡à°¿à°¯à±‹à°²à± à°¨à±‡à°°à±à°—à°¾ Google à°¡à±à°°à±ˆà°µà±â€Œà°•à± à°ªà°‚à°ªà°¬à°¡à°¤à°¾à°¯à°¿ à°®à°°à°¿à°¯à± à°¸à±à°¥à°¾à°¨à°¿à°•à°‚à°—à°¾ à°¨à°¿à°²à±à°µ à°šà±‡à°¯à°¬à°¡à°µà± à°•à°¾à°¬à°Ÿà±à°Ÿà°¿, à°®à±à°‚à°¦à±à°—à°¾ à°®à±€ Google à°–à°¾à°¤à°¾à°¨à± à°…à°¨à±à°¸à°‚à°§à°¾à°¨à°¿à°‚à°šà°¾à°²à°¿.",
+    connectGoogleDrive: "Google à°¡à±à°°à±ˆà°µà±â€Œà°¨à± à°•à°¨à±†à°•à±à°Ÿà± à°šà±‡à°¯à°‚à°¡à°¿",
+    selectDriveFolder: "Google à°¡à±à°°à±ˆà°µà± à°—à°®à±à°¯à°¸à±à°¥à°¾à°¨ à°«à±‹à°²à±à°¡à°°à±â€Œà°¨à± à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿",
+    disconnectGoogle: "Google à°–à°¾à°¤à°¾à°¨à± à°¡à°¿à°¸à±â€Œà°•à°¨à±†à°•à±à°Ÿà± à°šà±‡à°¯à°‚à°¡à°¿",
+    activeFolder: "à°¸à°•à±à°°à°¿à°¯ à°—à°®à±à°¯à°¸à±à°¥à°¾à°¨ à°«à±‹à°²à±à°¡à°°à±",
+    generateVideoBtn: "à°µà±€à°¡à°¿à°¯à±‹à°¨à± à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°‚à°¡à°¿",
+    generatingVideoBtn: "à°¸à°°à±à°µà°°à±â€Œà°²à±‹ à°µà±€à°¡à°¿à°¯à±‹ à°¸à±ƒà°·à±à°Ÿà°¿à°‚à°šà°¬à°¡à±à°¤à±‹à°‚à°¦à°¿...",
+    videoDone: "à°µà±€à°¡à°¿à°¯à±‹ à°œà°¨à°°à±‡à°·à°¨à± à°µà°¿à°œà°¯à°µà°‚à°¤à°‚à°—à°¾ à°ªà±‚à°°à±à°¤à°¯à°¿à°‚à°¦à°¿!",
+    driveUploadDone: "à°…à°ªà±â€Œà°²à±‹à°¡à± à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿ à°®à°°à°¿à°¯à± Google à°¡à±à°°à±ˆà°µà±â€Œà°²à±‹ à°¸à±‡à°µà± à°šà±‡à°¯à°¬à°¡à°¿à°‚à°¦à°¿!",
+    driveUploadBtn: "à°…à°ªà±â€Œà°²à±‹à°¡à± à°šà±‡à°¸à°¿ Google à°¡à±à°°à±ˆà°µà±â€Œà°²à±‹ à°¸à±‡à°µà± à°šà±‡à°¯à°‚à°¡à°¿",
+    viewOnDrive: "Google à°¡à±à°°à±ˆà°µà±â€Œà°²à±‹ à°šà±‚à°¡à°‚à°¡à°¿",
+    downloadVideo: "à°µà±€à°¡à°¿à°¯à±‹ à°«à±ˆà°²à±â€Œà°¨à± à°¡à±Œà°¨à±à°²à±‹à°¡à± à°šà±‡à°¯à°‚à°¡à°¿",
+    errorOccurred: "à°’à°• à°²à±‹à°ªà°‚ à°¸à°‚à°­à°µà°¿à°‚à°šà°¿à°‚à°¦à°¿:",
+    previewWorkspace: "à°²à±ˆà°µà± à°ªà±à°°à°¿à°µà±à°¯à±‚ à°µà°°à±à°•à±â€Œà°¸à±à°ªà±‡à°¸à±",
+    noTemplateSelected: "à°Ÿà±†à°‚à°ªà±à°²à±‡à°Ÿà± à°Žà°‚à°šà±à°•à±‹à°¬à°¡à°²à±‡à°¦à±. à°¦à°¶ 1 à°¨à±à°‚à°¡à°¿ à°¨à±‡à°ªà°¥à±à°¯ à°µà±€à°¡à°¿à°¯à±‹à°¨à± à°Žà°‚à°šà±à°•à±‹à°‚à°¡à°¿.",
+    loadingProgress: "à°Ÿà±†à°‚à°ªà±à°²à±‡à°Ÿà± à°²à±‹à°¡à± à°…à°µà±à°¤à±‹à°‚à°¦à°¿...",
+    signOut: "à°¸à±ˆà°¨à± à°…à°µà±à°Ÿà±",
   }
 };
 
@@ -301,7 +301,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
   const [transcriptionError, setTranscriptionError] = useState<string>('');
 
-  // TTS Pro Voice Presets (Microsoft Edge Neural — te-IN context)
+  // TTS Pro Voice Presets (Microsoft Edge Neural â€” te-IN context)
   const TTS_PRESETS = [
     { id: 'FM1', label: 'Emma', tag: 'Super', gender: 'F', voiceId: 'en-US-EmmaMultilingualNeural',   pitchCycles: [-4, -8, -15] },
     { id: 'FM2', label: 'Vivienne', tag: '',  gender: 'F', voiceId: 'fr-FR-VivienneMultilingualNeural', pitchCycles: [-4, -8] },
@@ -629,7 +629,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       });
       setAudioDuration(audioDurationValue);
 
-      // ── Word-level timestamps from TTS engine ──────────────────────────
+      // â”€â”€ Word-level timestamps from TTS engine â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const words: WordTimestamp[] = data.word_timestamps || [];
       console.log(`[TTS Caption] word_timestamps received: ${words.length} words`, words.slice(0, 5));
 
@@ -660,7 +660,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
           });
         }
       } else if (captionWords.length > 0) {
-        console.warn('[TTS Caption] No word timestamps — using proportional fallback captions (word by word)');
+        console.warn('[TTS Caption] No word timestamps â€” using proportional fallback captions (word by word)');
         const totalChars = captionWords.reduce((acc, w) => acc + w.length, 0) || 1;
         let elapsed = 0;
         alignedWords = captionWords.map((word) => {
@@ -696,7 +696,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const checkGoogleAuth = async () => {
     try {
       setIsAuthLoading(true);
-      const res = await fetch(`${BACKEND_URL}/api/gdrive-auth/status`);
+      const res = await fetch(`${BACKEND_URL}/api/drive/status`);
       if (res.ok) {
         const data = await res.json();
         setDriveConfig(data);
@@ -713,7 +713,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/gdrive-auth/logout`, {
+      const res = await fetch(`${BACKEND_URL}/api/drive/logout`, {
         method: 'POST'
       });
       if (res.ok) {
@@ -748,7 +748,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     }
   };
 
-  // Clipboard paste handler — used by both the Paste button and Ctrl+V shortcut
+  // Clipboard paste handler â€” used by both the Paste button and Ctrl+V shortcut
   const handlePasteImage = useCallback(async () => {
     try {
       const clipboardItems = await navigator.clipboard.read();
@@ -772,7 +772,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     }
   }, [imageUrl]);
 
-  // Desktop Ctrl+V shortcut — listen globally but only when no text input is focused
+  // Desktop Ctrl+V shortcut â€” listen globally but only when no text input is focused
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
@@ -1355,7 +1355,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     const top = window.screen.height / 2 - height / 2;
 
     const popup = window.open(
-      `${BACKEND_URL}/api/gdrive-auth/google/login`,
+      `${BACKEND_URL}/api/drive/google/login`,
       'GoogleAuthPopup',
       `width=${width},height=${height},left=${left},top=${top},status=0,menubar=0`
     );
@@ -1690,7 +1690,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 <div className="flex items-center gap-2 mb-1">
                   <Mic className="h-4 w-4 text-orange-400" />
                   <span className="text-sm font-semibold text-orange-300">AI Voice Studio (Microsoft Edge TTS)</span>
-                  <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free · Unlimited</span>
+                  <span className="ml-auto text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-semibold">Free Â· Unlimited</span>
                 </div>
 
                 {/* AI Script Generation Controls */}
@@ -1728,13 +1728,13 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
                 {!imageFile && (
                   <p className="text-[10px] text-amber-400/90 bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-lg leading-relaxed">
-                    ⚠️ <strong>Note:</strong> Upload a center image with text in Step 2 to generate script with AI.
+                    âš ï¸ <strong>Note:</strong> Upload a center image with text in Step 2 to generate script with AI.
                   </p>
                 )}
 
                 {scriptError && (
                   <p className="text-[10px] text-red-400 bg-red-950/20 border border-red-500/25 p-2.5 rounded-lg leading-relaxed">
-                    ❌ {scriptError}
+                    âŒ {scriptError}
                   </p>
                 )}
 
@@ -1752,7 +1752,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   <span className="text-xs font-semibold text-orange-400">Telugu Script (for generating voice)</span>
                   <textarea
                     rows={4}
-                    placeholder="Type your Telugu script here... (e.g.: నమస్కారం! శుభోదయం. ఈ వీడియో మీకు నచ్చుతుందని ఆశిస్తున్నాను.)"
+                    placeholder="Type your Telugu script here... (e.g.: à°¨à°®à°¸à±à°•à°¾à°°à°‚! à°¶à±à°­à±‹à°¦à°¯à°‚. à°ˆ à°µà±€à°¡à°¿à°¯à±‹ à°®à±€à°•à± à°¨à°šà±à°šà±à°¤à±à°‚à°¦à°¨à°¿ à°†à°¶à°¿à°¸à±à°¤à±à°¨à±à°¨à°¾à°¨à±.)"
                     value={ttsScript}
                     onChange={(e) => setTtsScript(e.target.value)}
                     className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none leading-relaxed"
@@ -1774,7 +1774,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 {/* Pro Voice Preset Cards */}
                 <div className="space-y-2">
                   {/* Female Presets */}
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">♀ Female Pro Voices</div>
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">â™€ Female Pro Voices</div>
                   <div className="grid grid-cols-3 gap-2">
                     {TTS_PRESETS.filter(p => p.gender === 'F').map(preset => {
                       const isActive = selectedPresetId === preset.id;
@@ -1795,7 +1795,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                         >
                           <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-pink-300' : 'text-slate-500'}`}>{preset.id}</span>
                           <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
-                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
+                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">â˜… {preset.tag}</span>}
                           <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-blue-400' : 'text-slate-600'}`}>
                             Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
                           </span>
@@ -1807,7 +1807,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                     })}
                   </div>
                   {/* Male Presets */}
-                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">♂ Male Pro Voices</div>
+                  <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">â™‚ Male Pro Voices</div>
                   <div className="grid grid-cols-3 gap-2">
                     {TTS_PRESETS.filter(p => p.gender === 'M').map(preset => {
                       const isActive = selectedPresetId === preset.id;
@@ -1828,7 +1828,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                         >
                           <span className={`block text-[10px] font-bold font-mono ${isActive ? 'text-sky-300' : 'text-slate-500'}`}>{preset.id}</span>
                           <span className={`block text-xs font-semibold mt-0.5 ${isActive ? 'text-white' : 'text-slate-300'}`}>{preset.label}</span>
-                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">★ {preset.tag}</span>}
+                          {preset.tag && <span className="block text-[9px] text-amber-400 font-semibold mt-0.5">â˜… {preset.tag}</span>}
                           <span className={`block text-[9px] mt-1 font-mono ${isActive ? 'text-sky-300' : 'text-slate-600'}`}>
                             Pitch: {pitch > 0 ? '+' : ''}{pitch}Hz
                           </span>
@@ -1845,12 +1845,12 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-950/60 border border-slate-800/60">
                   <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                   <span className="text-[10px] text-emerald-400 font-semibold">Studio Clarity Boost</span>
-                  <span className="text-[9px] text-slate-500 ml-auto">DSP: 7-band EQ · HP 80Hz · Locked</span>
-                  <span className="text-[10px] font-mono text-orange-300 ml-2">1.65×</span>
+                  <span className="text-[9px] text-slate-500 ml-auto">DSP: 7-band EQ Â· HP 80Hz Â· Locked</span>
+                  <span className="text-[10px] font-mono text-orange-300 ml-2">1.65Ã—</span>
                 </div>
 
                 <p className="text-[9px] text-slate-600 text-center">
-                  Tap a preset to select · Tap again to cycle pitch variant
+                  Tap a preset to select Â· Tap again to cycle pitch variant
                 </p>
 
                 {ttsError && (
@@ -1874,7 +1874,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 </button>
 
                 <p className="text-[10px] text-slate-500 text-center leading-relaxed">
-                  💡 The script is automatically split into caption segments and synced with the generated audio.
+                  ðŸ’¡ The script is automatically split into caption segments and synced with the generated audio.
                 </p>
               </div>
 
@@ -1969,7 +1969,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 </div>
                 
                 <div className="flex justify-between items-center text-[10px] text-slate-500">
-                  <span>Coordinates: X: {movableX.toFixed(0)}% • Y: {movableY.toFixed(0)}%</span>
+                  <span>Coordinates: X: {movableX.toFixed(0)}% â€¢ Y: {movableY.toFixed(0)}%</span>
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
@@ -2081,7 +2081,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 </div>
 
                 <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40">
-                  💡 <strong>Tip:</strong> Drag the banner layer directly on the Live Output Simulation player to place it anywhere (e.g. center at the bottom).
+                  ðŸ’¡ <strong>Tip:</strong> Drag the banner layer directly on the Live Output Simulation player to place it anywhere (e.g. center at the bottom).
                 </p>
               </div>
 
@@ -2136,7 +2136,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                       </div>
                       
                       <div className="flex justify-between items-center text-[10px] text-slate-500">
-                        <span>Coordinates: X: {movable2X.toFixed(0)}% • Y: {movable2Y.toFixed(0)}%</span>
+                        <span>Coordinates: X: {movable2X.toFixed(0)}% â€¢ Y: {movable2Y.toFixed(0)}%</span>
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
@@ -2309,7 +2309,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
                 {!audioFile && (
                   <p className="text-[11px] text-amber-400/90 bg-amber-950/20 border border-amber-500/20 p-2.5 rounded-lg">
-                    ⚠️ <strong>Note:</strong> You must upload a soundtrack in Step 4 before using auto-transcription.
+                    âš ï¸ <strong>Note:</strong> You must upload a soundtrack in Step 4 before using auto-transcription.
                   </p>
                 )}
 
@@ -2375,7 +2375,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                       ))}
                     </div>
                     <p className="text-[10px] text-slate-500 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/40">
-                      💡 <strong>Tip:</strong> Timestamps are in seconds. The simulator dynamically highlights the active caption during playback and bounces it with a CSS animation.
+                      ðŸ’¡ <strong>Tip:</strong> Timestamps are in seconds. The simulator dynamically highlights the active caption during playback and bounces it with a CSS animation.
                     </p>
                   </div>
                 )}
@@ -2387,7 +2387,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
         {/* Live Simulation Preview & Export (Right side) */}
         <div className="lg:col-span-5 space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
 
-          {/* ─── Live API Key & Quota Status Panel ─── */}
+          {/* â”€â”€â”€ Live API Key & Quota Status Panel â”€â”€â”€ */}
           {groqStatusPool.length > 0 && (
             <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 space-y-3 backdrop-blur-sm">
               <div className="flex items-center justify-between">
@@ -2453,14 +2453,14 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
                     <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last OCR Model</div>
                     <div className="text-[9px] font-mono text-sky-400 truncate mt-0.5" title={apiStatus.ocrModel}>
-                      {apiStatus.ocrModel?.replace('meta-llama/', '') || '—'}
+                      {apiStatus.ocrModel?.replace('meta-llama/', '') || 'â€”'}
                     </div>
                     <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.ocrKeyIndex ?? '?'} used</div>
                   </div>
                   <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
                     <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last Script Model</div>
                     <div className="text-[9px] font-mono text-orange-400 truncate mt-0.5" title={apiStatus.scriptModel}>
-                      {apiStatus.scriptModel?.replace('llama-', 'Llama-') || '—'}
+                      {apiStatus.scriptModel?.replace('llama-', 'Llama-') || 'â€”'}
                     </div>
                     <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.scriptKeyIndex ?? '?'} used</div>
                   </div>
@@ -2480,7 +2480,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
             {/* Player + Dual Quick Action Sidebars layout */}
             <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full justify-center items-center sm:items-start">
 
-              {/* ─── Left Quick Action Sidebar ─── */}
+              {/* â”€â”€â”€ Left Quick Action Sidebar â”€â”€â”€ */}
               <div className="flex flex-col gap-2 w-[calc(50%-8px)] sm:w-[88px] flex-shrink-0 order-2 sm:order-1">
                 {/* WM2 Toggle */}
                 <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col items-center gap-1.5">
@@ -2709,7 +2709,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 </div>
               )}
 
-              {/* Synced Audio Captions overlay — Word-by-Word Single Word Display */}
+              {/* Synced Audio Captions overlay â€” Word-by-Word Single Word Display */}
               {(() => {
                 // If we have word-level timestamps, show single word highlighted
                 if (wordTimestamps.length > 0 && currentWordIdx >= 0) {
@@ -2757,13 +2757,13 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
             </div>
 
-              {/* ─── Right Quick Action Sidebar ─── */}
+              {/* â”€â”€â”€ Right Quick Action Sidebar â”€â”€â”€ */}
               <div className="flex flex-col gap-2 w-[calc(50%-8px)] sm:w-[88px] flex-shrink-0 order-3 sm:order-3">
                 {/* Voice Presets Mini */}
                 <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-2 flex flex-col gap-1.5 w-full">
                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wide text-center">Voice</span>
                   {/* Female */}
-                  <div className="text-[7px] text-pink-400 font-semibold text-center">♀ F</div>
+                  <div className="text-[7px] text-pink-400 font-semibold text-center">â™€ F</div>
                   <div className="flex flex-col gap-1">
                     {TTS_PRESETS.filter(p => p.id === 'FM1').map(preset => (
                       <button
@@ -2785,7 +2785,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                     ))}
                   </div>
                   {/* Male */}
-                  <div className="text-[7px] text-sky-400 font-semibold text-center mt-0.5">♂ M</div>
+                  <div className="text-[7px] text-sky-400 font-semibold text-center mt-0.5">â™‚ M</div>
                   <div className="flex flex-col gap-1">
                     {TTS_PRESETS.filter(p => p.id === 'MV1' || p.id === 'MV2').map(preset => (
                       <button
@@ -2999,7 +2999,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                     <div>
                       <p className="text-xs font-semibold">Video Generated & Stored on Drive!</p>
                       <p className="text-[10px] text-emerald-400/80 mt-0.5">
-                        Duration: {audioDuration.toFixed(1)}s • MP4 H.264 Portrait
+                        Duration: {audioDuration.toFixed(1)}s â€¢ MP4 H.264 Portrait
                       </p>
                     </div>
                   </div>
@@ -3041,3 +3041,4 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     </div>
   );
 }
+
