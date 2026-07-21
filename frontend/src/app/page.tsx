@@ -2768,88 +2768,6 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
         {/* Live Simulation Preview & Export (Right side) */}
         <div className="lg:col-span-5 space-y-6 order-first lg:order-2 lg:sticky lg:top-24">
 
-          {/* â”€â”€â”€ Live API Key & Quota Status Panel â”€â”€â”€ */}
-          {groqStatusPool.length > 0 && (
-            <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 space-y-3 backdrop-blur-sm">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">Live API Key & Quota Status</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleResetGroqStatus}
-                  className="text-[9px] font-bold text-orange-400 hover:text-orange-300 bg-slate-900 border border-orange-500/30 px-2 py-1 rounded transition-colors"
-                >
-                  Reset Quotas
-                </button>
-              </div>
-
-              {/* List of keys and status */}
-              <div className="space-y-2">
-                {groqStatusPool.map((keyStatus) => (
-                  <div key={keyStatus.index} className="rounded-lg bg-slate-950/70 border border-slate-800/80 p-2.5 text-xs space-y-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-indigo-400">Key #{keyStatus.index}</span>
-                        <span className="text-[10px] font-mono text-slate-450 bg-slate-900 px-1 py-0.5 rounded">
-                          {keyStatus.keyMasked}
-                        </span>
-                      </div>
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${
-                        keyStatus.status === 'Active' 
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                          : 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse'
-                      }`}>
-                        {keyStatus.status}
-                      </span>
-                    </div>
-
-                    {/* Models exhausted list */}
-                    <div className="flex flex-wrap items-center gap-1 mt-1">
-                      <span className="text-[9px] text-slate-500">Exhausted Models:</span>
-                      {keyStatus.exhaustedModels.length > 0 ? (
-                        keyStatus.exhaustedModels.map((model, midx) => (
-                          <span key={midx} className="text-[8px] bg-red-950/45 text-red-300 border border-red-900/30 px-1 rounded font-mono">
-                            {model.replace('meta-llama/', '').replace('llama-', '')}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-[8px] text-emerald-400 font-semibold">None</span>
-                      )}
-                    </div>
-
-                    {keyStatus.lastError && (
-                      <div className="text-[8px] text-rose-400 bg-rose-950/20 border border-rose-900/20 px-1.5 py-0.5 rounded font-mono truncate" title={keyStatus.lastError}>
-                        Error: {keyStatus.lastError}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Display info of last successful query if available */}
-              {apiStatus && (
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60">
-                  <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
-                    <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last OCR Model</div>
-                    <div className="text-[9px] font-mono text-sky-400 truncate mt-0.5" title={apiStatus.ocrModel}>
-                      {apiStatus.ocrModel?.replace('meta-llama/', '') || 'â€”'}
-                    </div>
-                    <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.ocrKeyIndex ?? '?'} used</div>
-                  </div>
-                  <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
-                    <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last Script Model</div>
-                    <div className="text-[9px] font-mono text-orange-400 truncate mt-0.5" title={apiStatus.scriptModel}>
-                      {apiStatus.scriptModel?.replace('llama-', 'Llama-') || 'â€”'}
-                    </div>
-                    <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.scriptKeyIndex ?? '?'} used</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm flex flex-col items-center">
             {pdrAutoStatus && (
               <div className="w-full mb-4 p-3 rounded-xl border border-amber-500/40 bg-amber-950/30 text-amber-200 text-xs font-semibold flex items-center justify-between gap-2 shadow-lg backdrop-blur-sm animate-pop">
@@ -3548,6 +3466,89 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
               )}
             </div>
           </div>
+{/* â”€â”€â”€ Live API Key & Quota Status Panel â”€â”€â”€ */}
+          {groqStatusPool.length > 0 && (
+            <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 space-y-3 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">Live API Key & Quota Status</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetGroqStatus}
+                  className="text-[9px] font-bold text-orange-400 hover:text-orange-300 bg-slate-900 border border-orange-500/30 px-2 py-1 rounded transition-colors"
+                >
+                  Reset Quotas
+                </button>
+              </div>
+
+              {/* List of keys and status */}
+              <div className="space-y-2">
+                {groqStatusPool.map((keyStatus) => (
+                  <div key={keyStatus.index} className="rounded-lg bg-slate-950/70 border border-slate-800/80 p-2.5 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-indigo-400">Key #{keyStatus.index}</span>
+                        <span className="text-[10px] font-mono text-slate-450 bg-slate-900 px-1 py-0.5 rounded">
+                          {keyStatus.keyMasked}
+                        </span>
+                      </div>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${
+                        keyStatus.status === 'Active' 
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                          : 'bg-red-500/10 text-red-400 border border-red-500/20 animate-pulse'
+                      }`}>
+                        {keyStatus.status}
+                      </span>
+                    </div>
+
+                    {/* Models exhausted list */}
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      <span className="text-[9px] text-slate-500">Exhausted Models:</span>
+                      {keyStatus.exhaustedModels.length > 0 ? (
+                        keyStatus.exhaustedModels.map((model, midx) => (
+                          <span key={midx} className="text-[8px] bg-red-950/45 text-red-300 border border-red-900/30 px-1 rounded font-mono">
+                            {model.replace('meta-llama/', '').replace('llama-', '')}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[8px] text-emerald-400 font-semibold">None</span>
+                      )}
+                    </div>
+
+                    {keyStatus.lastError && (
+                      <div className="text-[8px] text-rose-400 bg-rose-950/20 border border-rose-900/20 px-1.5 py-0.5 rounded font-mono truncate" title={keyStatus.lastError}>
+                        Error: {keyStatus.lastError}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Display info of last successful query if available */}
+              {apiStatus && (
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/60">
+                  <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
+                    <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last OCR Model</div>
+                    <div className="text-[9px] font-mono text-sky-400 truncate mt-0.5" title={apiStatus.ocrModel}>
+                      {apiStatus.ocrModel?.replace('meta-llama/', '') || 'â€”'}
+                    </div>
+                    <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.ocrKeyIndex ?? '?'} used</div>
+                  </div>
+                  <div className="rounded-lg bg-slate-900/40 border border-slate-800 p-2">
+                    <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">Last Script Model</div>
+                    <div className="text-[9px] font-mono text-orange-400 truncate mt-0.5" title={apiStatus.scriptModel}>
+                      {apiStatus.scriptModel?.replace('llama-', 'Llama-') || 'â€”'}
+                    </div>
+                    <div className="text-[8px] text-slate-400 mt-0.5">Key #{apiStatus.scriptKeyIndex ?? '?'} used</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          
         </div>
       </div>
     </div>
