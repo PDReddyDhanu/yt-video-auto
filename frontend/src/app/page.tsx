@@ -301,6 +301,9 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [cropAvatarBottom, setCropAvatarBottom] = useState<number>(0);
   const [cropAvatarLeft, setCropAvatarLeft] = useState<number>(0);
   const [cropAvatarRight, setCropAvatarRight] = useState<number>(0);
+  const [avatarLayerPosition, setAvatarLayerPosition] = useState<'behind' | 'front'>('behind');
+  const [captionPosition, setCaptionPosition] = useState<'top' | 'bottom'>('top');
+
 
   // Caption Styling & Font State
   const [captionStyle, setCaptionStyle] = useState<'blast' | 'green_box' | 'pink_yellow' | 'frost' | 'classic'>('blast');
@@ -1377,6 +1380,9 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     formData.append('cropAvatarBottom', cropAvatarBottom.toString());
     formData.append('cropAvatarLeft', cropAvatarLeft.toString());
     formData.append('cropAvatarRight', cropAvatarRight.toString());
+    formData.append('avatarLayerPosition', avatarLayerPosition);
+    formData.append('captionPosition', captionPosition);
+
     if (avatarVideoFile) {
       formData.append('avatarVideo', avatarVideoFile);
     }
@@ -2306,7 +2312,39 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
                 {/* Avatar Position Sliders */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl border border-slate-800 bg-slate-950/40">
-                  <div className="space-y-1">
+                  
+                <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border border-slate-800 bg-slate-950/60">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-200">Avatar Layer Order</p>
+                    <p className="text-[10px] text-slate-500">Tuck avatar behind center poster image or place in front.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAvatarLayerPosition('behind')}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                        avatarLayerPosition === 'behind'
+                          ? 'border-orange-500 bg-orange-950/40 text-orange-400'
+                          : 'border-slate-800 bg-slate-900 text-slate-400'
+                      }`}
+                    >
+                      Behind Center Poster (Default)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAvatarLayerPosition('front')}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                        avatarLayerPosition === 'front'
+                          ? 'border-orange-500 bg-orange-950/40 text-orange-400'
+                          : 'border-slate-800 bg-slate-900 text-slate-400'
+                      }`}
+                    >
+                      In Front of Poster
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
                     <div className="flex justify-between text-xs text-slate-400 font-semibold">
                       <span>Avatar Size (Width)</span>
                       <span>{avatarScale}%</span>
@@ -2747,7 +2785,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                     left: `${avatarX}%`,
                     top: `${avatarY}%`,
                     width: `${avatarScale}%`,
-                    zIndex: 35,
+                    zIndex: avatarLayerPosition === 'behind' ? 15 : 35,
                     pointerEvents: 'none',
                     userSelect: 'none',
                   }}
@@ -2835,33 +2873,90 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                 </div>
               )}
 
-              {/* Synced Audio Captions overlay â€” Word-by-Word Single Word Display */}
+              {/* Synced Audio Captions overlay — Dynamic Preset Styles */}
               {(() => {
-                // If we have word-level timestamps, show single word highlighted
+                const getCaptionStyleCSS = (style: string, font: string) => {
+                  const fontFam = font || 'Arial Black';
+                  switch (style) {
+                    case 'blast':
+                      return {
+                        fontFamily: fontFam,
+                        color: '#FACC15',
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        border: '1.5px solid rgba(249, 115, 22, 0.6)',
+                        boxShadow: '0 0 15px rgba(249, 115, 22, 0.4)',
+                        textShadow: '0 0 12px #F97316, 0 0 24px #EA580C, 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000',
+                        borderRadius: '8px',
+                        padding: '6px 14px'
+                      };
+                    case 'green_box':
+                      return {
+                        fontFamily: fontFam,
+                        color: '#10B981',
+                        backgroundColor: '#090D16',
+                        border: '2px solid #10B981',
+                        borderRadius: '8px',
+                        padding: '6px 14px',
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                      };
+                    case 'pink_yellow':
+                      return {
+                        fontFamily: fontFam,
+                        color: '#FDE047',
+                        backgroundColor: '#DB2777',
+                        borderRadius: '10px',
+                        padding: '6px 14px',
+                        boxShadow: '0 4px 18px rgba(219, 39, 119, 0.6)'
+                      };
+                    case 'frost':
+                      return {
+                        fontFamily: fontFam,
+                        color: '#22D3EE',
+                        backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                        border: '1.5px solid rgba(34, 211, 238, 0.6)',
+                        textShadow: '0 0 14px #06B6D4, 0 0 28px #0891B2, 2px 2px 0 #000, -2px -2px 0 #000',
+                        borderRadius: '8px',
+                        padding: '6px 14px'
+                      };
+                    case 'classic':
+                    default:
+                      return {
+                        fontFamily: fontFam,
+                        color: '#FACC15',
+                        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                        textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000',
+                        borderRadius: '8px',
+                        padding: '6px 14px'
+                      };
+                  }
+                };
+
+                const capPosClass = captionPosition === 'bottom' ? 'bottom-[12%]' : 'top-[4.5%]';
+                const customStyle = getCaptionStyleCSS(captionStyle, captionFont);
+
                 if (wordTimestamps.length > 0 && currentWordIdx >= 0) {
                   const currentWord = wordTimestamps[currentWordIdx];
                   return (
-                    <div className="absolute top-[4.5%] left-0 right-0 px-4 text-center pointer-events-none z-30 select-none">
+                    <div className={`absolute ${capPosClass} left-0 right-0 px-3 text-center pointer-events-none z-30 select-none`}>
                       <span
-                        style={{
-                          textShadow: '0px 2px 4px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000',
-                        }}
-                        className="inline-block bg-black/45 px-2.5 py-1 rounded-md text-yellow-300 font-bold text-xs leading-snug tracking-wide border border-white/10 backdrop-blur-[1px] animate-pop"
+                        style={customStyle}
+                        className="inline-block font-black text-xs sm:text-sm leading-snug tracking-wide backdrop-blur-[1px] animate-pop"
                       >
                         {currentWord.word}
                       </span>
                     </div>
                   );
                 }
-                // Fallback: segment-level caption (manual upload / before TTS)
                 if (activeCaption) {
                   return (
                     <div
                       key={activeCaption.id}
-                      className="absolute top-[4.5%] left-0 right-0 px-4 text-center pointer-events-none z-30 select-none animate-pop"
-                      style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}
+                      className={`absolute ${capPosClass} left-0 right-0 px-3 text-center pointer-events-none z-30 select-none animate-pop`}
                     >
-                      <span className="inline-block bg-black/45 px-2.5 py-1 rounded-md text-white font-bold text-xs leading-snug tracking-wide border border-white/10 backdrop-blur-[1px]">
+                      <span
+                        style={customStyle}
+                        className="inline-block font-black text-xs sm:text-sm leading-snug tracking-wide backdrop-blur-[1px]"
+                      >
                         {activeCaption.text}
                       </span>
                     </div>

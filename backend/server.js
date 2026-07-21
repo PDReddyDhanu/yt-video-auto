@@ -32,63 +32,7 @@ function formatAssTime(seconds) {
   return `${hrsStr}:${minsStr}:${secsStr}.${csStr}`;
 }
 
-// Helper to construct ASS subtitle file content with custom styles and fonts
-function generateAssContent(captions, captionStyle = 'blast', captionFont = 'Arial Black') {
-  const font = captionFont || 'Arial Black';
-  
-  // Style configurations for ASS subtitles
-  // Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-  let styleLine = `Style: Default,${font},65,&H0000FFFF,&H000000FF,&H00000000,&H8C000000,-1,0,0,0,100,100,0,0,1,5,2,2,10,10,180,1`;
-  
-  switch (captionStyle) {
-    case 'blast':
-      // Glowing Orange/Red Neon text with thick dark outline
-      styleLine = `Style: Default,${font},68,&H000099FF,&H000000FF,&H00000000,&H600000FF,-1,0,0,0,100,100,0,0,1,6,5,2,10,10,180,1`;
-      break;
-    case 'green_box':
-      // CapCut style: Electric green text inside dark rounded box
-      styleLine = `Style: Default,${font},64,&H0000FF00,&H000000FF,&H00000000,&HD0000000,-1,0,0,0,100,100,0,0,3,10,0,2,10,10,180,1`;
-      break;
-    case 'pink_yellow':
-      // Viral Pink Badge with Yellow text
-      styleLine = `Style: Default,${font},65,&H0000FFFF,&H000000FF,&H00000000,&H20D600ED,-1,0,0,0,100,100,0,0,3,14,0,2,10,10,180,1`;
-      break;
-    case 'frost':
-      // Frost Neon Cyan / Teal Glow
-      styleLine = `Style: Default,${font},66,&H00FFFF00,&H000000FF,&H00000000,&H60FF8000,-1,0,0,0,100,100,0,0,1,4,6,2,10,10,180,1`;
-      break;
-    case 'classic':
-    default:
-      // High-contrast Classic Yellow & Black Outline
-      styleLine = `Style: Default,${font},65,&H0000FFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,2,2,10,10,180,1`;
-      break;
-  }
 
-  const header = `[Script Info]
-Title: AutoVideo Subtitles
-ScriptType: v4.00+
-Collisions: Normal
-PlayResX: 1080
-PlayResY: 1920
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-${styleLine}
-
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-`;
-
-  let events = '';
-  for (const caption of captions) {
-    const startStr = formatAssTime(caption.start || 0);
-    const endStr = formatAssTime(caption.end || 0);
-    const text = (caption.text || '').replace(/\r?\n/g, ' ');
-    events += `Dialogue: 0,${startStr},${endStr},Default,,0,0,0,,${text}\n`;
-  }
-
-  return header + events;
-}
 
 function cleanOldTtsFiles() {
   try {
@@ -577,6 +521,103 @@ app.post('/backend/generate-script-from-image', upload.single('image'), async (r
   }
 });
 
+// Helper to construct ASS subtitle file content with custom styles, fonts, and inline formatting
+function generateAssContent(captions, captionStyle = 'blast', captionFont = 'Arial Black', captionPosition = 'top') {
+  const font = captionFont || 'Arial Black';
+  const align = captionPosition === 'bottom' ? 2 : 8; // 8 = Top Center, 2 = Bottom Center
+  const marginV = captionPosition === 'bottom' ? 160 : 120;
+  
+  let primaryColor = '&H0000FFFF'; // Yellow
+  let outlineColor = '&H00000000'; // Black
+  let backColor = '&H80000000';
+  let borderStyle = 1;
+  let outlineWidth = 6;
+  let shadowDepth = 2;
+  let overrideTag = '{\\b1}';
+
+  switch (captionStyle) {
+    case 'blast':
+      primaryColor = '&H0000FFFF';
+      outlineColor = '&H00000000';
+      backColor = '&H80000066';
+      borderStyle = 1;
+      outlineWidth = 8;
+      shadowDepth = 6;
+      overrideTag = '{\\3c&H000000&\\4c&H000066FF&\\b1}';
+      break;
+
+    case 'green_box':
+      primaryColor = '&H0000FF00';
+      outlineColor = '&H00000000';
+      backColor = '&HE0101010';
+      borderStyle = 3;
+      outlineWidth = 10;
+      shadowDepth = 0;
+      overrideTag = '{\\b1\\3c&H000000&}';
+      break;
+
+    case 'pink_yellow':
+      primaryColor = '&H0000FFFF';
+      outlineColor = '&H00D600EC';
+      backColor = '&H00C000D0';
+      borderStyle = 3;
+      outlineWidth = 14;
+      shadowDepth = 0;
+      overrideTag = '{\\b1\\3c&H00D600EC&}';
+      break;
+
+    case 'frost':
+      primaryColor = '&H00FFFF00';
+      outlineColor = '&H00000000';
+      backColor = '&H00FF8000';
+      borderStyle = 1;
+      outlineWidth = 6;
+      shadowDepth = 6;
+      overrideTag = '{\\3c&H000000&\\4c&H00FF8000&\\b1}';
+      break;
+
+    case 'classic':
+    default:
+      primaryColor = '&H0000FFFF';
+      outlineColor = '&H00000000';
+      backColor = '&H80000000';
+      borderStyle = 1;
+      outlineWidth = 6;
+      shadowDepth = 2;
+      overrideTag = '{\\b1}';
+      break;
+  }
+
+  const styleLine = `Style: Default,${font},65,${primaryColor},&H000000FF,${outlineColor},${backColor},-1,0,0,0,100,100,0,0,${borderStyle},${outlineWidth},${shadowDepth},${align},10,10,${marginV},1`;
+
+  const header = `[Script Info]
+Title: AutoVideo Subtitles
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 1080
+PlayResY: 1920
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+${styleLine}
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+
+  let events = '';
+  for (const caption of captions) {
+    const startStr = formatAssTime(caption.start || 0);
+    const endStr = formatAssTime(caption.end || 0);
+    const text = (caption.text || '').replace(/\r?\n/g, ' ');
+    events += `Dialogue: 0,${startStr},${endStr},Default,,0,0,0,,${overrideTag}${text}\n`;
+  }
+
+  return header + events;
+}
+
+
+
 // ---------------- VIDEO GENERATION API ----------------
 
 app.post('/backend/generate', upload.fields([
@@ -592,14 +633,11 @@ app.post('/backend/generate', upload.fields([
       customFilename, mode, bgId, showMovable, movableX, movableY, movableScale, 
       cropTop, cropBottom, cropLeft, cropRight, showMovable2, movable2X, movable2Y, 
       movable2Scale, crop2Top, crop2Bottom, crop2Left, crop2Right, imageScale, 
-      folderId, captions, captionStyle, captionFont,
-      showAvatar, avatarX, avatarY, avatarScale, cropAvatarTop, cropAvatarBottom, cropAvatarLeft, cropAvatarRight
+      folderId, captions, captionStyle, captionFont, captionPosition,
+      showAvatar, avatarX, avatarY, avatarScale, cropAvatarTop, cropAvatarBottom, cropAvatarLeft, cropAvatarRight, avatarLayerPosition
     } = req.body;
     const files = req.files;
 
-    const isInstagram = mode === 'instagram';
-
-    // Parse captions and generate ASS subtitles if present
     const hasSubtitles = captions && captions !== '[]';
     let assFilename = null;
     let assPath = null;
@@ -607,11 +645,10 @@ app.post('/backend/generate', upload.fields([
       try {
         const parsedCaptions = JSON.parse(captions);
         if (Array.isArray(parsedCaptions) && parsedCaptions.length > 0) {
-          const assContent = generateAssContent(parsedCaptions, captionStyle, captionFont);
+          const assContent = generateAssContent(parsedCaptions, captionStyle, captionFont, captionPosition);
           assFilename = `subtitles-${Date.now()}.ass`;
           assPath = path.join(__dirname, assFilename);
           fs.writeFileSync(assPath, assContent, 'utf8');
-          console.log("Written subtitles to:", assPath);
         }
       } catch (err) {
         console.error("Failed to parse or write subtitles:", err);
@@ -641,24 +678,10 @@ app.post('/backend/generate', upload.fields([
 
     const duration = audioDuration;
 
-    const watermarkPath = path.join(UPLOADS_DIR, db.watermark.filename || 'default_watermark.png');
-
     progressState = 'Processing Video';
     const outputFilename = `render-${Date.now()}.mp4`;
     const outputPath = path.join(OUTPUT_DIR, outputFilename);
 
-    // Calculate watermark position overlay strings for FFmpeg
-    const wm = db.watermark;
-    let overlayCoords = `W-w-${wm.margin}:H-h-${wm.margin}`; // bottom-right default
-    if (wm.position === 'top-left') {
-      overlayCoords = `${wm.margin}:${wm.margin}`;
-    } else if (wm.position === 'top-right') {
-      overlayCoords = `W-w-${wm.margin}:${wm.margin}`;
-    } else if (wm.position === 'bottom-left') {
-      overlayCoords = `${wm.margin}:H-h-${wm.margin}`;
-    }
-
-    const isMovableEnabled = true; // compulsory mandatory bottom banner
     let movablePath = path.join(UPLOADS_DIR, 'ChatGPT Image Jun 17, 2026, 03_36_57 AM.png');
     if (files.movableWatermark && files.movableWatermark[0]) {
       movablePath = files.movableWatermark[0].path;
@@ -674,43 +697,41 @@ app.post('/backend/generate', upload.fields([
       movable2Path = path.join(UPLOADS_DIR, 'default_watermark.png');
     }
 
-    // Avatar video setup
     let avatarPath = path.join(UPLOADS_DIR, 'default_avatar.webm');
     if (files.avatarVideo && files.avatarVideo[0]) {
       avatarPath = files.avatarVideo[0].path;
+      try {
+        fs.copyFileSync(avatarPath, path.join(UPLOADS_DIR, 'default_avatar.webm'));
+      } catch (err) {
+        console.warn("Could not persist default avatar video:", err);
+      }
     }
     const isAvatarEnabled = showAvatar === 'true' || showAvatar === true || (showAvatar === undefined && fs.existsSync(avatarPath));
     const hasAvatar = isAvatarEnabled && fs.existsSync(avatarPath);
+    const avatarLayerBehind = avatarLayerPosition !== 'front';
 
     const imgScalePct = parseFloat(imageScale) || 90;
     const targetWidth = Math.round((imgScalePct / 100) * 1080);
     const targetHeight = Math.round((imgScalePct / 100) * 1760);
 
-    // Construct filter complex parts dynamically
-    // Overlay 0:v (background) with 1:v (center image)
     const filterComplexParts = [
       `[0:v]scale=w='iw*max(1080/iw,1920/ih)':h='ih*max(1080/iw,1920/ih)',crop=1080:1920[bg];`,
-      `[1:v]scale='if(gt(ih/iw,${targetHeight}/${targetWidth}),-1,${targetWidth})':'if(gt(ih/iw,${targetHeight}/${targetWidth}),${targetHeight},-1)'[img];`,
-      `[bg][img]overlay=(W-w)/2:(H-h)/2[bg_img];`
+      `[1:v]scale='if(gt(ih/iw,${targetHeight}/${targetWidth}),-1,${targetWidth})':'if(gt(ih/iw,${targetHeight}/${targetWidth}),${targetHeight},-1)'[img];`
     ];
-    let lastLabel = '[bg_img]';
+    let lastLabel = '[bg]';
 
-    // Avatar character overlay (dummy lip sync) - top-left of poster image
-    if (hasAvatar) {
+    const buildAvatarFilter = () => {
       const avScalePct = parseFloat(avatarScale) || 28;
       const avXPct = parseFloat(avatarX) || 4;
       const avYPct = parseFloat(avatarY) || 11;
-
       const avWidth = Math.round((avScalePct / 100) * 1080);
       const avXPos = Math.round((avXPct / 100) * 1080);
       const avYPos = Math.round((avYPct / 100) * 1920);
-
       const cAvL = parseFloat(cropAvatarLeft) || 0;
       const cAvR = parseFloat(cropAvatarRight) || 0;
       const cAvT = parseFloat(cropAvatarTop) || 0;
       const cAvB = parseFloat(cropAvatarBottom) || 0;
-
-      let avatarInputIndex = 4; // avatar is 4:v if present
+      let avatarInputIndex = 4;
       let avFilter = `[${avatarInputIndex}:v]format=rgba`;
       if (cAvL > 0 || cAvR > 0 || cAvT > 0 || cAvB > 0) {
         avFilter += `,crop=iw*(1-(${cAvL}+${cAvR})/100):ih*(1-(${cAvT}+${cAvB})/100):iw*${cAvL}/100:ih*${cAvT}/100`;
@@ -719,6 +740,17 @@ app.post('/backend/generate', upload.fields([
       filterComplexParts.push(avFilter);
       filterComplexParts.push(`${lastLabel}[avatar]overlay=${avXPos}:${avYPos}[bg_avatar];`);
       lastLabel = '[bg_avatar]';
+    };
+
+    if (hasAvatar && avatarLayerBehind) {
+      buildAvatarFilter();
+    }
+
+    filterComplexParts.push(`${lastLabel}[img]overlay=(W-w)/2:(H-h)/2[bg_img];`);
+    lastLabel = '[bg_img]';
+
+    if (hasAvatar && !avatarLayerBehind) {
+      buildAvatarFilter();
     }
 
     const mwmScalePct = parseFloat(movableScale) || 91.78571428571428;
