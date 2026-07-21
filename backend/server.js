@@ -32,8 +32,38 @@ function formatAssTime(seconds) {
   return `${hrsStr}:${minsStr}:${secsStr}.${csStr}`;
 }
 
-// Helper to construct ASS subtitle file content
-function generateAssContent(captions) {
+// Helper to construct ASS subtitle file content with custom styles and fonts
+function generateAssContent(captions, captionStyle = 'blast', captionFont = 'Arial Black') {
+  const font = captionFont || 'Arial Black';
+  
+  // Style configurations for ASS subtitles
+  // Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+  let styleLine = `Style: Default,${font},65,&H0000FFFF,&H000000FF,&H00000000,&H8C000000,-1,0,0,0,100,100,0,0,1,5,2,2,10,10,180,1`;
+  
+  switch (captionStyle) {
+    case 'blast':
+      // Glowing Orange/Red Neon text with thick dark outline
+      styleLine = `Style: Default,${font},68,&H000099FF,&H000000FF,&H00000000,&H600000FF,-1,0,0,0,100,100,0,0,1,6,5,2,10,10,180,1`;
+      break;
+    case 'green_box':
+      // CapCut style: Electric green text inside dark rounded box
+      styleLine = `Style: Default,${font},64,&H0000FF00,&H000000FF,&H00000000,&HD0000000,-1,0,0,0,100,100,0,0,3,10,0,2,10,10,180,1`;
+      break;
+    case 'pink_yellow':
+      // Viral Pink Badge with Yellow text
+      styleLine = `Style: Default,${font},65,&H0000FFFF,&H000000FF,&H00000000,&H20D600ED,-1,0,0,0,100,100,0,0,3,14,0,2,10,10,180,1`;
+      break;
+    case 'frost':
+      // Frost Neon Cyan / Teal Glow
+      styleLine = `Style: Default,${font},66,&H00FFFF00,&H000000FF,&H00000000,&H60FF8000,-1,0,0,0,100,100,0,0,1,4,6,2,10,10,180,1`;
+      break;
+    case 'classic':
+    default:
+      // High-contrast Classic Yellow & Black Outline
+      styleLine = `Style: Default,${font},65,&H0000FFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,6,2,2,10,10,180,1`;
+      break;
+  }
+
   const header = `[Script Info]
 Title: AutoVideo Subtitles
 ScriptType: v4.00+
@@ -43,7 +73,7 @@ PlayResY: 1920
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Default,Arial,65,&H0047E0FD,&H000000FF,&H00000000,&H8C000000,-1,0,0,0,100,100,0,0,3,10,0,8,10,10,110,1
+${styleLine}
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -552,12 +582,19 @@ app.post('/backend/generate-script-from-image', upload.single('image'), async (r
 app.post('/backend/generate', upload.fields([
   { name: 'image', maxCount: 1 },
   { name: 'audio', maxCount: 1 },
-  { name: 'movableWatermark', maxCount: 1 }
+  { name: 'movableWatermark', maxCount: 1 },
+  { name: 'avatarVideo', maxCount: 1 }
 ]), async (req, res) => {
   let progressState = 'Uploading';
   
   try {
-    const { customFilename, mode, bgId, showMovable, movableX, movableY, movableScale, cropTop, cropBottom, cropLeft, cropRight, showMovable2, movable2X, movable2Y, movable2Scale, crop2Top, crop2Bottom, crop2Left, crop2Right, imageScale, folderId, captions } = req.body;
+    const { 
+      customFilename, mode, bgId, showMovable, movableX, movableY, movableScale, 
+      cropTop, cropBottom, cropLeft, cropRight, showMovable2, movable2X, movable2Y, 
+      movable2Scale, crop2Top, crop2Bottom, crop2Left, crop2Right, imageScale, 
+      folderId, captions, captionStyle, captionFont,
+      showAvatar, avatarX, avatarY, avatarScale, cropAvatarTop, cropAvatarBottom, cropAvatarLeft, cropAvatarRight
+    } = req.body;
     const files = req.files;
 
     const isInstagram = mode === 'instagram';
@@ -570,7 +607,7 @@ app.post('/backend/generate', upload.fields([
       try {
         const parsedCaptions = JSON.parse(captions);
         if (Array.isArray(parsedCaptions) && parsedCaptions.length > 0) {
-          const assContent = generateAssContent(parsedCaptions);
+          const assContent = generateAssContent(parsedCaptions, captionStyle, captionFont);
           assFilename = `subtitles-${Date.now()}.ass`;
           assPath = path.join(__dirname, assFilename);
           fs.writeFileSync(assPath, assContent, 'utf8');
@@ -637,6 +674,14 @@ app.post('/backend/generate', upload.fields([
       movable2Path = path.join(UPLOADS_DIR, 'default_watermark.png');
     }
 
+    // Avatar video setup
+    let avatarPath = path.join(UPLOADS_DIR, 'default_avatar.webm');
+    if (files.avatarVideo && files.avatarVideo[0]) {
+      avatarPath = files.avatarVideo[0].path;
+    }
+    const isAvatarEnabled = showAvatar === 'true' || showAvatar === true || (showAvatar === undefined && fs.existsSync(avatarPath));
+    const hasAvatar = isAvatarEnabled && fs.existsSync(avatarPath);
+
     const imgScalePct = parseFloat(imageScale) || 90;
     const targetWidth = Math.round((imgScalePct / 100) * 1080);
     const targetHeight = Math.round((imgScalePct / 100) * 1760);
@@ -648,6 +693,33 @@ app.post('/backend/generate', upload.fields([
       `[1:v]scale='if(gt(ih/iw,${targetHeight}/${targetWidth}),-1,${targetWidth})':'if(gt(ih/iw,${targetHeight}/${targetWidth}),${targetHeight},-1)'[img];`,
       `[bg][img]overlay=(W-w)/2:(H-h)/2[bg_img];`
     ];
+    let lastLabel = '[bg_img]';
+
+    // Avatar character overlay (dummy lip sync) - top-left of poster image
+    if (hasAvatar) {
+      const avScalePct = parseFloat(avatarScale) || 28;
+      const avXPct = parseFloat(avatarX) || 4;
+      const avYPct = parseFloat(avatarY) || 11;
+
+      const avWidth = Math.round((avScalePct / 100) * 1080);
+      const avXPos = Math.round((avXPct / 100) * 1080);
+      const avYPos = Math.round((avYPct / 100) * 1920);
+
+      const cAvL = parseFloat(cropAvatarLeft) || 0;
+      const cAvR = parseFloat(cropAvatarRight) || 0;
+      const cAvT = parseFloat(cropAvatarTop) || 0;
+      const cAvB = parseFloat(cropAvatarBottom) || 0;
+
+      let avatarInputIndex = 4; // avatar is 4:v if present
+      let avFilter = `[${avatarInputIndex}:v]format=rgba`;
+      if (cAvL > 0 || cAvR > 0 || cAvT > 0 || cAvB > 0) {
+        avFilter += `,crop=iw*(1-(${cAvL}+${cAvR})/100):ih*(1-(${cAvT}+${cAvB})/100):iw*${cAvL}/100:ih*${cAvT}/100`;
+      }
+      avFilter += `,scale=${avWidth}:-1[avatar];`;
+      filterComplexParts.push(avFilter);
+      filterComplexParts.push(`${lastLabel}[avatar]overlay=${avXPos}:${avYPos}[bg_avatar];`);
+      lastLabel = '[bg_avatar]';
+    }
 
     const mwmScalePct = parseFloat(movableScale) || 91.78571428571428;
     const mwmXPct = parseFloat(movableX) || 4;
@@ -670,8 +742,8 @@ app.post('/backend/generate', upload.fields([
     }
     mwmFilter += `,scale=${mwmWidth}:-1[mwm];`;
     filterComplexParts.push(mwmFilter);
-    filterComplexParts.push(`[bg_img][mwm]overlay=${mwmX}:${mwmY}[bg_mwm];`);
-    let lastLabel = '[bg_mwm]';
+    filterComplexParts.push(`${lastLabel}[mwm]overlay=${mwmX}:${mwmY}[bg_mwm];`);
+    lastLabel = '[bg_mwm]';
 
     // 3:v is the optional second movable watermark
     if (showMovable2 === 'true') {
@@ -694,7 +766,7 @@ app.post('/backend/generate', upload.fields([
       }
       mwm2Filter += `,scale=${mwm2Width}:-1[mwm2];`;
       filterComplexParts.push(mwm2Filter);
-      filterComplexParts.push(`[bg_mwm][mwm2]overlay=${mwm2X}:${mwm2Y}[bg_mwm2];`);
+      filterComplexParts.push(`${lastLabel}[mwm2]overlay=${mwm2X}:${mwm2Y}[bg_mwm2];`);
       lastLabel = '[bg_mwm2]';
     }
 
@@ -707,19 +779,23 @@ app.post('/backend/generate', upload.fields([
 
     const filterComplex = filterComplexParts.join('');
 
-    // Setup input lists and index tracking (no corner watermark logo)
+    // Setup input lists and index tracking
     const ffmpegArgs = [
       '-y',
       '-stream_loop', '-1',
-      '-i', bgPath,
-      '-i', imgPath,
-      '-i', movablePath,
-      '-i', movable2Path
+      '-i', bgPath,            // 0:v
+      '-i', imgPath,           // 1:v
+      '-i', movablePath,       // 2:v
+      '-i', movable2Path       // 3:v
     ];
 
-    ffmpegArgs.push('-i', audioPath);
+    if (hasAvatar) {
+      ffmpegArgs.push('-stream_loop', '-1', '-i', avatarPath); // 4:v
+    }
 
-    const audioInputIndex = 4;
+    ffmpegArgs.push('-i', audioPath); // 4:a or 5:a
+
+    const audioInputIndex = hasAvatar ? 5 : 4;
 
     ffmpegArgs.push(
       '-t', duration.toString(),

@@ -290,6 +290,56 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [driveLink, setDriveLink] = useState<string>('');
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(false);
 
+  // Avatar Character Overlay Layer State (Dummy Lip Sync Character)
+  const [showAvatar, setShowAvatar] = useState<boolean>(true);
+  const [avatarVideoFile, setAvatarVideoFile] = useState<File | null>(null);
+  const [avatarVideoUrl, setAvatarVideoUrl] = useState<string>(`${BACKEND_URL}/uploads/default_avatar.webm`);
+  const [avatarX, setAvatarX] = useState<number>(4);      // X % (top left of poster)
+  const [avatarY, setAvatarY] = useState<number>(11);     // Y %
+  const [avatarScale, setAvatarScale] = useState<number>(28); // Width %
+  const [cropAvatarTop, setCropAvatarTop] = useState<number>(0);
+  const [cropAvatarBottom, setCropAvatarBottom] = useState<number>(0);
+  const [cropAvatarLeft, setCropAvatarLeft] = useState<number>(0);
+  const [cropAvatarRight, setCropAvatarRight] = useState<number>(0);
+
+  // Caption Styling & Font State
+  const [captionStyle, setCaptionStyle] = useState<'blast' | 'green_box' | 'pink_yellow' | 'frost' | 'classic'>('blast');
+  const [captionFont, setCaptionFont] = useState<string>('Arial Black');
+
+  const CAPTION_STYLES = [
+    {
+      id: 'blast',
+      label: 'BLAST',
+      desc: 'Fire Neon Glow with Black Outline',
+      badgeClass: 'bg-gradient-to-r from-orange-600 to-amber-500 text-white font-black uppercase tracking-wider'
+    },
+    {
+      id: 'green_box',
+      label: 'CAPCUT GREEN',
+      desc: 'Electric Green Text in Dark Rounded Box',
+      badgeClass: 'bg-slate-950 text-emerald-400 border border-emerald-500/60 font-black uppercase tracking-wider px-2 py-0.5 rounded'
+    },
+    {
+      id: 'pink_yellow',
+      label: 'PINK & YELLOW',
+      desc: 'Pink Background Badge with Yellow Text',
+      badgeClass: 'bg-pink-600 text-yellow-300 font-black uppercase tracking-wider px-2 py-0.5 rounded shadow'
+    },
+    {
+      id: 'frost',
+      label: 'FROST NEON',
+      desc: 'Electric Cyan Glow with Soft Shadow',
+      badgeClass: 'bg-slate-900 text-cyan-300 border border-cyan-400/50 font-black uppercase tracking-wider'
+    },
+    {
+      id: 'classic',
+      label: 'CLASSIC YELLOW',
+      desc: 'High Contrast Bold Yellow Text',
+      badgeClass: 'bg-slate-900 text-yellow-400 border border-yellow-500/40 font-extrabold uppercase tracking-wide'
+    }
+  ] as const;
+
+
   // Caption/Subtitle State
   interface CaptionSegment {
     id: string;
@@ -1317,6 +1367,20 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
     formData.append('imageScale', imageScale.toString());
     formData.append('captions', JSON.stringify(captions));
+    formData.append('captionStyle', captionStyle);
+    formData.append('captionFont', captionFont);
+    formData.append('showAvatar', showAvatar.toString());
+    formData.append('avatarX', avatarX.toString());
+    formData.append('avatarY', avatarY.toString());
+    formData.append('avatarScale', avatarScale.toString());
+    formData.append('cropAvatarTop', cropAvatarTop.toString());
+    formData.append('cropAvatarBottom', cropAvatarBottom.toString());
+    formData.append('cropAvatarLeft', cropAvatarLeft.toString());
+    formData.append('cropAvatarRight', cropAvatarRight.toString());
+    if (avatarVideoFile) {
+      formData.append('avatarVideo', avatarVideoFile);
+    }
+
 
     try {
       // Simulate transition to processing because large uploads are quick, then render takes time
@@ -2188,6 +2252,107 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
             </div>
           </div>
 
+          
+          {/* Step 5B: Avatar Character Overlay (Dummy Lip Sync) */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-sm border border-orange-500/20">
+                  5B
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-200">Avatar Character Layer (Dummy Lip Sync)</h2>
+                  <p className="text-[10px] text-slate-400">Position speaker avatar at top-left of center poster. Muted video loops automatically for full audio length.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAvatar(!showAvatar)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                  showAvatar
+                    ? 'border-emerald-500/40 bg-emerald-950/30 text-emerald-400'
+                    : 'border-slate-800 bg-slate-950 text-slate-500'
+                }`}
+              >
+                {showAvatar ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+
+            {showAvatar && (
+              <div className="space-y-4 pt-2">
+                {/* Upload Custom Avatar Video */}
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-800 bg-slate-950/60">
+                  <VideoIcon className="h-5 w-5 text-orange-400 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-slate-300">Custom Avatar Video (Optional WebM/MP4)</p>
+                    <p className="text-[10px] text-slate-500">Default avatar preset is loaded automatically. Upload custom video to overwrite.</p>
+                  </div>
+                  <label className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold cursor-pointer transition-colors">
+                    Upload
+                    <input
+                      type="file"
+                      accept="video/webm,video/mp4"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          setAvatarVideoFile(file);
+                          setAvatarVideoUrl(URL.createObjectURL(file));
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {/* Avatar Position Sliders */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-xl border border-slate-800 bg-slate-950/40">
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-slate-400 font-semibold">
+                      <span>Avatar Size (Width)</span>
+                      <span>{avatarScale}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="15"
+                      max="60"
+                      value={avatarScale}
+                      onChange={(e) => setAvatarScale(parseInt(e.target.value))}
+                      className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-slate-400 font-semibold">
+                      <span>Position X</span>
+                      <span>{avatarX}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="80"
+                      value={avatarX}
+                      onChange={(e) => setAvatarX(parseInt(e.target.value))}
+                      className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs text-slate-400 font-semibold">
+                      <span>Position Y</span>
+                      <span>{avatarY}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="80"
+                      value={avatarY}
+                      onChange={(e) => setAvatarY(parseInt(e.target.value))}
+                      className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Step 6: Dynamic Captions (Optional) */}
           {(videoPlatform === 'youtube' || videoPlatform === 'instagram') && (
             <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
@@ -2570,6 +2735,32 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                       />
                     </>
                   )}
+                </div>
+              )}
+
+              
+              {/* Avatar Character Overlay Layer in Live Simulator */}
+              {showAvatar && avatarVideoUrl && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${avatarX}%`,
+                    top: `${avatarY}%`,
+                    width: `${avatarScale}%`,
+                    zIndex: 35,
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  }}
+                  className="rounded-lg overflow-hidden shadow-lg"
+                >
+                  <video
+                    src={avatarVideoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-contain pointer-events-none"
+                  />
                 </div>
               )}
 
