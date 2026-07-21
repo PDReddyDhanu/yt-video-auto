@@ -588,7 +588,7 @@ function generateAssContent(captions, captionStyle = 'blast', captionFont = 'Ari
       break;
   }
 
-  const marginL = captionPosition === 'top' ? 260 : 30;
+  const marginL = captionPosition === 'top' ? 160 : 30;
   const marginR = 30;
 
   const styleLine = `Style: Default,${font},65,${primaryColor},&H000000FF,${outlineColor},${backColor},-1,0,0,0,100,100,0,0,${borderStyle},${outlineWidth},${shadowDepth},${align},${marginL},${marginR},${marginV},1`;

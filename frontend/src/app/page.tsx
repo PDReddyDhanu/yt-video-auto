@@ -257,7 +257,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [crop2Right, setCrop2Right] = useState<number>(0);
   const [movable2AspectRatio, setMovable2AspectRatio] = useState<number>(1.0); // loaded dynamically
 
-  const [activeWatermark, setActiveWatermark] = useState<'wm1' | 'wm2' | null>(null);
+  const [activeWatermark, setActiveWatermark] = useState<'wm1' | 'wm2' | 'avatar' | null>(null);
   const [isLockedWm1, setIsLockedWm1] = useState<boolean>(false);
   const [isLockedWm2, setIsLockedWm2] = useState<boolean>(false);
 
@@ -266,7 +266,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const dragStart = useRef({ x: 0, y: 0, left: 0, top: 0 });
-  const dragTarget = useRef<'wm1' | 'wm2'>('wm1');
+  const dragTarget = useRef<'wm1' | 'wm2' | 'avatar'>('wm1');
 
   // Preview Synced Player State
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -908,7 +908,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     setIsDragging(true);
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const currentX = target === 'wm1' ? movableX : movable2X;
+      const currentX = target === 'wm1' ? movableX : (target === 'wm2' ? movable2X : avatarX);
       const currentY = target === 'wm1' ? movableY : movable2Y;
       dragStart.current = {
         x: e.clientX,
@@ -931,7 +931,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     setIsDragging(true);
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const currentX = target === 'wm1' ? movableX : movable2X;
+      const currentX = target === 'wm1' ? movableX : (target === 'wm2' ? movable2X : avatarX);
       const currentY = target === 'wm1' ? movableY : movable2Y;
       dragStart.current = {
         x: touch.clientX,
@@ -943,14 +943,14 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   };
 
   // Movable Watermark Resizing Logic (Supports wm1 and wm2)
-  const handleResizeStart = (e: React.MouseEvent, corner: string, target: 'wm1' | 'wm2') => {
+  const handleResizeStart = (e: React.MouseEvent, corner: string, target: 'wm1' | 'wm2' | 'avatar') => {
     e.stopPropagation();
     e.preventDefault();
     dragTarget.current = target;
     setIsResizing(corner);
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const currentScale = target === 'wm1' ? movableScale : movable2Scale;
+      const currentScale = target === 'wm1' ? movableScale : (target === 'wm2' ? movable2Scale : avatarScale);
       const currentX = target === 'wm1' ? movableX : movable2X;
       dragStart.current = {
         x: e.clientX,
@@ -961,7 +961,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     }
   };
 
-  const handleResizeTouchStart = (e: React.TouchEvent, corner: string, target: 'wm1' | 'wm2') => {
+  const handleResizeTouchStart = (e: React.TouchEvent, corner: string, target: 'wm1' | 'wm2' | 'avatar') => {
     if (e.touches.length !== 1) return;
     const touch = e.touches[0];
     e.stopPropagation();
@@ -969,7 +969,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
     setIsResizing(corner);
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      const currentScale = target === 'wm1' ? movableScale : movable2Scale;
+      const currentScale = target === 'wm1' ? movableScale : (target === 'wm2' ? movable2Scale : avatarScale);
       const currentX = target === 'wm1' ? movableX : movable2X;
       dragStart.current = {
         x: touch.clientX,
@@ -2996,7 +2996,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   }
                 };
 
-                const capPosClass = captionPosition === 'bottom' ? 'bottom-[12%] left-0 right-0 px-3' : 'top-[4.5%] left-[24%] right-2 px-2';
+                const capPosClass = captionPosition === 'bottom' ? 'bottom-[12%] left-0 right-0 px-3' : 'top-[4.5%] left-[14%] right-2 px-2';
                 const customStyle = getCaptionStyleCSS(captionStyle, captionFont);
 
                 if (wordTimestamps.length > 0 && currentWordIdx >= 0) {
