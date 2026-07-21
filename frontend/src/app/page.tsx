@@ -2792,6 +2792,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   className="rounded-lg overflow-hidden shadow-lg"
                 >
                   <video
+                    key={avatarVideoUrl}
                     src={avatarVideoUrl}
                     autoPlay
                     loop
