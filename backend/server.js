@@ -588,7 +588,10 @@ function generateAssContent(captions, captionStyle = 'blast', captionFont = 'Ari
       break;
   }
 
-  const styleLine = `Style: Default,${font},65,${primaryColor},&H000000FF,${outlineColor},${backColor},-1,0,0,0,100,100,0,0,${borderStyle},${outlineWidth},${shadowDepth},${align},10,10,${marginV},1`;
+  const marginL = captionPosition === 'top' ? 260 : 30;
+  const marginR = 30;
+
+  const styleLine = `Style: Default,${font},65,${primaryColor},&H000000FF,${outlineColor},${backColor},-1,0,0,0,100,100,0,0,${borderStyle},${outlineWidth},${shadowDepth},${align},${marginL},${marginR},${marginV},1`;
 
   const header = `[Script Info]
 Title: AutoVideo Subtitles
@@ -721,9 +724,9 @@ app.post('/backend/generate', upload.fields([
     let lastLabel = '[bg]';
 
     const buildAvatarFilter = () => {
-      const avScalePct = parseFloat(avatarScale) || 28;
-      const avXPct = parseFloat(avatarX) || 4;
-      const avYPct = parseFloat(avatarY) || 11;
+      const avScalePct = !isNaN(parseFloat(avatarScale)) ? parseFloat(avatarScale) : 28;
+      const avXPct = !isNaN(parseFloat(avatarX)) ? parseFloat(avatarX) : 0;
+      const avYPct = !isNaN(parseFloat(avatarY)) ? parseFloat(avatarY) : 0;
       const avWidth = Math.round((avScalePct / 100) * 1080);
       const avXPos = Math.round((avXPct / 100) * 1080);
       const avYPos = Math.round((avYPct / 100) * 1920);

@@ -294,8 +294,8 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [showAvatar, setShowAvatar] = useState<boolean>(true);
   const [avatarVideoFile, setAvatarVideoFile] = useState<File | null>(null);
   const [avatarVideoUrl, setAvatarVideoUrl] = useState<string>(`${BACKEND_URL}/uploads/default_avatar.webm`);
-  const [avatarX, setAvatarX] = useState<number>(4);      // X % (top left of poster)
-  const [avatarY, setAvatarY] = useState<number>(11);     // Y %
+  const [avatarX, setAvatarX] = useState<number>(0);      // X % (top left of poster)
+  const [avatarY, setAvatarY] = useState<number>(0);     // Y %
   const [avatarScale, setAvatarScale] = useState<number>(28); // Width %
   const [cropAvatarTop, setCropAvatarTop] = useState<number>(0);
   const [cropAvatarBottom, setCropAvatarBottom] = useState<number>(0);
@@ -303,6 +303,33 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [cropAvatarRight, setCropAvatarRight] = useState<number>(0);
   const [avatarLayerPosition, setAvatarLayerPosition] = useState<'behind' | 'front'>('behind');
   const [captionPosition, setCaptionPosition] = useState<'top' | 'bottom'>('top');
+  const [isDraggingAvatar, setIsDraggingAvatar] = useState<boolean>(false);
+  const avatarDragStart = useRef({ x: 0, y: 0, avatarX: 0, avatarY: 0 });
+
+  const handleAvatarMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingAvatar(true);
+    avatarDragStart.current = {
+      x: e.clientX,
+      y: e.clientY,
+      avatarX: avatarX,
+      avatarY: avatarY
+    };
+  };
+
+  const handleAvatarTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDraggingAvatar(true);
+      avatarDragStart.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        avatarX: avatarX,
+        avatarY: avatarY
+      };
+    }
+  };
+
 
 
   // Caption Styling & Font State
@@ -970,7 +997,44 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
 
-      if (isDragging) {
+      if (isDraggingAvatar && containerRef.current) {
+      const handleAvatarMove = (moveEvt: MouseEvent | TouchEvent) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const clientX = 'touches' in moveEvt ? moveEvt.touches[0].clientX : moveEvt.clientX;
+        const clientY = 'touches' in moveEvt ? moveEvt.touches[0].clientY : moveEvt.clientY;
+        
+        const deltaX = clientX - avatarDragStart.current.x;
+        const deltaY = clientY - avatarDragStart.current.y;
+        
+        const deltaXPct = (deltaX / rect.width) * 100;
+        const deltaYPct = (deltaY / rect.height) * 100;
+
+        const newX = Math.max(0, Math.min(80, Math.round(avatarDragStart.current.avatarX + deltaXPct)));
+        const newY = Math.max(0, Math.min(80, Math.round(avatarDragStart.current.avatarY + deltaYPct)));
+
+        setAvatarX(newX);
+        setAvatarY(newY);
+      };
+
+      const handleAvatarEnd = () => {
+        setIsDraggingAvatar(false);
+      };
+
+      window.addEventListener('mousemove', handleAvatarMove);
+      window.addEventListener('mouseup', handleAvatarEnd);
+      window.addEventListener('touchmove', handleAvatarMove);
+      window.addEventListener('touchend', handleAvatarEnd);
+
+      return () => {
+        window.removeEventListener('mousemove', handleAvatarMove);
+        window.removeEventListener('mouseup', handleAvatarEnd);
+        window.removeEventListener('touchmove', handleAvatarMove);
+        window.removeEventListener('touchend', handleAvatarEnd);
+      };
+    }
+
+    if (isDragging) {
         const deltaX = e.clientX - dragStart.current.x;
         const deltaY = e.clientY - dragStart.current.y;
 
@@ -2932,7 +2996,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   }
                 };
 
-                const capPosClass = captionPosition === 'bottom' ? 'bottom-[12%]' : 'top-[4.5%]';
+                const capPosClass = captionPosition === 'bottom' ? 'bottom-[12%] left-0 right-0 px-3' : 'top-[4.5%] left-[24%] right-2 px-2';
                 const customStyle = getCaptionStyleCSS(captionStyle, captionFont);
 
                 if (wordTimestamps.length > 0 && currentWordIdx >= 0) {
