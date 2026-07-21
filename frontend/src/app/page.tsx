@@ -306,11 +306,14 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   // ─── PDR-AUTO 1-CLICK AUTOMATED WORKFLOW ───────────────────────
   const [isPdrAutoRunning, setIsPdrAutoRunning] = useState<boolean>(false);
   const [pdrAutoStatus, setPdrAutoStatus] = useState<string>('');
+  const [isPdrAutoMode, setIsPdrAutoMode] = useState<boolean>(true); // PDR-Auto ON by default
+
   const pdrAutoPitchRef = useRef<number>(4); // Alternates between +4Hz and +8Hz
   const pdrAutoDurationRef = useRef<number>(120); // Alternates between 120s (2 min) and 150s (2:30 min)
 
-  const handlePdrAutoWorkflow = async () => {
-    if (!imageFile) {
+  const handlePdrAutoWorkflow = async (overrideFile?: File) => {
+    const targetImg = overrideFile || imageFile;
+    if (!targetImg) {
       alert("⚠️ Please paste or upload a Center Poster Image first, then click PDR-Auto!");
       return;
     }
@@ -333,7 +336,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       setScriptError('');
       
       const formData = new FormData();
-      formData.append('image', imageFile);
+      formData.append('image', targetImg);
       formData.append('duration', targetDuration.toString());
 
       const scriptRes = await fetch(`${BACKEND_URL}/backend/generate-script-from-image`, {
@@ -995,6 +998,10 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
       setImageFile(file);
       if (imageUrl) URL.revokeObjectURL(imageUrl);
       setImageUrl(URL.createObjectURL(file));
+          if (isPdrAutoMode) {
+            handlePdrAutoWorkflow(file);
+          }
+
       // Reset play state
       pausePreview();
     }
