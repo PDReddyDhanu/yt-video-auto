@@ -84,7 +84,7 @@ function readDb() {
       clientSecret: '',
       redirectUri: 'http://localhost:3001/backend/syncdone',
       tokens: null,
-      targetFolderId: 'root'
+      targetFolderId: process.env.DRIVE_FOLDER_ID || '1HKOpwOro1jxv09xBqbnhilhtCRb7V8yA'
     },
     history: []
   };

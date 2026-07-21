@@ -303,6 +303,178 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
   const [cropAvatarRight, setCropAvatarRight] = useState<number>(0);
   const [avatarLayerPosition, setAvatarLayerPosition] = useState<'behind' | 'front'>('behind');
   const [captionPosition, setCaptionPosition] = useState<'top' | 'bottom'>('top');
+  // ─── PDR-AUTO 1-CLICK AUTOMATED WORKFLOW ───────────────────────
+  const [isPdrAutoRunning, setIsPdrAutoRunning] = useState<boolean>(false);
+  const [pdrAutoStatus, setPdrAutoStatus] = useState<string>('');
+  const pdrAutoPitchRef = useRef<number>(4); // Alternates between +4Hz and +8Hz
+  const pdrAutoDurationRef = useRef<number>(120); // Alternates between 120s (2 min) and 150s (2:30 min)
+
+  const handlePdrAutoWorkflow = async () => {
+    if (!imageFile) {
+      alert("⚠️ Please paste or upload a Center Poster Image first, then click PDR-Auto!");
+      return;
+    }
+
+    setIsPdrAutoRunning(true);
+    setPdrAutoStatus("🚀 Starting PDR-Auto Workflow...");
+
+    try {
+      // Step 1: Alternate Target Script Duration (120s vs 150s). Default: 120s (2 mins)
+      const targetDuration = pdrAutoDurationRef.current;
+      setScriptDuration(targetDuration);
+      pdrAutoDurationRef.current = targetDuration === 120 ? 150 : 120;
+      setPdrAutoStatus(`⚡ Step 1/4: Target Duration set to ${targetDuration === 120 ? '2 mins (120s)' : '2:30 mins (150s)'}...`);
+
+      // Step 2: Auto-select Destination Folder (1HKOpwOro1jxv09xBqbnhilhtCRb7V8yA)
+      setSelectedFolderId('1HKOpwOro1jxv09xBqbnhilhtCRb7V8yA');
+
+      // Step 3: Trigger OCR & AI Script Generation from Image
+      setPdrAutoStatus(`🧠 Step 2/4: Generating AI Script from Image for ${targetDuration}s...`);
+      setScriptError('');
+      
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      formData.append('duration', targetDuration.toString());
+
+      const scriptRes = await fetch(`${BACKEND_URL}/backend/generate-script-from-image`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!scriptRes.ok) {
+        const errData = await scriptRes.json();
+        throw new Error(errData.error || 'AI script generation failed.');
+      }
+
+      const scriptData = await scriptRes.json();
+      const generatedTeluguScript = scriptData.teluguScript || '';
+      const generatedTenglishScript = scriptData.tenglishScript || '';
+
+      setTtsScript(generatedTeluguScript);
+      setTenglishScript(generatedTenglishScript);
+
+      if (scriptData.autoFilename) {
+        setCustomFilename(scriptData.autoFilename);
+      } else {
+        const slug = (generatedTenglishScript || 'auto_video')
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-_]/g, '')
+          .trim()
+          .replace(/[\s-_]+/g, '_')
+          .split('_')
+          .slice(0, 10)
+          .join('_');
+        setCustomFilename(slug);
+      }
+
+      if (scriptData.apiStatus) {
+        setApiStatus(scriptData.apiStatus);
+      }
+
+      // Step 4: Select Male Pro Voice MV1 (Brian) with alternate pitch (+4Hz / +8Hz)
+      const currentPitch = pdrAutoPitchRef.current;
+      setSelectedPresetId('MV1');
+      setPitchCycleIndex(prev => ({ ...prev, MV1: currentPitch === 4 ? 0 : 1 }));
+      pdrAutoPitchRef.current = currentPitch === 4 ? 8 : 4;
+      
+      setPdrAutoStatus(`🎙️ Step 3/4: Selected Male Voice MV1 (Brian) with Pitch +${currentPitch}Hz...`);
+
+      // Pause briefly for state sync
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Step 5: Generate Audio & Auto-Fill Captions
+      setPdrAutoStatus(`🔊 Step 4/4: Generating Audio & Auto-Filling Word-by-Word Captions...`);
+      
+      const ttsPayloadText = generatedTeluguScript.trim() || generatedTenglishScript.trim();
+      if (!ttsPayloadText) {
+        throw new Error("Generated script text was empty.");
+      }
+
+      const ttsRes = await fetch(`${BACKEND_URL}/backend/tts/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: ttsPayloadText,
+          voice_id: 'en-US-BrianMultilingualNeural',
+          speed: 1.65,
+          pitch: currentPitch
+        })
+      });
+
+      if (!ttsRes.ok) {
+        const errData = await ttsRes.json();
+        throw new Error(errData.error || 'TTS Audio generation failed.');
+      }
+
+      const ttsData = await ttsRes.json();
+      const audioFetchRes = await fetch(`${BACKEND_URL}${ttsData.url}`);
+      const audioBlob = await audioFetchRes.blob();
+      const audioFileObj = new File([audioBlob], ttsData.filename, { type: 'audio/mpeg' });
+      const audioObjUrl = URL.createObjectURL(audioBlob);
+
+      setAudioFile(audioFileObj);
+      setAudioUrl(audioObjUrl);
+
+      const detectedAudioDur: number = await new Promise(resolve => {
+        const tmp = new Audio(audioObjUrl);
+        tmp.onloadedmetadata = () => resolve(tmp.duration);
+        tmp.onerror = () => resolve(targetDuration);
+      });
+      setAudioDuration(detectedAudioDur);
+
+      // Auto-align word-by-word timestamps for captions
+      const words: WordTimestamp[] = ttsData.word_timestamps || [];
+      const captionText = generatedTenglishScript.trim() || generatedTeluguScript.trim();
+      const captionWords = captionText.split(/\s+/).map((w: string) => w.trim()).filter((w: string) => w.length > 0);
+
+      let alignedWords: WordTimestamp[] = [];
+      if (words.length > 0 && captionWords.length > 0) {
+        if (words.length === captionWords.length) {
+          alignedWords = captionWords.map((word: string, idx: number) => ({
+            word,
+            start: words[idx].start,
+            end: words[idx].end
+          }));
+        } else {
+          const numWords = captionWords.length;
+          const totalDuration = words[words.length - 1].end || detectedAudioDur;
+          const wordDur = totalDuration / numWords;
+          alignedWords = captionWords.map((word: string, idx: number) => ({
+            word,
+            start: parseFloat((idx * wordDur).toFixed(2)),
+            end: parseFloat(((idx + 1) * wordDur).toFixed(2))
+          }));
+        }
+      }
+
+      setWordTimestamps(alignedWords);
+
+      // Convert word timestamps to segment captions for FFmpeg subtitle export
+      if (alignedWords.length > 0) {
+        const groupSize = 4;
+        const newSegments: CaptionSegment[] = [];
+        for (let i = 0; i < alignedWords.length; i += groupSize) {
+          const group = alignedWords.slice(i, i + groupSize);
+          newSegments.push({
+            id: `auto-${Date.now()}-${i}`,
+            start: group[0].start,
+            end: group[group.length - 1].end,
+            text: group.map(g => g.word).join(' ')
+          });
+        }
+        setCaptions(newSegments);
+      }
+
+      setPdrAutoStatus(`✅ PDR-Auto Complete! Audio & Captions Ready. Destination: READY_TO_APPROVE (1HKOpwOro1jxv09xBqbnhilhtCRb7V8yA).`);
+    } catch (err: any) {
+      console.error("PDR-Auto Workflow Error:", err);
+      setPdrAutoStatus(`❌ PDR-Auto Error: ${err.message || 'Workflow failed'}`);
+    } finally {
+      setIsPdrAutoRunning(false);
+      fetchGroqStatus();
+    }
+  };
+
   const [isDraggingAvatar, setIsDraggingAvatar] = useState<boolean>(false);
   const avatarDragStart = useRef({ x: 0, y: 0, avatarX: 0, avatarY: 0 });
 
@@ -2672,6 +2844,25 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
           )}
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm flex flex-col items-center">
+            {pdrAutoStatus && (
+              <div className="w-full mb-4 p-3 rounded-xl border border-amber-500/40 bg-amber-950/30 text-amber-200 text-xs font-semibold flex items-center justify-between gap-2 shadow-lg backdrop-blur-sm animate-pop">
+                <div className="flex items-center gap-2">
+                  {isPdrAutoRunning ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-orange-400 shrink-0" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  )}
+                  <span>{pdrAutoStatus}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPdrAutoStatus('')}
+                  className="text-[10px] text-amber-400 hover:text-amber-200 underline font-mono"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
             <div className="w-full flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-orange-400" />
