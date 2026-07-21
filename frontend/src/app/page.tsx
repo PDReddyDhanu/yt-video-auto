@@ -2766,7 +2766,7 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
         </div>
 
         {/* Live Simulation Preview & Export (Right side) */}
-        <div className="lg:col-span-5 space-y-6 order-1 lg:order-2 lg:sticky lg:top-24">
+        <div className="lg:col-span-5 space-y-6 order-first lg:order-2 lg:sticky lg:top-24">
 
           {/* â”€â”€â”€ Live API Key & Quota Status Panel â”€â”€â”€ */}
           {groqStatusPool.length > 0 && (
