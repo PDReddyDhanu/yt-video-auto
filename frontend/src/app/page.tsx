@@ -3146,37 +3146,62 @@ export default function StudioPage({ initialPlatform = 'youtube' }: { initialPla
                   }
                 };
 
-                const capPosClass = captionPosition === 'bottom' ? 'bottom-[12%] left-0 right-0 px-3' : 'top-[4.5%] left-[14%] right-2 px-2';
+                const capPosClass = captionPosition === 'bottom' 
+                  ? 'bottom-[12%] left-2 right-2 text-center' 
+                  : 'top-[4.5%] left-[15%] right-2 text-center';
                 const customStyle = getCaptionStyleCSS(captionStyle, captionFont);
 
-                if (wordTimestamps.length > 0 && currentWordIdx >= 0) {
+                // 1. Live playing word-by-word timestamp
+                if (wordTimestamps.length > 0 && currentWordIdx >= 0 && currentWordIdx < wordTimestamps.length) {
                   const currentWord = wordTimestamps[currentWordIdx];
                   return (
-                    <div className={`absolute ${capPosClass} left-0 right-0 px-3 text-center pointer-events-none z-30 select-none`}>
+                    <div className={`absolute ${capPosClass} pointer-events-none z-[60] select-none`}>
                       <span
                         style={customStyle}
-                        className="inline-block font-black text-xs sm:text-sm leading-snug tracking-wide backdrop-blur-[1px] animate-pop"
+                        className="inline-block font-black text-xs sm:text-sm leading-snug tracking-wide backdrop-blur-[1px] animate-pop shadow-2xl"
                       >
                         {currentWord.word}
                       </span>
                     </div>
                   );
                 }
+
+                // 2. Active caption segment matching current audio time
                 if (activeCaption) {
                   return (
                     <div
                       key={activeCaption.id}
-                      className={`absolute ${capPosClass} left-0 right-0 px-3 text-center pointer-events-none z-30 select-none animate-pop`}
+                      className={`absolute ${capPosClass} pointer-events-none z-[60] select-none animate-pop`}
                     >
                       <span
                         style={customStyle}
-                        className="inline-block font-black text-xs sm:text-sm leading-snug tracking-wide backdrop-blur-[1px]"
+                        className="inline-block font-black text-xs sm:text-sm leading-snug tracking-wide backdrop-blur-[1px] shadow-2xl"
                       >
                         {activeCaption.text}
                       </span>
                     </div>
                   );
                 }
+
+                // 3. Fallback Preview Caption (Always visible in frame when paused or resting)
+                const fallbackText = captions.length > 0 
+                  ? captions[0].text 
+                  : (tenglishScript.trim() || ttsScript.trim() || '');
+
+                if (fallbackText) {
+                  const previewWords = fallbackText.split(/\s+/).slice(0, 4).join(' ');
+                  return (
+                    <div className={`absolute ${capPosClass} pointer-events-none z-[60] select-none`}>
+                      <span
+                        style={customStyle}
+                        className="inline-block font-black text-xs sm:text-sm leading-snug tracking-wide backdrop-blur-[1px] opacity-90 shadow-2xl"
+                      >
+                        {previewWords}
+                      </span>
+                    </div>
+                  );
+                }
+
                 return null;
               })()}
 
