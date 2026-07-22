@@ -3,13 +3,17 @@ node_modules/
 backend/node_modules/
 frontend/node_modules/
 
-# Local database and configuration (CRITICAL: Contains tokens and credentials)
-backend/db.json
-backend/.env
+# Frontend env (not needed on server)
 frontend/.env
 frontend/.env.local
-.env
 .env.local
+
+# Secrets / credentials — kept out of GitHub (use HF Secrets or local .env)
+backend/.env
+.env
+
+# Large binary files (installed via npm on deployment)
+backend/bin/
 
 # Temp media output and user uploads (CRITICAL: Contains rendered files and uploads)
 backend/output/*
@@ -21,17 +25,9 @@ backend/uploads/*
 !backend/uploads/gemini_generated_video_9373c8e4.mp4
 !backend/uploads/gemini_generated_video_c6c8622d.mp4
 !backend/uploads/gemini_generated_video_ec2851d1.mp4
-!backend/uploads/ChatGPT Image Jun 17, 2026, 03_36_57 AM.png
+!backend/uploads/i_want_the_black_background_th.mp4
 !backend/uploads/watermark2p.png
 !backend/uploads/default_avatar.webm
-!backend/uploads/i_want_the_black_background_th.mp4
-backend/uploads/default_watermark.png
-backend/uploads/Watermark-movable.png
-backend/mock_audio_long.mp3
-backend/mock_audio_short.mp3
-backend/mock_image.png
-backend/test_subtitles.ass
-backend/bin/
 
 # Build outputs
 frontend/.next/

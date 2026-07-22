@@ -1,0 +1,73 @@
+{
+  "backgrounds": [
+    {
+      "id": "bg-i_want_the_black_background_th-37",
+      "name": "I want the black background th (10s)",
+      "filename": "i_want_the_black_background_th.mp4",
+      "duration": 10.005
+    },
+    {
+      "id": "bg-gemini_generated_video_080dd2fa-480",
+      "name": "Gemini generated video 080dd2fa (10s)",
+      "filename": "gemini_generated_video_080dd2fa.mp4",
+      "duration": 10
+    },
+    {
+      "id": "bg-gemini_generated_video_3f9409a8-768",
+      "name": "Gemini generated video 3f9409a8 (10s)",
+      "filename": "gemini_generated_video_3f9409a8.mp4",
+      "duration": 10
+    },
+    {
+      "id": "bg-gemini_generated_video_9373c8e4-51",
+      "name": "Gemini generated video 9373c8e4 (10s)",
+      "filename": "gemini_generated_video_9373c8e4.mp4",
+      "duration": 10
+    },
+    {
+      "id": "bg-gemini_generated_video_c6c8622d-737",
+      "name": "Gemini generated video c6c8622d (10s)",
+      "filename": "gemini_generated_video_c6c8622d.mp4",
+      "duration": 10
+    },
+    {
+      "id": "bg-gemini_generated_video_ec2851d1-667",
+      "name": "Gemini generated video ec2851d1 (10s)",
+      "filename": "gemini_generated_video_ec2851d1.mp4",
+      "duration": 10
+    },
+    {
+      "id": "bg-audio-1781654965235-815834471-420",
+      "name": "Audio 1781654965235 815834471 (10s)",
+      "filename": "audio-1781654965235-815834471.mp4",
+      "duration": 10
+    },
+    {
+      "id": "bg-black_avatar-771",
+      "name": "Black avatar (8s)",
+      "filename": "black_avatar.mp4",
+      "duration": 8
+    },
+    {
+      "id": "bg-Made with FlexClip AI-2026-07-21T121713-936",
+      "name": "Made with FlexClip AI 2026 07 21T121713 (5s)",
+      "filename": "Made with FlexClip AI-2026-07-21T121713.mp4",
+      "duration": 5.013
+    }
+  ],
+  "watermark": {
+    "filename": "1000429881-removebg-preview.png",
+    "position": "bottom-right",
+    "size": 180,
+    "opacity": 1,
+    "margin": 40
+  },
+  "googleDrive": {
+    "clientId": "961076655537-iqekfd3mvjikfd7b0867hn8nsqgg7n4d.apps.googleusercontent.com",
+    "clientSecret": "",
+    "redirectUri": "http://localhost:3001/backend/syncdone",
+    "tokens": {},
+    "targetFolderId": "1HKOpwOro1jxv09xBqbnhilhtCRb7V8yA"
+  },
+  "history": []
+}

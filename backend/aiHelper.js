@@ -336,3 +336,118 @@ export async function generateScriptFromImage(imagePath, mimeType, duration) {
     }
   };
 }
+
+/**
+ * PDR Script Generator for 125-150s Shorts/Reels
+ */
+/**
+ * PDR Script Generator for 125-150s Shorts/Reels based on user's exact instructions
+ */
+export async function generatePDRScript(inputData, duration = 150) {
+  initKeysIfNeeded();
+  const keys = getApiKeyPool();
+  const modelName = 'llama-3.3-70b-versatile';
+
+  const prompt = `Act as a professional viral content writer for Instagram Reels / Short Videos (${duration} Seconds). 
+
+Generate an engaging, natural-sounding audio script based on the following topic or information:
+"${inputData}"
+
+Strictly follow these rules:
+1. Output format: Provide the script in both TELUGU (తెలుగు) and TENGLISH (English alphabet with Telugu words).
+2. Exact Line-by-Line Match: Telugu and Tenglish scripts must match 100% word-for-word and sentence-by-sentence.
+3. Natural Human Pauses: Use "..." between phrases to indicate short breaks for realistic human voiceover recording.
+4. Hook Style: Create an engaging, modern hook without using repetitive phrases like "ఆగు ఆగు" (Agu Agu). Make it curious, direct, or problem-solving.
+5. Content Quality: Correct Telugu grammar and spelling with zero errors. Reword the input text slightly for maximum clarity, flow, relaxed explanation cadence, and high viral engagement.
+6. Call to Action (CTA): End naturally with a follow call-to-action like:
+   - Telugu: "ఇలాంటి ఆసక్తికరమైన అప్డేట్స్ కోసం ఇప్పుడే Telugu States Official ను ఫాలో అవ్వండి!"
+   - Tenglish: "Ilaanti aasakthikaramaina updates kosam ippude Telugu States Official ni Follow Avvandi!"
+
+You MUST respond strictly with a valid JSON object matching this schema:
+{
+  "teluguScript": "Full Telugu script including ... pauses",
+  "tenglishScript": "Full matching Tenglish script including ... pauses",
+  "recommendedVoiceGender": "Male",
+  "autoFilename": "slugified_10_word_filename_here"
+}`;
+
+  const requestBody = {
+    model: modelName,
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a professional Telugu content writer for viral YouTube Shorts and Instagram Reels. Output strictly valid JSON.'
+      },
+      {
+        role: 'user',
+        content: prompt
+      }
+    ],
+    response_format: { type: 'json_object' },
+    temperature: 0.3
+  };
+
+  let lastError = null;
+
+  for (let i = 0; i < keys.length; i++) {
+    const apiKey = keys[i];
+    console.log(`[AI Helper] PDR Script Gen — trying key ${i + 1}/${keys.length} (index ${i})`);
+    if (keyStatuses[i]) {
+      keyStatuses[i].lastUsed = new Date().toISOString();
+    }
+
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      const content = result.choices[0].message.content;
+      const parsed = JSON.parse(content);
+
+      if (!parsed.autoFilename) {
+        const baseText = parsed.tenglishScript || inputData || 'pdr_video';
+        const cleaned = baseText
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-_]/g, '')
+          .trim()
+          .replace(/[\s-_]+/g, '_')
+          .split('_')
+          .slice(0, 10)
+          .join('_');
+        parsed.autoFilename = cleaned || 'pdr_video';
+      }
+
+      console.log(`[AI Helper] PDR Script Gen succeeded with key ${i + 1}`);
+      if (keyStatuses[i]) {
+        keyStatuses[i].status = 'Active';
+        keyStatuses[i].exhaustedModels = keyStatuses[i].exhaustedModels.filter(m => m !== modelName);
+        keyStatuses[i].lastError = null;
+      }
+      return {
+        ...parsed,
+        apiStatus: {
+          scriptModel: modelName,
+          scriptKeyIndex: i + 1,
+          totalKeys: keys.length,
+          timestamp: new Date().toISOString()
+        }
+      };
+    }
+
+    const errorText = await response.text();
+    console.warn(`[AI Helper] PDR Script key ${i + 1} failed — HTTP ${response.status}: ${errorText.slice(0, 200)}`);
+    if (isRetryableStatus(response.status)) {
+      lastError = new Error(`Groq Chat API error (key ${i + 1}): ${response.status} - ${errorText}`);
+      continue;
+    }
+    throw new Error(`Groq Chat API error: ${response.status} - ${errorText}`);
+  }
+
+  throw new Error(`All ${keys.length} Groq API key(s) failed for PDR Script Generation: ${lastError?.message}`);
+}

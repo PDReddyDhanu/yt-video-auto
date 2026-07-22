@@ -11,9 +11,10 @@ import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import ffprobeInstaller from '@ffprobe-installer/ffprobe';
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { generateScriptFromImage, getGroqStatus, resetGroqStatus } from './aiHelper.js';
+import { generateScriptFromImage, generatePDRScript, getGroqStatus, resetGroqStatus } from './aiHelper.js';
 
 dotenv.config();
+dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '.env') });
 
 const execPromise = promisify(exec);
 
@@ -188,8 +189,14 @@ async function syncBackgroundsFromFolder() {
     const mp4Files = files.filter(f => f.toLowerCase().endsWith('.mp4'));
     const existingFilenames = db.backgrounds.map(b => b.filename);
 
-    // Add new ones
+    // Add new ones (excluding avatar character videos)
+    const isAvatarFilename = (fn) => {
+      const lower = fn.toLowerCase();
+      return lower.includes('avatar') || lower.includes('flexclip') || lower.includes('black_avatar');
+    };
+
     for (const filename of mp4Files) {
+      if (isAvatarFilename(filename)) continue;
       if (!existingFilenames.includes(filename)) {
         const filePath = path.join(UPLOADS_DIR, filename);
         const duration = await getMediaDuration(filePath);
@@ -485,6 +492,57 @@ app.post('/backend/groq-status/reset', (req, res) => {
 
 // ---------------- AI OCR SCRIPT GENERATION API ----------------
 
+
+// ---------------- PDR ROUTE SCRIPT GENERATION API ----------------
+// Text-only route: body is parsed by global express.json() middleware (no multer needed)
+app.post('/backend/generate-script-pdr', async (req, res) => {
+  try {
+    const contentType = req.headers['content-type'] || '';
+
+    // If multipart (image upload) — delegate to the multer handler
+    if (contentType.includes('multipart/form-data')) {
+      return upload.single('image')(req, res, async (err) => {
+        if (err) return res.status(400).json({ error: err.message });
+        try {
+          const duration = parseInt(req.body && req.body.duration) || 150;
+          const inputText = (req.body && req.body.text) || '';
+
+          if (!req.file) {
+            return res.status(400).json({ error: 'No image file uploaded.' });
+          }
+
+          console.log("[PDR Script Gen] Running OCR on uploaded image...");
+          const ocrResult = await generateScriptFromImage(req.file.path, req.file.mimetype || 'image/png', duration);
+          try { if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch(e) {}
+          return res.json(ocrResult);
+        } catch (innerErr) {
+          console.error("[PDR Script Gen] OCR Error:", innerErr);
+          if (req.file && fs.existsSync(req.file.path)) {
+            try { fs.unlinkSync(req.file.path); } catch(e) {}
+          }
+          return res.status(500).json({ error: innerErr.message || 'OCR failed.' });
+        }
+      });
+    }
+
+    // JSON / text-only mode (body already parsed by global express.json() middleware)
+    const inputText = (req.body && (req.body.text || req.body.postInfoText)) || '';
+    const duration = parseInt((req.body && req.body.duration) || '150') || 150;
+
+    if (!inputText.trim()) {
+      return res.status(400).json({ error: 'Please paste raw text into the information box OR upload an image for OCR.' });
+    }
+
+    console.log(`[PDR Script Gen] Generating ${duration}s script from text (${inputText.length} chars)...`);
+    const pdrResult = await generatePDRScript(inputText.trim(), duration);
+    return res.json(pdrResult);
+
+  } catch (error) {
+    console.error("[PDR Script Gen] Error:", error);
+    return res.status(500).json({ error: error.message || 'Failed to generate PDR script.' });
+  }
+});
+
 app.post('/backend/generate-script-from-image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -537,53 +595,58 @@ function generateAssContent(captions, captionStyle = 'blast', captionFont = 'Ari
 
   switch (captionStyle) {
     case 'blast':
-      primaryColor = '&H0000FFFF';
-      outlineColor = '&H00000000';
-      backColor = '&H80000066';
-      borderStyle = 1;
-      outlineWidth = 8;
-      shadowDepth = 6;
-      overrideTag = '{\\3c&H000000&\\4c&H000066FF&\\b1}';
+      // 3D Yellow text (#FACC15), Black stroke (#000000), Orange/Brown 3D shadow (#C2410C), NO background box
+      primaryColor = '&H0000FFFF'; // Vibrant Yellow
+      outlineColor = '&H00000000'; // Black outline
+      backColor = '&H000C41C2';    // Orange/Brown 3D shadow (#C2410C)
+      borderStyle = 1;             // Outline + Drop Shadow mode (no box fill)
+      outlineWidth = 4;
+      shadowDepth = 3;
+      overrideTag = '{\\b1}';
       break;
 
     case 'green_box':
-      primaryColor = '&H0000FF00';
-      outlineColor = '&H00000000';
-      backColor = '&HE0101010';
+      // Emerald text (#10B981), Dark Navy fill (#090D16), Emerald border
+      primaryColor = '&H0081B910';
+      outlineColor = '&H0081B910';
+      backColor = '&H00160D09';
       borderStyle = 3;
-      outlineWidth = 10;
+      outlineWidth = 8;
       shadowDepth = 0;
-      overrideTag = '{\\b1\\3c&H000000&}';
+      overrideTag = '{\\b1}';
       break;
 
     case 'pink_yellow':
-      primaryColor = '&H0000FFFF';
-      outlineColor = '&H00D600EC';
-      backColor = '&H00C000D0';
+      // Yellow text (#FDE047), Pink fill & border (#DB2777)
+      primaryColor = '&H0047E0FD';
+      outlineColor = '&H007727DB';
+      backColor = '&H007727DB';
       borderStyle = 3;
-      outlineWidth = 14;
+      outlineWidth = 10;
       shadowDepth = 0;
-      overrideTag = '{\\b1\\3c&H00D600EC&}';
+      overrideTag = '{\\b1}';
       break;
 
     case 'frost':
-      primaryColor = '&H00FFFF00';
-      outlineColor = '&H00000000';
-      backColor = '&H00FF8000';
-      borderStyle = 1;
-      outlineWidth = 6;
-      shadowDepth = 6;
-      overrideTag = '{\\3c&H000000&\\4c&H00FF8000&\\b1}';
+      // Cyan text (#22D3EE), Dark Cyan fill (#063A44), Cyan border
+      primaryColor = '&H00EED322';
+      outlineColor = '&H00EED322';
+      backColor = '&H20443A06';
+      borderStyle = 3;
+      outlineWidth = 8;
+      shadowDepth = 0;
+      overrideTag = '{\\b1}';
       break;
 
     case 'classic':
     default:
-      primaryColor = '&H0000FFFF';
+      // Yellow text (#FACC15), 80% Opaque Black fill, Black border
+      primaryColor = '&H0015CCFA';
       outlineColor = '&H00000000';
-      backColor = '&H80000000';
-      borderStyle = 1;
-      outlineWidth = 6;
-      shadowDepth = 2;
+      backColor = '&H33000000';
+      borderStyle = 3;
+      outlineWidth = 8;
+      shadowDepth = 0;
       overrideTag = '{\\b1}';
       break;
   }
@@ -701,13 +764,25 @@ app.post('/backend/generate', upload.fields([
     }
 
     let avatarPath = path.join(UPLOADS_DIR, 'default_avatar.webm');
+    if (req.body.avatarUrl) {
+      const cleanRel = req.body.avatarUrl.replace(/^.*\/uploads\//, '');
+      const candidatePath = path.join(UPLOADS_DIR, cleanRel);
+      if (fs.existsSync(candidatePath)) {
+        avatarPath = candidatePath;
+      }
+    }
+    
+    if (avatarPath === path.join(UPLOADS_DIR, 'default_avatar.webm')) {
+      const avatarPreset = req.body.avatarPreset || 'white';
+      if (avatarPreset === 'black' && (fs.existsSync(path.join(UPLOADS_DIR, 'black_avatar.webm')) || fs.existsSync(path.join(UPLOADS_DIR, 'black_avatar.mp4')))) {
+        avatarPath = fs.existsSync(path.join(UPLOADS_DIR, 'black_avatar.webm')) ? path.join(UPLOADS_DIR, 'black_avatar.webm') : path.join(UPLOADS_DIR, 'black_avatar.mp4');
+      } else if (avatarPreset === 'white' && fs.existsSync(path.join(UPLOADS_DIR, 'default_avatar.webm'))) {
+        avatarPath = path.join(UPLOADS_DIR, 'default_avatar.webm');
+      }
+    }
+
     if (files.avatarVideo && files.avatarVideo[0]) {
       avatarPath = files.avatarVideo[0].path;
-      try {
-        fs.copyFileSync(avatarPath, path.join(UPLOADS_DIR, 'default_avatar.webm'));
-      } catch (err) {
-        console.warn("Could not persist default avatar video:", err);
-      }
     }
     const isAvatarEnabled = showAvatar === 'true' || showAvatar === true || (showAvatar === undefined && fs.existsSync(avatarPath));
     const hasAvatar = isAvatarEnabled && fs.existsSync(avatarPath);
@@ -735,7 +810,12 @@ app.post('/backend/generate', upload.fields([
       const cAvT = parseFloat(cropAvatarTop) || 0;
       const cAvB = parseFloat(cropAvatarBottom) || 0;
       let avatarInputIndex = 4;
-      let avFilter = `[${avatarInputIndex}:v]format=rgba`;
+      let avFilter = `[${avatarInputIndex}:v]`;
+      if (avatarPath.toLowerCase().endsWith('.mp4')) {
+        avFilter += `colorkey=0x282C30:0.24:0.08,colorkey=0x1A1E22:0.22:0.06,colorkey=0x00FF00:0.25:0.08,colorkey=0xFFFFFF:0.15:0.04,format=yuva420p`;
+      } else {
+        avFilter += `colorkey=0x282C30:0.24:0.08,colorkey=0x1A1E22:0.22:0.06,colorkey=0xFFFFFF:0.15:0.04,format=yuva420p`;
+      }
       if (cAvL > 0 || cAvR > 0 || cAvT > 0 || cAvB > 0) {
         avFilter += `,crop=iw*(1-(${cAvL}+${cAvR})/100):ih*(1-(${cAvT}+${cAvB})/100):iw*${cAvL}/100:ih*${cAvT}/100`;
       }
@@ -1223,6 +1303,150 @@ process.on('uncaughtException', (err) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('UNHANDLED REJECTION at:', promise, 'reason:', reason);
+});
+
+
+// ---------------- AVATAR CHARACTERS & CHROMA KEY API ----------------
+
+// Get registered avatar character list
+app.get('/backend/avatars', (req, res) => {
+  try {
+    const avatarDir = path.join(UPLOADS_DIR, 'avatars');
+    if (!fs.existsSync(avatarDir)) {
+      fs.mkdirSync(avatarDir, { recursive: true });
+    }
+
+    const defaultAvatars = [
+      {
+        id: 'white',
+        name: 'White Avatar',
+        url: '/uploads/default_avatar.webm',
+        preset: 'white',
+        isDefault: true
+      },
+      {
+        id: 'black',
+        name: 'Black Avatar',
+        url: fs.existsSync(path.join(UPLOADS_DIR, 'black_avatar.webm')) ? '/uploads/black_avatar.webm' : '/uploads/black_avatar.mp4',
+        preset: 'black',
+        isDefault: true
+      }
+    ];
+
+    const files = fs.readdirSync(avatarDir);
+    const customAvatars = files
+      .filter(f => f.toLowerCase().endsWith('.webm') || f.toLowerCase().endsWith('.mp4'))
+      .map(f => ({
+        id: 'avatar-' + f,
+        name: f.replace(/_|-/g, ' ').replace(/\.[^/.]+$/, ''),
+        url: `/uploads/avatars/${f}`,
+        preset: 'custom',
+        isDefault: false
+      }));
+
+    res.json([...defaultAvatars, ...customAvatars]);
+  } catch (err) {
+    console.error("Error listing avatars:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Chroma Key (Green Screen) Background Removal for Avatar Videos
+app.post('/backend/avatars/remove-background', upload.single('avatarVideo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No avatar video file provided.' });
+    }
+
+    const inputPath = req.file.path;
+    const { keyColor = '#00FF00', similarity = '0.35', blend = '0.10', avatarName = 'Processed Avatar' } = req.body;
+
+    const avatarDir = path.join(UPLOADS_DIR, 'avatars');
+    if (!fs.existsSync(avatarDir)) {
+      fs.mkdirSync(avatarDir, { recursive: true });
+    }
+
+    const timestamp = Date.now();
+    const outputFilename = `processed_avatar_${timestamp}.webm`;
+    const outputPath = path.join(avatarDir, outputFilename);
+
+    let colorkeyHex = '0x00FF00';
+    if (keyColor && keyColor.startsWith('#')) {
+      colorkeyHex = '0x' + keyColor.replace('#', '').toUpperCase();
+    } else if (keyColor && keyColor.startsWith('0x')) {
+      colorkeyHex = keyColor;
+    }
+
+    const simVal = parseFloat(similarity) || 0.35;
+    const blendVal = parseFloat(blend) || 0.10;
+    const removeWhiteRing = req.body.removeWhiteRing !== 'false' && req.body.removeWhiteRing !== false;
+
+    // Multi-pass smart green & custom background removal filter chain
+    const normColor = (keyColor || '#00FF00').toUpperCase();
+    let filterChain = '';
+
+    if (normColor.includes('00FF00') || normColor === 'GREEN' || normColor === '#00FF00') {
+      // Key out bright green, dark forest green (#3B7E4F), olive green, and dark green shadows
+      filterChain = `chromakey=0x00FF00:${simVal}:${blendVal},chromakey=0x3B7E4F:${simVal}:${blendVal},colorkey=0x2B6E3F:${simVal}:${blendVal},colorkey=0x00E000:${simVal}:${blendVal},despill=type=green:expand=0.2`;
+    } else if (normColor.includes('000000') || normColor === 'BLACK' || normColor === '#000000') {
+      filterChain = `colorkey=0x000000:${simVal}:${blendVal},colorkey=0x1E2226:${simVal}:${blendVal}`;
+    } else {
+      // Custom user selected color (e.g. #3B7E4F or custom hex)
+      filterChain = `chromakey=${colorkeyHex}:${simVal}:${blendVal},colorkey=${colorkeyHex}:${simVal * 1.15}:${blendVal}`;
+    }
+
+    // Always strip dark gray card boxes (#2B2F38) and white arc lines (#FFFFFF) to guarantee 100% pure character cutout
+    filterChain += `,colorkey=0x2B2F38:0.25:0.08,colorkey=0x2A2E35:0.25:0.08`;
+    if (removeWhiteRing) {
+      filterChain += `,colorkey=0xFFFFFF:0.18:0.04,colorkey=0xE2E8F0:0.14:0.03`;
+    }
+    filterChain += `,format=yuva420p`;
+
+    // FFmpeg Chroma Key filter chain for VP9 transparent WebM output with alpha
+    const ffmpegArgs = [
+      '-y',
+      '-i', inputPath,
+      '-vf', filterChain,
+      '-c:v', 'libvpx-vp9',
+      '-pix_fmt', 'yuva420p',
+      '-auto-alt-ref', '0',
+      '-b:v', '2M',
+      '-an',
+      outputPath
+    ];
+
+    console.log("[ChromaKey] Running FFmpeg:", ffmpegPath, ffmpegArgs.join(' '));
+
+    const ffmpegProcess = spawn(ffmpegPath, ffmpegArgs);
+    let stderrData = '';
+
+    ffmpegProcess.stderr.on('data', (chunk) => {
+      stderrData += chunk.toString();
+    });
+
+    ffmpegProcess.on('close', (code) => {
+      // Clean up original temp file
+      try {
+        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+      } catch (e) {}
+
+      if (code === 0 && fs.existsSync(outputPath)) {
+        res.json({
+          success: true,
+          avatarId: `avatar-${outputFilename}`,
+          avatarName: avatarName,
+          avatarUrl: `/uploads/avatars/${outputFilename}`
+        });
+      } else {
+        console.error("[ChromaKey] FFmpeg failed with code:", code, stderrData);
+        res.status(500).json({ error: 'Chroma Key background removal failed', details: stderrData });
+      }
+    });
+
+  } catch (err) {
+    console.error("[ChromaKey] Crash:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Start Server
